@@ -26,14 +26,17 @@ spring:
           time_zone: UTC
 
   flyway:
-    enabled: false
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    schemas: ${SPRING_DATASOURCE_SCHEMA:business_service}
 
   security:
     oauth2:
       resourceserver:
         jwt:
           issuer-uri: ${KEYCLOAK_URL:http://localhost:8090}/realms/${KEYCLOAK_REALM:werkflow}
-          jwk-set-uri: ${KEYCLOAK_URL:http://localhost:8090}/realms/${KEYCLOAK_REALM:werkflow}/protocol/openid-connect/certs
+          jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8090/realms/${KEYCLOAK_REALM:werkflow}/protocol/openid-connect/certs}
 
   jackson:
     serialization:

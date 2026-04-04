@@ -33,7 +33,8 @@ services:
       # Platform service URLs (connect to main werkflow network)
       ENGINE_SERVICE_URL: http://werkflow-engine:8081
       ADMIN_SERVICE_URL: http://werkflow-admin:8083
-      KEYCLOAK_URL: http://werkflow-keycloak:8080
+      KEYCLOAK_URL: http://localhost:8090
+      KEYCLOAK_JWK_SET_URI: http://werkflow-keycloak:8080/realms/werkflow/protocol/openid-connect/certs
       KEYCLOAK_REALM: werkflow
     ports:
       - "8084:8084"
