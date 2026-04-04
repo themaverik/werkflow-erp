@@ -1,5 +1,6 @@
 -- V5: Reseed departments with org_id, type, locations
--- Clear existing data (employees first due to FK)
+-- Clear existing data (performance_reviews must be deleted before employees due to ON DELETE RESTRICT on reviewer_id)
+DELETE FROM hr_service.performance_reviews;
 DELETE FROM hr_service.employees WHERE department_id IS NOT NULL;
 DELETE FROM hr_service.employees;
 DELETE FROM hr_service.departments;
