@@ -1,0 +1,129 @@
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# Package Files
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# Eclipse
+.classpath
+.project
+.settings/
+bin/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# NetBeans
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Application
+application-local.yml
+application-local.properties
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+.specstory/
+.claude/
+
+# Database
+*.db
+*.sqlite
+
+# Node.js / Frontend
+node_modules/
+.next/
+.turbo/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm/
+.eslintcache
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.shared
+.env.engine
+.env.admin
+.env.business
+config/env/.env.shared
+config/env/.env.engine
+config/env/.env.admin
+config/env/.env.business
+
+# Docker
+docker-compose.override.yml
+.docker/
+volumes/
+
+# Service-specific
+services/*/target/
+services/*/.mvn/
+frontends/*/node_modules/
+frontends/*/.next/
+frontends/*/out/
+frontends/*/.env.local
+
+# Build artifacts
+dist/
+build/
+out/
+
+# Archives
+/archive/
+docs/archive/
+
+.playwright/
+.playwright-cli/
+.playwright-mcp/
+.playwright-*.worktrees/
+.superpowers/
