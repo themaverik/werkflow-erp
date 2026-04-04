@@ -1,0 +1,73 @@
+version: '3.8'
+name: werkflow-erp
+
+# ================================================================
+# WERKFLOW ERP — STANDALONE DOCKER COMPOSE
+# ================================================================
+# Business Service standalone deployment for external integration testing.
+# Shares the same PostgreSQL database as the main Werkflow platform.
+# ================================================================
+
+services:
+  # Business Service (consolidated HR + Finance + Procurement + Inventory)
+  business-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: business-service
+    container_name: werkflow-business
+    env_file:
+      - ./config/env/.env.shared
+      - ./config/env/.env.business
+    environment:
+      # Shared database with main platform
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: werkflow
+      POSTGRES_USER: werkflow_admin
+      POSTGRES_PASSWORD: werkflow_secure_pass
+      SPRING_DATASOURCE_SCHEMA: business_service
+
+      SERVER_PORT: 8084
+
+      # Platform service URLs (connect to main werkflow network)
+      ENGINE_SERVICE_URL: http://werkflow-engine:8081
+      ADMIN_SERVICE_URL: http://werkflow-admin:8083
+      KEYCLOAK_URL: http://werkflow-keycloak:8080
+      KEYCLOAK_REALM: werkflow
+    ports:
+      - "8084:8084"
+    volumes:
+      - business_logs:/app/logs
+    networks:
+      - werkflow-network
+      - werkflow-erp-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    restart: unless-stopped
+    external_links:
+      - werkflow-postgres:postgres
+      - werkflow-engine:werkflow-engine
+      - werkflow-admin:werkflow-admin
+      - werkflow-keycloak:werkflow-keycloak
+
+# ================================================================
+# VOLUMES
+# ================================================================
+volumes:
+  business_logs:
+    driver: local
+
+# ================================================================
+# NETWORKS
+# ================================================================
+networks:
+  werkflow-network:
+    external: true
+    name: werkflow-network
+  werkflow-erp-network:
+    driver: bridge
+    name: werkflow-erp-network

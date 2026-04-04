@@ -1,0 +1,5 @@
+com/werkflow/delegates/rest/RestServiceDelegate.class
+com/werkflow/delegates/email/EmailDelegate.class
+com/werkflow/delegates/notification/NotificationDelegate.class
+com/werkflow/delegates/validation/ValidationDelegate.class
+com/werkflow/delegates/approval/ApprovalDelegate.class
