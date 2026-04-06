@@ -16,18 +16,12 @@ public interface BudgetPlanRepository extends JpaRepository<BudgetPlan, Long> {
 
     List<BudgetPlan> findByTenantId(String tenantId);
 
-    List<BudgetPlan> findByDepartmentId(Long departmentId);
-
-    List<BudgetPlan> findByDepartmentIdAndStatus(Long departmentId, BudgetStatus status);
-
-    Optional<BudgetPlan> findByDepartmentIdAndFiscalYear(Long departmentId, Integer fiscalYear);
-
     Optional<BudgetPlan> findByDepartmentIdAndFiscalYearAndTenantId(Long departmentId, Integer fiscalYear, String tenantId);
 
-    List<BudgetPlan> findByFiscalYear(Integer fiscalYear);
-
-    List<BudgetPlan> findByStatus(BudgetStatus status);
-
+    // NOTE: findActiveBudgetForDepartment and findBudgetsExceedingThreshold below are
+    // unscoped custom queries (no tenantId filter). They must not be called from
+    // tenant-facing code paths. Retain only for potential future admin tooling;
+    // scope them before any production use.
     @Query("SELECT bp FROM BudgetPlan bp WHERE bp.departmentId = :deptId " +
            "AND bp.periodStart <= :date AND bp.periodEnd >= :date")
     Optional<BudgetPlan> findActiveBudgetForDepartment(
@@ -38,6 +32,4 @@ public interface BudgetPlanRepository extends JpaRepository<BudgetPlan, Long> {
     @Query("SELECT bp FROM BudgetPlan bp WHERE bp.status = 'ACTIVE' " +
            "AND (bp.spentAmount / bp.totalAmount) > :threshold")
     List<BudgetPlan> findBudgetsExceedingThreshold(@Param("threshold") Double threshold);
-
-    boolean existsByDepartmentIdAndFiscalYear(Long departmentId, Integer fiscalYear);
 }
