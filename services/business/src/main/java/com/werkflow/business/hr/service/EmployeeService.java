@@ -1,5 +1,6 @@
 package com.werkflow.business.hr.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.hr.dto.EmployeeRequest;
 import com.werkflow.business.hr.dto.EmployeeResponse;
 import com.werkflow.business.hr.entity.Department;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 
 /**
  * Service for Employee operations
+ * All queries are tenant-scoped via TenantContext
  */
 @Service
 @RequiredArgsConstructor
@@ -29,85 +31,102 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final RoleDisplayService roleDisplayService;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     public List<EmployeeResponse> getAllEmployees() {
-        log.debug("Fetching all employees");
+        String tenantId = getTenantId();
+        log.debug("Fetching all employees for tenant: {}", tenantId);
         return employeeRepository.findAll().stream()
+            .filter(e -> e.getTenantId().equals(tenantId))
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public EmployeeResponse getEmployeeById(Long id) {
-        log.debug("Fetching employee by id: {}", id);
+        String tenantId = getTenantId();
+        log.debug("Fetching employee by id: {} for tenant: {}", id, tenantId);
         Employee employee = employeeRepository.findById(id)
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
         return convertToResponse(employee);
     }
 
     public EmployeeResponse getEmployeeByEmail(String email) {
-        log.debug("Fetching employee by email: {}", email);
-        Employee employee = employeeRepository.findByEmail(email)
+        String tenantId = getTenantId();
+        log.debug("Fetching employee by email: {} for tenant: {}", email, tenantId);
+        Employee employee = employeeRepository.findByTenantIdAndEmail(tenantId, email)
             .orElseThrow(() -> new EntityNotFoundException("Employee not found with email: " + email));
         return convertToResponse(employee);
     }
 
     public EmployeeResponse getEmployeeByKeycloakUserId(String keycloakUserId) {
-        log.debug("Fetching employee by keycloakUserId: {}", keycloakUserId);
-        Employee employee = employeeRepository.findByKeycloakUserId(keycloakUserId)
+        String tenantId = getTenantId();
+        log.debug("Fetching employee by keycloakUserId: {} for tenant: {}", keycloakUserId, tenantId);
+        Employee employee = employeeRepository.findByTenantIdAndKeycloakUserId(tenantId, keycloakUserId)
             .orElseThrow(() -> new EntityNotFoundException(
                 "Employee not found with keycloakUserId: " + keycloakUserId));
         return convertToResponse(employee);
     }
 
     public List<EmployeeResponse> getEmployeesByOrganization(Long orgId) {
-        log.debug("Fetching employees for org: {}", orgId);
-        return employeeRepository.findByOrganizationId(orgId).stream()
+        String tenantId = getTenantId();
+        log.debug("Fetching employees for org: {} in tenant: {}", orgId, tenantId);
+        return employeeRepository.findByTenantIdAndOrganizationId(tenantId, orgId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public List<EmployeeResponse> getEmployeesByDepartment(Long departmentId) {
-        log.debug("Fetching employees for department: {}", departmentId);
-        return employeeRepository.findByDepartmentId(departmentId).stream()
+        String tenantId = getTenantId();
+        log.debug("Fetching employees for department: {} in tenant: {}", departmentId, tenantId);
+        return employeeRepository.findByTenantIdAndDepartmentId(tenantId, departmentId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public List<EmployeeResponse> getEmployeesByDepartmentCode(String code) {
-        log.debug("Fetching employees for department code: {}", code);
-        return employeeRepository.findByDepartmentCode(code).stream()
+        String tenantId = getTenantId();
+        log.debug("Fetching employees for department code: {} in tenant: {}", code, tenantId);
+        return employeeRepository.findByTenantIdAndDepartmentCode(tenantId, code).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public List<EmployeeResponse> getEmployeesByStatus(EmploymentStatus status) {
-        log.debug("Fetching employees by status: {}", status);
-        return employeeRepository.findByEmploymentStatus(status).stream()
+        String tenantId = getTenantId();
+        log.debug("Fetching employees by status: {} in tenant: {}", status, tenantId);
+        return employeeRepository.findByTenantIdAndEmploymentStatus(tenantId, status).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public List<EmployeeResponse> searchEmployees(String searchTerm) {
-        log.debug("Searching employees with term: {}", searchTerm);
-        return employeeRepository.searchEmployees(searchTerm).stream()
+        String tenantId = getTenantId();
+        log.debug("Searching employees for term: {} in tenant: {}", searchTerm, tenantId);
+        return employeeRepository.searchEmployeesByTenant(tenantId, searchTerm).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     @Transactional
     public EmployeeResponse createEmployee(EmployeeRequest request) {
-        log.info("Creating new employee: {}", request.getEmail());
+        String tenantId = getTenantId();
+        log.info("Creating new employee: {} in tenant: {}", request.getEmail(), tenantId);
 
-        if (employeeRepository.existsByEmail(request.getEmail())) {
+        if (employeeRepository.existsByTenantIdAndEmail(tenantId, request.getEmail())) {
             throw new IllegalArgumentException("Email already exists: " + request.getEmail());
         }
         if (request.getKeycloakUserId() != null
-                && employeeRepository.existsByKeycloakUserId(request.getKeycloakUserId())) {
+                && employeeRepository.existsByTenantIdAndKeycloakUserId(tenantId, request.getKeycloakUserId())) {
             throw new IllegalArgumentException(
                 "Keycloak user already linked: " + request.getKeycloakUserId());
         }
 
-        Employee employee = convertToEntity(request);
+        Employee employee = convertToEntity(request, tenantId);
         Employee savedEmployee = employeeRepository.save(employee);
         log.info("Employee created successfully with id: {}", savedEmployee.getId());
         return convertToResponse(savedEmployee);
@@ -115,17 +134,19 @@ public class EmployeeService {
 
     @Transactional
     public EmployeeResponse updateEmployee(Long id, EmployeeRequest request) {
-        log.info("Updating employee with id: {}", id);
+        String tenantId = getTenantId();
+        log.info("Updating employee {} in tenant: {}", id, tenantId);
 
         Employee employee = employeeRepository.findById(id)
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
 
         if (!request.getEmail().equals(employee.getEmail())
-                && employeeRepository.existsByEmail(request.getEmail())) {
+                && employeeRepository.existsByTenantIdAndEmail(tenantId, request.getEmail())) {
             throw new IllegalArgumentException("Email already exists: " + request.getEmail());
         }
 
-        updateEntityFromRequest(employee, request);
+        updateEntityFromRequest(employee, request, tenantId);
         Employee updatedEmployee = employeeRepository.save(employee);
         log.info("Employee updated successfully: {}", id);
         return convertToResponse(updatedEmployee);
@@ -133,24 +154,28 @@ public class EmployeeService {
 
     @Transactional
     public void deleteEmployee(Long id) {
-        log.info("Deleting employee with id: {}", id);
+        String tenantId = getTenantId();
+        log.info("Deleting employee {} in tenant: {}", id, tenantId);
         Employee employee = employeeRepository.findById(id)
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
         employeeRepository.delete(employee);
         log.info("Employee deleted successfully: {}", id);
     }
 
-    private Employee convertToEntity(EmployeeRequest request) {
+    private Employee convertToEntity(EmployeeRequest request, String tenantId) {
         Department department = null;
         if (request.getDepartmentId() != null) {
             department = departmentRepository.findById(request.getDepartmentId())
+                .filter(d -> d.getTenantId().equals(tenantId))
                 .orElseThrow(() -> new EntityNotFoundException(
                     "Department not found with id: " + request.getDepartmentId()));
         }
 
-        validateDeptHeadUniqueness(request.getDepartmentCode(), request.getDoaLevel(), null);
+        validateDeptHeadUniqueness(tenantId, request.getDepartmentCode(), request.getDoaLevel(), null);
 
         return Employee.builder()
+            .tenantId(tenantId)
             .organizationId(request.getOrganizationId())
             .keycloakUserId(request.getKeycloakUserId())
             .firstName(request.getFirstName())
@@ -170,10 +195,10 @@ public class EmployeeService {
             .build();
     }
 
-    private void updateEntityFromRequest(Employee employee, EmployeeRequest request) {
+    private void updateEntityFromRequest(Employee employee, EmployeeRequest request, String tenantId) {
         // Department head uniqueness: only check if doaLevel is changing to 2
         if (request.getDoaLevel() != null && request.getDoaLevel() == 2) {
-            validateDeptHeadUniqueness(request.getDepartmentCode(), request.getDoaLevel(), employee.getId());
+            validateDeptHeadUniqueness(tenantId, request.getDepartmentCode(), request.getDoaLevel(), employee.getId());
         }
 
         employee.setOrganizationId(request.getOrganizationId());
@@ -194,6 +219,7 @@ public class EmployeeService {
 
         if (request.getDepartmentId() != null) {
             Department department = departmentRepository.findById(request.getDepartmentId())
+                .filter(d -> d.getTenantId().equals(tenantId))
                 .orElseThrow(() -> new EntityNotFoundException(
                     "Department not found with id: " + request.getDepartmentId()));
             employee.setDepartment(department);
@@ -203,14 +229,14 @@ public class EmployeeService {
     }
 
     /**
-     * Enforces at most one department_head (doaLevel=2) per department code.
+     * Enforces at most one department_head (doaLevel=2) per department code within a tenant.
      * Pass currentEmployeeId to exclude the employee being updated from the check.
      */
-    private void validateDeptHeadUniqueness(String departmentCode, Integer doaLevel, Long currentEmployeeId) {
+    private void validateDeptHeadUniqueness(String tenantId, String departmentCode, Integer doaLevel, Long currentEmployeeId) {
         if (doaLevel != null && doaLevel == 2 && departmentCode != null) {
             boolean headExists = currentEmployeeId == null
-                ? employeeRepository.existsByDepartmentCodeAndDoaLevel(departmentCode, 2)
-                : employeeRepository.existsByDepartmentCodeAndDoaLevelAndIdNot(departmentCode, 2, currentEmployeeId);
+                ? employeeRepository.existsByTenantIdAndDepartmentCodeAndDoaLevel(tenantId, departmentCode, 2)
+                : employeeRepository.existsByTenantIdAndDepartmentCodeAndDoaLevelAndIdNot(tenantId, departmentCode, 2, currentEmployeeId);
             if (headExists) {
                 throw new IllegalStateException(
                     "A department head already exists for department: " + departmentCode);
@@ -219,8 +245,10 @@ public class EmployeeService {
     }
 
     public Map<String, String> getRoleDisplay(Long id, List<String> keycloakRoles) {
-        log.debug("Getting role display for employee {} with roles: {}", id, keycloakRoles);
+        String tenantId = getTenantId();
+        log.debug("Getting role display for employee {} in tenant: {} with roles: {}", id, tenantId, keycloakRoles);
         Employee employee = employeeRepository.findById(id)
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Employee not found: " + id));
 
         String displayRole = roleDisplayService.getDisplayRole(keycloakRoles, employee.getDepartmentCode());

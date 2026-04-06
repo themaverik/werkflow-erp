@@ -1,5 +1,6 @@
 package com.werkflow.business.hr.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.hr.dto.PayrollRequest;
 import com.werkflow.business.hr.dto.PayrollResponse;
 import com.werkflow.business.hr.entity.Employee;
@@ -24,28 +25,43 @@ public class PayrollService {
 
     private final PayrollRepository payrollRepository;
     private final EmployeeRepository employeeRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     public List<PayrollResponse> getAllPayrolls() {
+        String tenantId = getTenantId();
+        log.debug("Fetching all payrolls for tenant: {}", tenantId);
         return payrollRepository.findAll().stream()
+            .filter(p -> p.getTenantId().equals(tenantId))
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public PayrollResponse getPayrollById(Long id) {
+        String tenantId = getTenantId();
+        log.debug("Fetching payroll by id: {} for tenant: {}", id, tenantId);
         Payroll payroll = payrollRepository.findById(id)
+            .filter(p -> p.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Payroll not found"));
         return convertToResponse(payroll);
     }
 
     public List<PayrollResponse> getPayrollsByEmployee(Long employeeId) {
-        return payrollRepository.findByEmployeeIdOrderByPaymentDateDesc(employeeId)
+        String tenantId = getTenantId();
+        log.debug("Fetching payrolls for employee: {} in tenant: {}", employeeId, tenantId);
+        return payrollRepository.findByTenantIdAndEmployeeIdOrderByPaymentDateDesc(tenantId, employeeId)
             .stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public List<PayrollResponse> getPayrollsByMonthYear(Integer month, Integer year) {
-        return payrollRepository.findByMonthAndYear(month, year)
+        String tenantId = getTenantId();
+        log.debug("Fetching payrolls for month: {} year: {} in tenant: {}", month, year, tenantId);
+        return payrollRepository.findByTenantIdAndMonthAndYear(tenantId, month, year)
             .stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
@@ -53,18 +69,21 @@ public class PayrollService {
 
     @Transactional
     public PayrollResponse createPayroll(PayrollRequest request) {
-        log.info("Creating payroll for employee: {}", request.getEmployeeId());
+        String tenantId = getTenantId();
+        log.info("Creating payroll for employee: {} in tenant: {}", request.getEmployeeId(), tenantId);
 
         Employee employee = employeeRepository.findById(request.getEmployeeId())
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
 
         // Check if payroll already exists for this month/year
-        if (payrollRepository.existsByEmployeeIdAndPaymentMonthAndPaymentYear(
-            request.getEmployeeId(), request.getPaymentMonth(), request.getPaymentYear())) {
+        if (payrollRepository.existsByTenantIdAndEmployeeIdAndPaymentMonthAndPaymentYear(
+            tenantId, request.getEmployeeId(), request.getPaymentMonth(), request.getPaymentYear())) {
             throw new IllegalStateException("Payroll already exists for this month/year");
         }
 
         Payroll payroll = Payroll.builder()
+            .tenantId(tenantId)
             .employee(employee)
             .paymentMonth(request.getPaymentMonth())
             .paymentYear(request.getPaymentYear())
@@ -87,7 +106,11 @@ public class PayrollService {
 
     @Transactional
     public PayrollResponse updatePayroll(Long id, PayrollRequest request) {
+        String tenantId = getTenantId();
+        log.info("Updating payroll {} in tenant: {}", id, tenantId);
+
         Payroll payroll = payrollRepository.findById(id)
+            .filter(p -> p.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Payroll not found"));
 
         payroll.setPaymentDate(request.getPaymentDate());

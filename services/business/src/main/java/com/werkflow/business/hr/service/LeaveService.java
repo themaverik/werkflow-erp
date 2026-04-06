@@ -1,5 +1,6 @@
 package com.werkflow.business.hr.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.hr.dto.LeaveRequest;
 import com.werkflow.business.hr.dto.LeaveResponse;
 import com.werkflow.business.hr.entity.Employee;
@@ -25,46 +26,64 @@ public class LeaveService {
 
     private final LeaveRepository leaveRepository;
     private final EmployeeRepository employeeRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     public List<LeaveResponse> getAllLeaves() {
+        String tenantId = getTenantId();
+        log.debug("Fetching all leaves for tenant: {}", tenantId);
         return leaveRepository.findAll().stream()
+            .filter(l -> l.getTenantId().equals(tenantId))
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public LeaveResponse getLeaveById(Long id) {
+        String tenantId = getTenantId();
+        log.debug("Fetching leave by id: {} for tenant: {}", id, tenantId);
         Leave leave = leaveRepository.findById(id)
+            .filter(l -> l.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Leave not found with id: " + id));
         return convertToResponse(leave);
     }
 
     public List<LeaveResponse> getLeavesByEmployee(Long employeeId) {
-        return leaveRepository.findByEmployeeId(employeeId).stream()
+        String tenantId = getTenantId();
+        log.debug("Fetching leaves for employee: {} in tenant: {}", employeeId, tenantId);
+        return leaveRepository.findByTenantIdAndEmployeeId(tenantId, employeeId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public List<LeaveResponse> getLeavesByStatus(LeaveStatus status) {
-        return leaveRepository.findByStatus(status).stream()
+        String tenantId = getTenantId();
+        log.debug("Fetching leaves by status: {} in tenant: {}", status, tenantId);
+        return leaveRepository.findByTenantIdAndStatus(tenantId, status).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     @Transactional
     public LeaveResponse createLeave(LeaveRequest request) {
-        log.info("Creating leave request for employee: {}", request.getEmployeeId());
+        String tenantId = getTenantId();
+        log.info("Creating leave request for employee: {} in tenant: {}", request.getEmployeeId(), tenantId);
 
         Employee employee = employeeRepository.findById(request.getEmployeeId())
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
 
         // Check for overlapping leaves
-        List<Leave> overlapping = leaveRepository.findOverlappingLeaves(
-            request.getEmployeeId(), request.getStartDate(), request.getEndDate());
+        List<Leave> overlapping = leaveRepository.findByTenantIdAndEmployeeIdAndOverlappingDates(
+            tenantId, request.getEmployeeId(), request.getStartDate(), request.getEndDate());
         if (!overlapping.isEmpty()) {
             throw new IllegalStateException("Leave request overlaps with existing leave");
         }
 
         Leave leave = Leave.builder()
+            .tenantId(tenantId)
             .employee(employee)
             .leaveType(request.getLeaveType())
             .startDate(request.getStartDate())
@@ -81,7 +100,11 @@ public class LeaveService {
 
     @Transactional
     public LeaveResponse updateLeave(Long id, LeaveRequest request) {
+        String tenantId = getTenantId();
+        log.info("Updating leave {} in tenant: {}", id, tenantId);
+
         Leave leave = leaveRepository.findById(id)
+            .filter(l -> l.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Leave not found"));
 
         leave.setLeaveType(request.getLeaveType());
@@ -95,10 +118,15 @@ public class LeaveService {
 
     @Transactional
     public LeaveResponse approveLeave(Long id, Long approverId, String remarks) {
+        String tenantId = getTenantId();
+        log.info("Approving leave {} in tenant: {}", id, tenantId);
+
         Leave leave = leaveRepository.findById(id)
+            .filter(l -> l.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Leave not found"));
 
         Employee approver = employeeRepository.findById(approverId)
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Approver not found"));
 
         leave.setStatus(LeaveStatus.APPROVED);
@@ -111,10 +139,15 @@ public class LeaveService {
 
     @Transactional
     public LeaveResponse rejectLeave(Long id, Long approverId, String remarks) {
+        String tenantId = getTenantId();
+        log.info("Rejecting leave {} in tenant: {}", id, tenantId);
+
         Leave leave = leaveRepository.findById(id)
+            .filter(l -> l.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Leave not found"));
 
         Employee approver = employeeRepository.findById(approverId)
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Approver not found"));
 
         leave.setStatus(LeaveStatus.REJECTED);
@@ -127,7 +160,14 @@ public class LeaveService {
 
     @Transactional
     public void deleteLeave(Long id) {
-        leaveRepository.deleteById(id);
+        String tenantId = getTenantId();
+        log.info("Deleting leave {} in tenant: {}", id, tenantId);
+
+        Leave leave = leaveRepository.findById(id)
+            .filter(l -> l.getTenantId().equals(tenantId))
+            .orElseThrow(() -> new EntityNotFoundException("Leave not found"));
+
+        leaveRepository.delete(leave);
     }
 
     private LeaveResponse convertToResponse(Leave leave) {

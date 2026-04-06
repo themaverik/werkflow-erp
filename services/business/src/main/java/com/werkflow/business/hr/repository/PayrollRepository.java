@@ -16,38 +16,101 @@ import java.util.Optional;
 @Repository
 public interface PayrollRepository extends JpaRepository<Payroll, Long> {
 
+    // Tenant-scoped methods (NEW)
+    List<Payroll> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
+                                              @Param("employeeId") Long employeeId);
+
+    Optional<Payroll> findByTenantIdAndEmployeeIdAndPaymentMonthAndPaymentYear(@Param("tenantId") String tenantId,
+                                                                                @Param("employeeId") Long employeeId,
+                                                                                @Param("paymentMonth") Integer month,
+                                                                                @Param("paymentYear") Integer year);
+
+    @Query("SELECT p FROM Payroll p WHERE p.tenantId = :tenantId AND p.employee.id = :employeeId " +
+           "ORDER BY p.paymentYear DESC, p.paymentMonth DESC")
+    List<Payroll> findByTenantIdAndEmployeeIdOrderByPaymentDateDesc(@Param("tenantId") String tenantId,
+                                                                     @Param("employeeId") Long employeeId);
+
+    @Query("SELECT p FROM Payroll p WHERE p.tenantId = :tenantId AND p.paymentMonth = :month AND p.paymentYear = :year")
+    List<Payroll> findByTenantIdAndMonthAndYear(@Param("tenantId") String tenantId,
+                                                @Param("month") Integer month,
+                                                @Param("year") Integer year);
+
+    @Query("SELECT p FROM Payroll p WHERE p.tenantId = :tenantId AND p.paymentDate BETWEEN :startDate AND :endDate")
+    List<Payroll> findByTenantIdAndPaymentDateBetween(@Param("tenantId") String tenantId,
+                                                      @Param("startDate") LocalDate startDate,
+                                                      @Param("endDate") LocalDate endDate);
+
+    List<Payroll> findByTenantIdAndIsPaid(@Param("tenantId") String tenantId,
+                                          @Param("isPaid") Boolean isPaid);
+
+    @Query("SELECT p FROM Payroll p WHERE p.tenantId = :tenantId AND p.employee.department.id = :departmentId " +
+           "AND p.paymentMonth = :month AND p.paymentYear = :year")
+    List<Payroll> findByTenantIdAndDepartmentAndMonthYear(@Param("tenantId") String tenantId,
+                                                          @Param("departmentId") Long departmentId,
+                                                          @Param("month") Integer month,
+                                                          @Param("year") Integer year);
+
+    @Query("SELECT SUM(p.netSalary) FROM Payroll p WHERE p.tenantId = :tenantId AND p.paymentMonth = :month " +
+           "AND p.paymentYear = :year AND p.isPaid = true")
+    Double getTotalPaidSalaryByTenantAndMonthYear(@Param("tenantId") String tenantId,
+                                                  @Param("month") Integer month,
+                                                  @Param("year") Integer year);
+
+    @Query("SELECT SUM(p.netSalary) FROM Payroll p WHERE p.tenantId = :tenantId AND p.employee.department.id = :departmentId " +
+           "AND p.paymentMonth = :month AND p.paymentYear = :year")
+    Double getTotalSalaryByTenantAndDepartmentAndMonthYear(@Param("tenantId") String tenantId,
+                                                           @Param("departmentId") Long departmentId,
+                                                           @Param("month") Integer month,
+                                                           @Param("year") Integer year);
+
+    boolean existsByTenantIdAndEmployeeIdAndPaymentMonthAndPaymentYear(@Param("tenantId") String tenantId,
+                                                                        @Param("employeeId") Long employeeId,
+                                                                        @Param("paymentMonth") Integer month,
+                                                                        @Param("paymentYear") Integer year);
+
+    // Legacy methods (kept for backward compatibility, but deprecated)
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<Payroll> findByEmployeeId(Long employeeId);
 
+    @Deprecated(forRemoval = false, since = "1.0.0")
     Optional<Payroll> findByEmployeeIdAndPaymentMonthAndPaymentYear(Long employeeId, Integer month, Integer year);
 
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT p FROM Payroll p WHERE p.employee.id = :employeeId " +
            "ORDER BY p.paymentYear DESC, p.paymentMonth DESC")
     List<Payroll> findByEmployeeIdOrderByPaymentDateDesc(@Param("employeeId") Long employeeId);
 
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT p FROM Payroll p WHERE p.paymentMonth = :month AND p.paymentYear = :year")
     List<Payroll> findByMonthAndYear(@Param("month") Integer month, @Param("year") Integer year);
 
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT p FROM Payroll p WHERE p.paymentDate BETWEEN :startDate AND :endDate")
     List<Payroll> findByPaymentDateBetween(@Param("startDate") LocalDate startDate,
                                            @Param("endDate") LocalDate endDate);
 
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<Payroll> findByIsPaid(Boolean isPaid);
 
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT p FROM Payroll p WHERE p.employee.department.id = :departmentId " +
            "AND p.paymentMonth = :month AND p.paymentYear = :year")
     List<Payroll> findByDepartmentAndMonthYear(@Param("departmentId") Long departmentId,
                                                @Param("month") Integer month,
                                                @Param("year") Integer year);
 
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT SUM(p.netSalary) FROM Payroll p WHERE p.paymentMonth = :month " +
            "AND p.paymentYear = :year AND p.isPaid = true")
     Double getTotalPaidSalaryByMonthYear(@Param("month") Integer month, @Param("year") Integer year);
 
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT SUM(p.netSalary) FROM Payroll p WHERE p.employee.department.id = :departmentId " +
            "AND p.paymentMonth = :month AND p.paymentYear = :year")
     Double getTotalSalaryByDepartmentAndMonthYear(@Param("departmentId") Long departmentId,
                                                    @Param("month") Integer month,
                                                    @Param("year") Integer year);
 
+    @Deprecated(forRemoval = false, since = "1.0.0")
     boolean existsByEmployeeIdAndPaymentMonthAndPaymentYear(Long employeeId, Integer month, Integer year);
 }

@@ -1,5 +1,6 @@
 package com.werkflow.business.hr.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.hr.dto.PerformanceReviewRequest;
 import com.werkflow.business.hr.dto.PerformanceReviewResponse;
 import com.werkflow.business.hr.entity.Employee;
@@ -24,21 +25,34 @@ public class PerformanceReviewService {
 
     private final PerformanceReviewRepository reviewRepository;
     private final EmployeeRepository employeeRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     public List<PerformanceReviewResponse> getAllReviews() {
+        String tenantId = getTenantId();
+        log.debug("Fetching all performance reviews for tenant: {}", tenantId);
         return reviewRepository.findAll().stream()
+            .filter(r -> r.getTenantId().equals(tenantId))
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public PerformanceReviewResponse getReviewById(Long id) {
+        String tenantId = getTenantId();
+        log.debug("Fetching performance review by id: {} for tenant: {}", id, tenantId);
         PerformanceReview review = reviewRepository.findById(id)
+            .filter(r -> r.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Performance review not found"));
         return convertToResponse(review);
     }
 
     public List<PerformanceReviewResponse> getReviewsByEmployee(Long employeeId) {
-        return reviewRepository.findByEmployeeIdOrderByReviewDateDesc(employeeId)
+        String tenantId = getTenantId();
+        log.debug("Fetching performance reviews for employee: {} in tenant: {}", employeeId, tenantId);
+        return reviewRepository.findByTenantIdAndEmployeeIdOrderByReviewDateDesc(tenantId, employeeId)
             .stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
@@ -46,15 +60,19 @@ public class PerformanceReviewService {
 
     @Transactional
     public PerformanceReviewResponse createReview(PerformanceReviewRequest request) {
-        log.info("Creating performance review for employee: {}", request.getEmployeeId());
+        String tenantId = getTenantId();
+        log.info("Creating performance review for employee: {} in tenant: {}", request.getEmployeeId(), tenantId);
 
         Employee employee = employeeRepository.findById(request.getEmployeeId())
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
 
         Employee reviewer = employeeRepository.findById(request.getReviewerId())
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Reviewer not found"));
 
         PerformanceReview review = PerformanceReview.builder()
+            .tenantId(tenantId)
             .employee(employee)
             .reviewDate(request.getReviewDate())
             .reviewPeriodStart(request.getReviewPeriodStart())
@@ -76,7 +94,11 @@ public class PerformanceReviewService {
 
     @Transactional
     public PerformanceReviewResponse updateReview(Long id, PerformanceReviewRequest request) {
+        String tenantId = getTenantId();
+        log.info("Updating performance review {} in tenant: {}", id, tenantId);
+
         PerformanceReview review = reviewRepository.findById(id)
+            .filter(r -> r.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Performance review not found"));
 
         review.setReviewDate(request.getReviewDate());
@@ -94,7 +116,11 @@ public class PerformanceReviewService {
 
     @Transactional
     public PerformanceReviewResponse acknowledgeReview(Long id) {
+        String tenantId = getTenantId();
+        log.info("Acknowledging performance review {} in tenant: {}", id, tenantId);
+
         PerformanceReview review = reviewRepository.findById(id)
+            .filter(r -> r.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Performance review not found"));
 
         review.setEmployeeAcknowledged(true);

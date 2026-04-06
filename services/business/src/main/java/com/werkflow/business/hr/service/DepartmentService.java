@@ -1,5 +1,6 @@
 package com.werkflow.business.hr.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.hr.dto.DepartmentRequest;
 import com.werkflow.business.hr.dto.DepartmentResponse;
 import com.werkflow.business.hr.entity.Department;
@@ -15,6 +16,7 @@ import java.util.stream.Collectors;
 
 /**
  * Service for Department operations
+ * All queries are tenant-scoped via TenantContext
  */
 @Service
 @RequiredArgsConstructor
@@ -23,54 +25,67 @@ import java.util.stream.Collectors;
 public class DepartmentService {
 
     private final DepartmentRepository departmentRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     public List<DepartmentResponse> getAllDepartments() {
-        log.debug("Fetching all departments");
+        String tenantId = getTenantId();
+        log.debug("Fetching all departments for tenant: {}", tenantId);
         return departmentRepository.findAll().stream()
+            .filter(d -> d.getTenantId().equals(tenantId))
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public DepartmentResponse getDepartmentById(Long id) {
-        log.debug("Fetching department by id: {}", id);
+        String tenantId = getTenantId();
+        log.debug("Fetching department by id: {} for tenant: {}", id, tenantId);
         Department department = departmentRepository.findById(id)
+            .filter(d -> d.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Department not found with id: " + id));
         return convertToResponse(department);
     }
 
     public DepartmentResponse getDepartmentByCode(String code) {
-        log.debug("Fetching department by code: {}", code);
-        Department department = departmentRepository.findByCode(code)
+        String tenantId = getTenantId();
+        log.debug("Fetching department by code: {} for tenant: {}", code, tenantId);
+        Department department = departmentRepository.findByTenantIdAndCode(tenantId, code)
             .orElseThrow(() -> new EntityNotFoundException("Department not found with code: " + code));
         return convertToResponse(department);
     }
 
     public List<DepartmentResponse> getActiveDepartments() {
-        log.debug("Fetching active departments");
-        return departmentRepository.findByIsActive(true).stream()
+        String tenantId = getTenantId();
+        log.debug("Fetching active departments for tenant: {}", tenantId);
+        return departmentRepository.findByTenantIdAndIsActive(tenantId, true).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     public List<DepartmentResponse> getDepartmentsByOrganization(Long organizationId) {
-        log.debug("Fetching departments for organization: {}", organizationId);
-        return departmentRepository.findByOrganizationId(organizationId).stream()
+        String tenantId = getTenantId();
+        log.debug("Fetching departments for organization: {} in tenant: {}", organizationId, tenantId);
+        return departmentRepository.findByTenantIdAndOrganizationId(tenantId, organizationId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }
 
     @Transactional
     public DepartmentResponse createDepartment(DepartmentRequest request) {
-        log.info("Creating new department: {}", request.getName());
+        String tenantId = getTenantId();
+        log.info("Creating new department: {} in tenant: {}", request.getName(), tenantId);
 
-        if (departmentRepository.existsByCodeAndOrganizationId(request.getCode(), request.getOrganizationId())) {
+        if (departmentRepository.existsByTenantIdAndCodeAndOrganizationId(tenantId, request.getCode(), request.getOrganizationId())) {
             throw new IllegalArgumentException("Department code already exists in this organization: " + request.getCode());
         }
-        if (departmentRepository.existsByNameAndOrganizationId(request.getName(), request.getOrganizationId())) {
+        if (departmentRepository.existsByTenantIdAndNameAndOrganizationId(tenantId, request.getName(), request.getOrganizationId())) {
             throw new IllegalArgumentException("Department name already exists in this organization: " + request.getName());
         }
 
-        Department department = convertToEntity(request);
+        Department department = convertToEntity(request, tenantId);
         Department savedDepartment = departmentRepository.save(department);
         log.info("Department created successfully with id: {}", savedDepartment.getId());
         return convertToResponse(savedDepartment);
@@ -78,21 +93,23 @@ public class DepartmentService {
 
     @Transactional
     public DepartmentResponse updateDepartment(Long id, DepartmentRequest request) {
-        log.info("Updating department with id: {}", id);
+        String tenantId = getTenantId();
+        log.info("Updating department {} in tenant: {}", id, tenantId);
 
         Department department = departmentRepository.findById(id)
+            .filter(d -> d.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Department not found with id: " + id));
 
         if (!request.getCode().equals(department.getCode())
-            && departmentRepository.existsByCodeAndOrganizationId(request.getCode(), request.getOrganizationId())) {
+            && departmentRepository.existsByTenantIdAndCodeAndOrganizationId(tenantId, request.getCode(), request.getOrganizationId())) {
             throw new IllegalArgumentException("Department code already exists in this organization: " + request.getCode());
         }
         if (!request.getName().equals(department.getName())
-            && departmentRepository.existsByNameAndOrganizationId(request.getName(), request.getOrganizationId())) {
+            && departmentRepository.existsByTenantIdAndNameAndOrganizationId(tenantId, request.getName(), request.getOrganizationId())) {
             throw new IllegalArgumentException("Department name already exists in this organization: " + request.getName());
         }
 
-        updateEntityFromRequest(department, request);
+        updateEntityFromRequest(department, request, tenantId);
         Department updatedDepartment = departmentRepository.save(department);
         log.info("Department updated successfully: {}", id);
         return convertToResponse(updatedDepartment);
@@ -100,16 +117,19 @@ public class DepartmentService {
 
     @Transactional
     public void deleteDepartment(Long id) {
-        log.info("Deactivating department with id: {}", id);
+        String tenantId = getTenantId();
+        log.info("Deactivating department {} in tenant: {}", id, tenantId);
         Department department = departmentRepository.findById(id)
+            .filter(d -> d.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Department not found with id: " + id));
         department.setIsActive(false);
         departmentRepository.save(department);
         log.info("Department deactivated successfully: {}", id);
     }
 
-    private Department convertToEntity(DepartmentRequest request) {
+    private Department convertToEntity(DepartmentRequest request, String tenantId) {
         return Department.builder()
+            .tenantId(tenantId)
             .name(request.getName())
             .code(request.getCode())
             .organizationId(request.getOrganizationId())
@@ -121,7 +141,7 @@ public class DepartmentService {
             .build();
     }
 
-    private void updateEntityFromRequest(Department department, DepartmentRequest request) {
+    private void updateEntityFromRequest(Department department, DepartmentRequest request, String tenantId) {
         department.setName(request.getName());
         department.setCode(request.getCode());
         department.setOrganizationId(request.getOrganizationId());
