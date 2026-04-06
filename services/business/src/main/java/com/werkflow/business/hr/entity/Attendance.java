@@ -29,6 +29,10 @@ import java.time.LocalTime;
 @Builder
 public class Attendance extends BaseEntity {
 
+    @NotNull(message = "Tenant ID is required")
+    @Column(name = "tenant_id", nullable = false, length = 255)
+    private String tenantId;
+
     @NotNull(message = "Employee is required")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)

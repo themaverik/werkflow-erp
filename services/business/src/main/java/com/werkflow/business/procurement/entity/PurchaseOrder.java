@@ -26,6 +26,9 @@ public class PurchaseOrder {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "tenant_id", nullable = false, length = 255)
+    private String tenantId;
+
     @Column(name = "po_number", unique = true, nullable = false, length = 50)
     private String poNumber;
 

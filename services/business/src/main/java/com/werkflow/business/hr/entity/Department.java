@@ -29,6 +29,10 @@ public class Department extends BaseEntity {
     @Column(name = "code", nullable = false, length = 50)
     private String code;
 
+    @NotNull(message = "Tenant ID is required")
+    @Column(name = "tenant_id", nullable = false, length = 255)
+    private String tenantId;
+
     @NotNull(message = "Organization ID is required")
     @Column(name = "organization_id", nullable = false)
     private Long organizationId;

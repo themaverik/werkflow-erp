@@ -25,6 +25,9 @@ public class ApprovalThreshold {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "tenant_id", nullable = false, length = 255)
+    private String tenantId;
+
     @Column(name = "min_amount", nullable = false, precision = 15, scale = 2)
     private BigDecimal minAmount;
 
