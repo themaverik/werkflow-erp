@@ -11,6 +11,8 @@ import java.util.List;
 @Repository
 public interface BudgetLineItemRepository extends JpaRepository<BudgetLineItem, Long> {
 
+    List<BudgetLineItem> findByTenantId(String tenantId);
+
     List<BudgetLineItem> findByBudgetPlanId(Long budgetPlanId);
 
     List<BudgetLineItem> findByCategoryId(Long categoryId);

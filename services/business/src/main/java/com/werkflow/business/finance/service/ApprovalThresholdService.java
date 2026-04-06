@@ -1,11 +1,13 @@
 package com.werkflow.business.finance.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.finance.dto.ApprovalThresholdRequest;
 import com.werkflow.business.finance.dto.ApprovalThresholdResponse;
 import com.werkflow.business.finance.entity.ApprovalThreshold;
 import com.werkflow.business.finance.repository.ApprovalThresholdRepository;
 import com.werkflow.business.finance.repository.BudgetCategoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,12 +16,26 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ApprovalThresholdService {
     private final ApprovalThresholdRepository thresholdRepository;
     private final BudgetCategoryRepository categoryRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     @Transactional(readOnly = true)
     public List<ApprovalThresholdResponse> getAllThresholds() {
+        String tenantId = getTenantId();
+        log.debug("Fetching all approval thresholds for tenant: {}", tenantId);
+        return thresholdRepository.findByTenantId(tenantId).stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Deprecated
+    @Transactional(readOnly = true)
+    public List<ApprovalThresholdResponse> getAllThresholdsUnscoped() {
         return thresholdRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
     }
 

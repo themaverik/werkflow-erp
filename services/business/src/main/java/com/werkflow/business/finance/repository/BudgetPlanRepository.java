@@ -14,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface BudgetPlanRepository extends JpaRepository<BudgetPlan, Long> {
 
+    List<BudgetPlan> findByTenantId(String tenantId);
+
     List<BudgetPlan> findByDepartmentId(Long departmentId);
 
     List<BudgetPlan> findByDepartmentIdAndStatus(Long departmentId, BudgetStatus status);

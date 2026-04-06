@@ -1,5 +1,6 @@
 package com.werkflow.business.finance.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.finance.dto.BudgetCategoryRequest;
 import com.werkflow.business.finance.dto.BudgetCategoryResponse;
 import com.werkflow.business.finance.entity.BudgetCategory;
@@ -18,9 +19,24 @@ import java.util.stream.Collectors;
 public class BudgetCategoryService {
 
     private final BudgetCategoryRepository categoryRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     @Transactional(readOnly = true)
     public List<BudgetCategoryResponse> getAllCategories() {
+        String tenantId = getTenantId();
+        log.debug("Fetching all budget categories for tenant: {}", tenantId);
+        return categoryRepository.findByTenantId(tenantId).stream()
+            .map(this::toResponse)
+            .collect(Collectors.toList());
+    }
+
+    @Deprecated
+    @Transactional(readOnly = true)
+    public List<BudgetCategoryResponse> getAllCategoriesUnscoped() {
         return categoryRepository.findAll().stream()
             .map(this::toResponse)
             .collect(Collectors.toList());

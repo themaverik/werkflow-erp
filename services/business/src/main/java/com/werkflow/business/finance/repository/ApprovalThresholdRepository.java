@@ -13,6 +13,8 @@ import java.util.Optional;
 @Repository
 public interface ApprovalThresholdRepository extends JpaRepository<ApprovalThreshold, Long> {
 
+    List<ApprovalThreshold> findByTenantId(String tenantId);
+
     List<ApprovalThreshold> findByActiveTrue();
 
     List<ApprovalThreshold> findByDepartmentId(Long departmentId);

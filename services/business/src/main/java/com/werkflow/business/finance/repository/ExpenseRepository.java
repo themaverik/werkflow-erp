@@ -14,6 +14,8 @@ import java.util.List;
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
+    List<Expense> findByTenantId(String tenantId);
+
     List<Expense> findByDepartmentId(Long departmentId);
 
     List<Expense> findBySubmittedByUserId(Long userId);

@@ -1,10 +1,12 @@
 package com.werkflow.business.finance.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.finance.dto.BudgetPlanRequest;
 import com.werkflow.business.finance.dto.BudgetPlanResponse;
 import com.werkflow.business.finance.entity.BudgetPlan;
 import com.werkflow.business.finance.repository.BudgetPlanRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,11 +16,25 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BudgetPlanService {
     private final BudgetPlanRepository budgetPlanRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     @Transactional(readOnly = true)
     public List<BudgetPlanResponse> getAllBudgetPlans() {
+        String tenantId = getTenantId();
+        log.debug("Fetching all budget plans for tenant: {}", tenantId);
+        return budgetPlanRepository.findByTenantId(tenantId).stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Deprecated
+    @Transactional(readOnly = true)
+    public List<BudgetPlanResponse> getAllBudgetPlansUnscoped() {
         return budgetPlanRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
     }
 

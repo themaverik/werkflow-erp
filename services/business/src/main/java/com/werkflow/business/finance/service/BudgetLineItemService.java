@@ -1,5 +1,6 @@
 package com.werkflow.business.finance.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.finance.dto.BudgetLineItemRequest;
 import com.werkflow.business.finance.dto.BudgetLineItemResponse;
 import com.werkflow.business.finance.entity.BudgetLineItem;
@@ -7,6 +8,7 @@ import com.werkflow.business.finance.repository.BudgetLineItemRepository;
 import com.werkflow.business.finance.repository.BudgetPlanRepository;
 import com.werkflow.business.finance.repository.BudgetCategoryRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,10 +18,24 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BudgetLineItemService {
     private final BudgetLineItemRepository lineItemRepository;
     private final BudgetPlanRepository budgetPlanRepository;
     private final BudgetCategoryRepository categoryRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
+
+    @Transactional(readOnly = true)
+    public List<BudgetLineItemResponse> getAllLineItems() {
+        String tenantId = getTenantId();
+        log.debug("Fetching all budget line items for tenant: {}", tenantId);
+        return lineItemRepository.findByTenantId(tenantId).stream()
+            .map(this::toResponse).collect(Collectors.toList());
+    }
 
     @Transactional(readOnly = true)
     public List<BudgetLineItemResponse> getLineItemsByBudgetPlan(Long budgetPlanId) {

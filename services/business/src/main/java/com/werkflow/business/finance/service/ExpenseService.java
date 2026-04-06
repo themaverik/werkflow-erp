@@ -1,5 +1,6 @@
 package com.werkflow.business.finance.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.finance.dto.ExpenseRequest;
 import com.werkflow.business.finance.dto.ExpenseResponse;
 import com.werkflow.business.finance.entity.Expense;
@@ -7,6 +8,7 @@ import com.werkflow.business.finance.repository.ExpenseRepository;
 import com.werkflow.business.finance.repository.BudgetCategoryRepository;
 import com.werkflow.business.finance.repository.BudgetLineItemRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,13 +17,27 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final BudgetCategoryRepository categoryRepository;
     private final BudgetLineItemRepository lineItemRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     @Transactional(readOnly = true)
     public List<ExpenseResponse> getAllExpenses() {
+        String tenantId = getTenantId();
+        log.debug("Fetching all expenses for tenant: {}", tenantId);
+        return expenseRepository.findByTenantId(tenantId).stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Deprecated
+    @Transactional(readOnly = true)
+    public List<ExpenseResponse> getAllExpensesUnscoped() {
         return expenseRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
     }
 

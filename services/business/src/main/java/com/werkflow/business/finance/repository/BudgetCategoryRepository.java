@@ -12,6 +12,8 @@ import java.util.Optional;
 @Repository
 public interface BudgetCategoryRepository extends JpaRepository<BudgetCategory, Long> {
 
+    List<BudgetCategory> findByTenantId(String tenantId);
+
     Optional<BudgetCategory> findByCode(String code);
 
     List<BudgetCategory> findByActiveTrue();
