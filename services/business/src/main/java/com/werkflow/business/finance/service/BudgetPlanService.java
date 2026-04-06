@@ -70,6 +70,44 @@ public class BudgetPlanService {
         return toResponse(budgetPlanRepository.save(plan));
     }
 
+    @Transactional
+    public BudgetPlanResponse updateBudgetPlan(Long id, BudgetPlanRequest request) {
+        String tenantId = getTenantId();
+        log.debug("Updating budget plan with id: {} for tenant: {}", id, tenantId);
+        BudgetPlan plan = budgetPlanRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("BudgetPlan not found with id: " + id));
+        if (!plan.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to update this BudgetPlan");
+        }
+
+        plan.setDepartmentId(request.getDepartmentId());
+        plan.setFiscalYear(request.getFiscalYear());
+        plan.setPeriodStart(request.getPeriodStart());
+        plan.setPeriodEnd(request.getPeriodEnd());
+        plan.setTotalAmount(request.getTotalAmount());
+        if (request.getStatus() != null) {
+            plan.setStatus(request.getStatus());
+        }
+        plan.setNotes(request.getNotes());
+
+        BudgetPlan updated = budgetPlanRepository.save(plan);
+        log.info("Updated budget plan: {}", id);
+        return toResponse(updated);
+    }
+
+    @Transactional
+    public void deleteBudgetPlan(Long id) {
+        String tenantId = getTenantId();
+        log.debug("Deleting budget plan with id: {} for tenant: {}", id, tenantId);
+        BudgetPlan plan = budgetPlanRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("BudgetPlan not found with id: " + id));
+        if (!plan.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to delete this BudgetPlan");
+        }
+        budgetPlanRepository.deleteById(id);
+        log.info("Deleted budget plan: {}", id);
+    }
+
     private BudgetPlanResponse toResponse(BudgetPlan plan) {
         return BudgetPlanResponse.builder()
             .id(plan.getId())
