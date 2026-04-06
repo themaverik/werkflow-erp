@@ -12,83 +12,98 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository for TransferRequest entity
+ * Repository for TransferRequest entity.
+ * Tenant-scoped query methods follow the pattern established in Tasks 4-6.
  */
 @Repository
 public interface TransferRequestRepository extends JpaRepository<TransferRequest, Long> {
 
-    /**
-     * Find transfer requests by asset instance
-     */
+    // Tenant-scoped methods
+    List<TransferRequest> findByTenantId(String tenantId);
+
+    List<TransferRequest> findByTenantIdAndStatus(String tenantId, String status);
+
+    @Query("SELECT tr FROM TransferRequest tr WHERE tr.tenantId = :tenantId AND tr.status = 'PENDING'")
+    List<TransferRequest> findPendingRequestsForTenant(@Param("tenantId") String tenantId);
+
+    List<TransferRequest> findByTenantIdAndFromDeptId(String tenantId, Long fromDeptId);
+
+    List<TransferRequest> findByTenantIdAndToDeptId(String tenantId, Long toDeptId);
+
+    List<TransferRequest> findByTenantIdAndFromDeptIdAndStatus(String tenantId, Long fromDeptId, String status);
+
+    List<TransferRequest> findByTenantIdAndToDeptIdAndStatus(String tenantId, Long toDeptId, String status);
+
+    List<TransferRequest> findByTenantIdAndInitiatedByUserId(String tenantId, Long userId);
+
+    List<TransferRequest> findByTenantIdAndTransferType(String tenantId, String transferType);
+
+    @Query("SELECT tr FROM TransferRequest tr WHERE tr.tenantId = :tenantId " +
+           "AND tr.transferType = 'INTER_DEPARTMENT' AND tr.status != 'CANCELLED'")
+    List<TransferRequest> findActiveInterDepartmentTransfersForTenant(@Param("tenantId") String tenantId);
+
+    @Query("SELECT tr FROM TransferRequest tr WHERE tr.tenantId = :tenantId " +
+           "AND tr.transferType = 'LOAN' AND tr.status = 'COMPLETED'")
+    List<TransferRequest> findActiveLoanRequestsForTenant(@Param("tenantId") String tenantId);
+
+    @Query("SELECT tr FROM TransferRequest tr WHERE tr.tenantId = :tenantId " +
+           "AND tr.transferType = 'LOAN' AND tr.expectedReturnDate <= :currentDate AND tr.status = 'APPROVED'")
+    List<TransferRequest> findOverdueLoansForTenant(@Param("tenantId") String tenantId,
+                                                    @Param("currentDate") LocalDateTime currentDate);
+
+    @Query("SELECT tr FROM TransferRequest tr WHERE tr.tenantId = :tenantId AND " +
+           "(LOWER(tr.transferReason) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
+           "OR tr.assetInstance.assetTag LIKE CONCAT('%', :searchTerm, '%'))")
+    List<TransferRequest> searchTransfersForTenant(@Param("tenantId") String tenantId,
+                                                   @Param("searchTerm") String searchTerm);
+
+    List<TransferRequest> findByTenantIdAndAssetInstance(String tenantId, AssetInstance assetInstance);
+
+    // Legacy unscoped methods
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<TransferRequest> findByAssetInstance(AssetInstance assetInstance);
 
-    /**
-     * Find transfer requests by status
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<TransferRequest> findByStatus(String status);
 
-    /**
-     * Find pending transfer requests
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT tr FROM TransferRequest tr WHERE tr.status = 'PENDING'")
     List<TransferRequest> findPendingRequests();
 
-    /**
-     * Find transfer requests by from department
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<TransferRequest> findByFromDeptId(Long fromDeptId);
 
-    /**
-     * Find transfer requests by to department
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<TransferRequest> findByToDeptId(Long toDeptId);
 
-    /**
-     * Find transfer requests by from department and status
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<TransferRequest> findByFromDeptIdAndStatus(Long fromDeptId, String status);
 
-    /**
-     * Find transfer requests by to department and status
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<TransferRequest> findByToDeptIdAndStatus(Long toDeptId, String status);
 
-    /**
-     * Find transfer requests by initiated user
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<TransferRequest> findByInitiatedByUserId(Long userId);
 
-    /**
-     * Find transfer requests by transfer type
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<TransferRequest> findByTransferType(String transferType);
 
-    /**
-     * Find inter-department transfers
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT tr FROM TransferRequest tr WHERE tr.transferType = 'INTER_DEPARTMENT' AND tr.status != 'CANCELLED'")
     List<TransferRequest> findActiveInterDepartmentTransfers();
 
-    /**
-     * Find loans that need to be returned
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT tr FROM TransferRequest tr WHERE tr.transferType = 'LOAN' AND tr.status = 'COMPLETED'")
     List<TransferRequest> findActiveLoanRequests();
 
-    /**
-     * Find overdue loans
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT tr FROM TransferRequest tr WHERE tr.transferType = 'LOAN' AND tr.expectedReturnDate <= :currentDate AND tr.status = 'APPROVED'")
     List<TransferRequest> findOverdueLoans(@Param("currentDate") LocalDateTime currentDate);
 
-    /**
-     * Find transfer requests by workflow instance ID
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     Optional<TransferRequest> findByProcessInstanceId(String processInstanceId);
 
-    /**
-     * Search transfer requests
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT tr FROM TransferRequest tr WHERE " +
            "LOWER(tr.transferReason) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR tr.assetInstance.assetTag LIKE CONCAT('%', :searchTerm, '%')")
