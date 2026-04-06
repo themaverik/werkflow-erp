@@ -131,7 +131,14 @@ public class PerformanceReviewService {
 
     @Transactional
     public void deleteReview(Long id) {
-        reviewRepository.deleteById(id);
+        String tenantId = getTenantId();
+        log.info("Deleting review {} in tenant: {}", id, tenantId);
+
+        PerformanceReview review = reviewRepository.findById(id)
+            .filter(r -> r.getTenantId().equals(tenantId))
+            .orElseThrow(() -> new EntityNotFoundException("PerformanceReview not found with id: " + id));
+
+        reviewRepository.delete(review);
     }
 
     private PerformanceReviewResponse convertToResponse(PerformanceReview review) {

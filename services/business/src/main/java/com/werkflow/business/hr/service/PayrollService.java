@@ -128,8 +128,12 @@ public class PayrollService {
 
     @Transactional
     public PayrollResponse markAsPaid(Long id) {
+        String tenantId = getTenantId();
+        log.info("Marking payroll {} as paid for tenant: {}", id, tenantId);
+
         Payroll payroll = payrollRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Payroll not found"));
+            .filter(p -> p.getTenantId().equals(tenantId))
+            .orElseThrow(() -> new EntityNotFoundException("Payroll not found with id: " + id));
 
         payroll.setIsPaid(true);
         return convertToResponse(payrollRepository.save(payroll));
@@ -137,7 +141,14 @@ public class PayrollService {
 
     @Transactional
     public void deletePayroll(Long id) {
-        payrollRepository.deleteById(id);
+        String tenantId = getTenantId();
+        log.info("Deleting payroll {} in tenant: {}", id, tenantId);
+
+        Payroll payroll = payrollRepository.findById(id)
+            .filter(p -> p.getTenantId().equals(tenantId))
+            .orElseThrow(() -> new EntityNotFoundException("Payroll not found with id: " + id));
+
+        payrollRepository.delete(payroll);
     }
 
     private PayrollResponse convertToResponse(Payroll payroll) {
