@@ -15,6 +15,8 @@ public interface BudgetLineItemRepository extends JpaRepository<BudgetLineItem, 
 
     List<BudgetLineItem> findByBudgetPlanId(Long budgetPlanId);
 
+    List<BudgetLineItem> findByBudgetPlanIdAndTenantId(Long budgetPlanId, String tenantId);
+
     List<BudgetLineItem> findByCategoryId(Long categoryId);
 
     @Query("SELECT bli FROM BudgetLineItem bli " +

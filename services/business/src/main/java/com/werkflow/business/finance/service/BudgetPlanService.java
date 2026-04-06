@@ -5,8 +5,10 @@ import com.werkflow.business.finance.dto.BudgetPlanRequest;
 import com.werkflow.business.finance.dto.BudgetPlanResponse;
 import com.werkflow.business.finance.entity.BudgetPlan;
 import com.werkflow.business.finance.repository.BudgetPlanRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,13 +42,20 @@ public class BudgetPlanService {
 
     @Transactional(readOnly = true)
     public BudgetPlanResponse getBudgetPlanById(Long id) {
-        return budgetPlanRepository.findById(id).map(this::toResponse)
-            .orElseThrow(() -> new RuntimeException("Budget plan not found: " + id));
+        String tenantId = getTenantId();
+        BudgetPlan plan = budgetPlanRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("BudgetPlan not found with id: " + id));
+        if (!plan.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this BudgetPlan");
+        }
+        return toResponse(plan);
     }
 
     @Transactional
     public BudgetPlanResponse createBudgetPlan(BudgetPlanRequest request) {
+        String tenantId = getTenantId();
         BudgetPlan plan = BudgetPlan.builder()
+            .tenantId(tenantId)
             .departmentId(request.getDepartmentId())
             .fiscalYear(request.getFiscalYear())
             .periodStart(request.getPeriodStart())

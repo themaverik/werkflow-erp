@@ -7,8 +7,10 @@ import com.werkflow.business.finance.entity.Expense;
 import com.werkflow.business.finance.repository.ExpenseRepository;
 import com.werkflow.business.finance.repository.BudgetCategoryRepository;
 import com.werkflow.business.finance.repository.BudgetLineItemRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,16 +45,26 @@ public class ExpenseService {
 
     @Transactional(readOnly = true)
     public ExpenseResponse getExpenseById(Long id) {
-        return expenseRepository.findById(id).map(this::toResponse)
-            .orElseThrow(() -> new RuntimeException("Expense not found: " + id));
+        String tenantId = getTenantId();
+        Expense expense = expenseRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Expense not found with id: " + id));
+        if (!expense.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this Expense");
+        }
+        return toResponse(expense);
     }
 
     @Transactional
     public ExpenseResponse createExpense(ExpenseRequest request) {
+        String tenantId = getTenantId();
         var category = categoryRepository.findById(request.getCategoryId())
-            .orElseThrow(() -> new RuntimeException("Category not found"));
+            .orElseThrow(() -> new EntityNotFoundException("BudgetCategory not found with id: " + request.getCategoryId()));
+        if (!category.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this BudgetCategory");
+        }
 
         Expense expense = Expense.builder()
+            .tenantId(tenantId)
             .departmentId(request.getDepartmentId())
             .expenseDate(request.getExpenseDate())
             .amount(request.getAmount())
@@ -67,7 +79,10 @@ public class ExpenseService {
 
         if (request.getBudgetLineItemId() != null) {
             var lineItem = lineItemRepository.findById(request.getBudgetLineItemId())
-                .orElseThrow(() -> new RuntimeException("Budget line item not found"));
+                .orElseThrow(() -> new EntityNotFoundException("BudgetLineItem not found with id: " + request.getBudgetLineItemId()));
+            if (!lineItem.getTenantId().equals(tenantId)) {
+                throw new AccessDeniedException("Not authorized to access this BudgetLineItem");
+            }
             expense.setBudgetLineItem(lineItem);
         }
 

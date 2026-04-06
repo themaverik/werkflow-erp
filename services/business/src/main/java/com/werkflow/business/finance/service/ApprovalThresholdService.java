@@ -6,8 +6,10 @@ import com.werkflow.business.finance.dto.ApprovalThresholdResponse;
 import com.werkflow.business.finance.entity.ApprovalThreshold;
 import com.werkflow.business.finance.repository.ApprovalThresholdRepository;
 import com.werkflow.business.finance.repository.BudgetCategoryRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,9 +41,22 @@ public class ApprovalThresholdService {
         return thresholdRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
+    public ApprovalThresholdResponse getThresholdById(Long id) {
+        String tenantId = getTenantId();
+        ApprovalThreshold threshold = thresholdRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("ApprovalThreshold not found with id: " + id));
+        if (!threshold.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this ApprovalThreshold");
+        }
+        return toResponse(threshold);
+    }
+
     @Transactional
     public ApprovalThresholdResponse createThreshold(ApprovalThresholdRequest request) {
+        String tenantId = getTenantId();
         ApprovalThreshold threshold = ApprovalThreshold.builder()
+            .tenantId(tenantId)
             .departmentId(request.getDepartmentId())
             .minAmount(request.getMinAmount())
             .maxAmount(request.getMaxAmount())
@@ -52,7 +67,10 @@ public class ApprovalThresholdService {
 
         if (request.getCategoryId() != null) {
             var category = categoryRepository.findById(request.getCategoryId())
-                .orElseThrow(() -> new RuntimeException("Category not found"));
+                .orElseThrow(() -> new EntityNotFoundException("BudgetCategory not found with id: " + request.getCategoryId()));
+            if (!category.getTenantId().equals(tenantId)) {
+                throw new AccessDeniedException("Not authorized to access this BudgetCategory");
+            }
             threshold.setCategory(category);
         }
 

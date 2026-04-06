@@ -4,11 +4,14 @@ import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.finance.dto.BudgetLineItemRequest;
 import com.werkflow.business.finance.dto.BudgetLineItemResponse;
 import com.werkflow.business.finance.entity.BudgetLineItem;
+import com.werkflow.business.finance.entity.BudgetPlan;
 import com.werkflow.business.finance.repository.BudgetLineItemRepository;
 import com.werkflow.business.finance.repository.BudgetPlanRepository;
 import com.werkflow.business.finance.repository.BudgetCategoryRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,18 +42,32 @@ public class BudgetLineItemService {
 
     @Transactional(readOnly = true)
     public List<BudgetLineItemResponse> getLineItemsByBudgetPlan(Long budgetPlanId) {
-        return lineItemRepository.findByBudgetPlanId(budgetPlanId).stream()
+        String tenantId = getTenantId();
+        BudgetPlan plan = budgetPlanRepository.findById(budgetPlanId)
+            .orElseThrow(() -> new EntityNotFoundException("BudgetPlan not found with id: " + budgetPlanId));
+        if (!plan.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this BudgetPlan");
+        }
+        return lineItemRepository.findByBudgetPlanIdAndTenantId(budgetPlanId, tenantId).stream()
             .map(this::toResponse).collect(Collectors.toList());
     }
 
     @Transactional
     public BudgetLineItemResponse createLineItem(BudgetLineItemRequest request) {
+        String tenantId = getTenantId();
         var budgetPlan = budgetPlanRepository.findById(request.getBudgetPlanId())
-            .orElseThrow(() -> new RuntimeException("Budget plan not found"));
+            .orElseThrow(() -> new EntityNotFoundException("BudgetPlan not found with id: " + request.getBudgetPlanId()));
+        if (!budgetPlan.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this BudgetPlan");
+        }
         var category = categoryRepository.findById(request.getCategoryId())
-            .orElseThrow(() -> new RuntimeException("Category not found"));
+            .orElseThrow(() -> new EntityNotFoundException("BudgetCategory not found with id: " + request.getCategoryId()));
+        if (!category.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this BudgetCategory");
+        }
 
         BudgetLineItem lineItem = BudgetLineItem.builder()
+            .tenantId(tenantId)
             .budgetPlan(budgetPlan)
             .category(category)
             .description(request.getDescription())
