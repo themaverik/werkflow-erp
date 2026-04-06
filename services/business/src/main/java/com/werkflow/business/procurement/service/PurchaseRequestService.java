@@ -24,6 +24,14 @@ import java.util.stream.Collectors;
 /**
  * Service for PurchaseRequest operations.
  * All queries are tenant-scoped via TenantContext.
+ *
+ * <p>Cross-domain FK validation (vendor, budget, department) is NOT performed here.
+ * {@code requestingDeptId} and {@code requesterUserId} are stored as opaque Long values —
+ * the caller is trusted to supply valid IDs from their respective domains.
+ * Full cross-domain validation is tracked under Roadmap P0.4 (CrossDomainValidator).
+ *
+ * <p>Tenant isolation IS enforced: read, update, and delete operations verify
+ * that the requested PurchaseRequest belongs to the current tenant.
  */
 @Service
 @RequiredArgsConstructor
