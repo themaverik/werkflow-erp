@@ -12,6 +12,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class TenantContext {
 
+    /**
+     * Static ThreadLocal storage for tenant ID.
+     * Static ensures all instances of TenantContext share the same ThreadLocal,
+     * which is required for proper request-scoped tenant isolation.
+     */
     private static final ThreadLocal<String> tenantIdHolder = new ThreadLocal<>();
 
     /**
@@ -42,19 +47,18 @@ public class TenantContext {
      * Looks for "organization_id" claim in JWT
      */
     public String extractTenantIdFromJwt(Jwt jwt) {
-        Object orgId = jwt.getClaim("organization_id");
+        String orgId = jwt.getClaimAsString("organization_id");
         if (orgId == null) {
             throw new IllegalArgumentException("JWT claim 'organization_id' not found");
         }
-        return (String) orgId;
+        return orgId;
     }
 
     /**
      * Extract tenant ID from current Authentication
      */
     public String extractTenantIdFromAuthentication(Authentication authentication) {
-        if (authentication instanceof JwtAuthenticationToken) {
-            JwtAuthenticationToken jwtAuth = (JwtAuthenticationToken) authentication;
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
             Jwt jwt = (Jwt) jwtAuth.getPrincipal();
             return extractTenantIdFromJwt(jwt);
         }

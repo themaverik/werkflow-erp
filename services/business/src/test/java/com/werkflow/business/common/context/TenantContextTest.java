@@ -79,4 +79,52 @@ class TenantContextTest {
         String tenantId = tenantContext.extractTenantIdFromAuthentication(auth);
         assertEquals("acme-corp", tenantId);
     }
+
+    @Test
+    void testSetTenantIdNullThrows() {
+        assertThrows(IllegalArgumentException.class, () -> tenantContext.setTenantId(null));
+    }
+
+    @Test
+    void testExtractFromAuthenticationThrowsWhenNotJwt() {
+        Authentication nonJwtAuth = new Authentication() {
+            @Override
+            public String getName() {
+                return "test-user";
+            }
+
+            @Override
+            public java.util.Collection<? extends GrantedAuthority> getAuthorities() {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public Object getCredentials() {
+                return null;
+            }
+
+            @Override
+            public Object getDetails() {
+                return null;
+            }
+
+            @Override
+            public Object getPrincipal() {
+                return "test-principal";
+            }
+
+            @Override
+            public boolean isAuthenticated() {
+                return true;
+            }
+
+            @Override
+            public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
+            }
+        };
+
+        assertThrows(IllegalArgumentException.class,
+            () -> tenantContext.extractTenantIdFromAuthentication(nonJwtAuth));
+    }
+
 }
