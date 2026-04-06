@@ -58,7 +58,13 @@ class TenantContextFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         MockHttpServletResponse response = new MockHttpServletResponse();
 
-        // Doable test: verify filter calls doFilter
+        // Use doAnswer to capture what happens during filter chain
+        doAnswer(invocation -> {
+            // Inside the filter chain, tenantId should be set
+            assertEquals("acme-corp", tenantContext.getTenantId());
+            return null;
+        }).when(filterChain).doFilter(request, response);
+
         filter.doFilter(request, response, filterChain);
 
         // Verify filterChain was called
@@ -86,5 +92,57 @@ class TenantContextFilterTest {
 
         // Attempt to get tenantId after filter should throw
         assertThrows(IllegalStateException.class, () -> tenantContext.getTenantId());
+    }
+
+    @Test
+    void testFilterProceededWhenExtractionFails() throws ServletException, IOException {
+        // Create authentication that will cause extraction to fail
+        Authentication failingAuth = mock(Authentication.class);
+        when(failingAuth.isAuthenticated()).thenReturn(true);
+        // This will throw because it's not a JwtAuthenticationToken
+
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(failingAuth);
+        SecurityContextHolder.setContext(context);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        // Filter should still call doFilter even if extraction fails
+        filter.doFilter(request, response, filterChain);
+
+        // Verify filterChain was called despite extraction failure
+        verify(filterChain).doFilter(request, response);
+
+        // After filter completes, tenantContext should be cleared (no exception thrown)
+        assertThrows(IllegalStateException.class, () -> tenantContext.getTenantId());
+    }
+
+    @Test
+    void testShouldNotFilterActuatorPaths() throws ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/actuator/health");
+        assertTrue(filter.shouldNotFilter(request));
+    }
+
+    @Test
+    void testShouldNotFilterSwaggerPaths() throws ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/swagger-ui/index.html");
+        assertTrue(filter.shouldNotFilter(request));
+    }
+
+    @Test
+    void testShouldNotFilterApiDocsPaths() throws ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/v3/api-docs");
+        assertTrue(filter.shouldNotFilter(request));
+    }
+
+    @Test
+    void testShouldFilterNormalApiPaths() throws ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/api/v1/employees");
+        assertFalse(filter.shouldNotFilter(request));
     }
 }

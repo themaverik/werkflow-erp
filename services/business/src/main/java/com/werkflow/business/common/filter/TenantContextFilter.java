@@ -15,8 +15,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 /**
- * Filter that extracts tenantId from JWT and stores in TenantContext (ThreadLocal)
- * Must be registered in SecurityFilterChain after authentication filters
+ * Servlet filter for extracting and storing tenant ID in request scope.
+ *
+ * The injected TenantContext bean has a static ThreadLocal field.
+ * While this may seem contradictory, it is intentional: the static ThreadLocal ensures
+ * that all Spring-injected instances of TenantContext share the same storage, which is
+ * required for proper request-scoped tenant isolation across the application.
+ *
+ * Do not attempt to change TenantContext to request-scoped (@Scope("request"))
+ * as this would break the shared ThreadLocal design.
+ *
+ * Must be registered in SecurityFilterChain after authentication filters.
  */
 @Component
 @RequiredArgsConstructor
@@ -37,7 +46,7 @@ public class TenantContextFilter extends OncePerRequestFilter {
                 try {
                     String tenantId = tenantContext.extractTenantIdFromAuthentication(authentication);
                     tenantContext.setTenantId(tenantId);
-                    log.debug("Set tenant context to: {}", tenantId);
+                    log.debug("Tenant context set successfully");
                 } catch (Exception e) {
                     log.warn("Failed to extract tenant ID from authentication: {}", e.getMessage());
                     // If tenantId extraction fails, request is rejected by SecurityConfig anyway
