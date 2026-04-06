@@ -18,6 +18,8 @@ import java.util.Optional;
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     // Tenant-scoped methods (NEW)
+    List<Attendance> findByTenantId(@Param("tenantId") String tenantId);
+
     Optional<Attendance> findByTenantIdAndEmployeeIdAndAttendanceDate(@Param("tenantId") String tenantId,
                                                                       @Param("employeeId") Long employeeId,
                                                                       @Param("attendanceDate") LocalDate attendanceDate);

@@ -35,8 +35,7 @@ public class LeaveService {
     public List<LeaveResponse> getAllLeaves() {
         String tenantId = getTenantId();
         log.debug("Fetching all leaves for tenant: {}", tenantId);
-        return leaveRepository.findAll().stream()
-            .filter(l -> l.getTenantId().equals(tenantId))
+        return leaveRepository.findByTenantId(tenantId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }

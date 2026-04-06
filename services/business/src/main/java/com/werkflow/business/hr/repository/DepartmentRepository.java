@@ -16,6 +16,8 @@ import java.util.Optional;
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     // Tenant-scoped methods (NEW)
+    List<Department> findByTenantId(@Param("tenantId") String tenantId);
+
     Optional<Department> findByTenantIdAndCode(@Param("tenantId") String tenantId,
                                                @Param("code") String code);
 

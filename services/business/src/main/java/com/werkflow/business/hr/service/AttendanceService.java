@@ -34,8 +34,7 @@ public class AttendanceService {
     public List<AttendanceResponse> getAllAttendances() {
         String tenantId = getTenantId();
         log.debug("Fetching all attendances for tenant: {}", tenantId);
-        return attendanceRepository.findAll().stream()
-            .filter(a -> a.getTenantId().equals(tenantId))
+        return attendanceRepository.findByTenantId(tenantId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }

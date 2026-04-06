@@ -17,6 +17,8 @@ import java.util.Optional;
 public interface PayrollRepository extends JpaRepository<Payroll, Long> {
 
     // Tenant-scoped methods (NEW)
+    List<Payroll> findByTenantId(@Param("tenantId") String tenantId);
+
     List<Payroll> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
                                               @Param("employeeId") Long employeeId);
 

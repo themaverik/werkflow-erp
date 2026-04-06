@@ -18,6 +18,8 @@ import java.util.Optional;
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     // Tenant-scoped methods (NEW)
+    List<Employee> findByTenantId(@Param("tenantId") String tenantId);
+
     Optional<Employee> findByTenantIdAndEmail(@Param("tenantId") String tenantId,
                                               @Param("email") String email);
 

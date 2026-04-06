@@ -40,8 +40,7 @@ public class EmployeeService {
     public List<EmployeeResponse> getAllEmployees() {
         String tenantId = getTenantId();
         log.debug("Fetching all employees for tenant: {}", tenantId);
-        return employeeRepository.findAll().stream()
-            .filter(e -> e.getTenantId().equals(tenantId))
+        return employeeRepository.findByTenantId(tenantId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }

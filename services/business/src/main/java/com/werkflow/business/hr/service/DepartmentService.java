@@ -34,8 +34,7 @@ public class DepartmentService {
     public List<DepartmentResponse> getAllDepartments() {
         String tenantId = getTenantId();
         log.debug("Fetching all departments for tenant: {}", tenantId);
-        return departmentRepository.findAll().stream()
-            .filter(d -> d.getTenantId().equals(tenantId))
+        return departmentRepository.findByTenantId(tenantId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }

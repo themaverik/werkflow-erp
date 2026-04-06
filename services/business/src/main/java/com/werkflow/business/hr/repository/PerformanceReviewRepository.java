@@ -17,6 +17,8 @@ import java.util.List;
 public interface PerformanceReviewRepository extends JpaRepository<PerformanceReview, Long> {
 
     // Tenant-scoped methods (NEW)
+    List<PerformanceReview> findByTenantId(@Param("tenantId") String tenantId);
+
     List<PerformanceReview> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
                                                         @Param("employeeId") Long employeeId);
 

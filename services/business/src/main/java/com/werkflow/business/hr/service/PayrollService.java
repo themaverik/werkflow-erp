@@ -34,8 +34,7 @@ public class PayrollService {
     public List<PayrollResponse> getAllPayrolls() {
         String tenantId = getTenantId();
         log.debug("Fetching all payrolls for tenant: {}", tenantId);
-        return payrollRepository.findAll().stream()
-            .filter(p -> p.getTenantId().equals(tenantId))
+        return payrollRepository.findByTenantId(tenantId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }

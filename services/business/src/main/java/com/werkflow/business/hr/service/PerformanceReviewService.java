@@ -34,8 +34,7 @@ public class PerformanceReviewService {
     public List<PerformanceReviewResponse> getAllReviews() {
         String tenantId = getTenantId();
         log.debug("Fetching all performance reviews for tenant: {}", tenantId);
-        return reviewRepository.findAll().stream()
-            .filter(r -> r.getTenantId().equals(tenantId))
+        return reviewRepository.findByTenantId(tenantId).stream()
             .map(this::convertToResponse)
             .collect(Collectors.toList());
     }

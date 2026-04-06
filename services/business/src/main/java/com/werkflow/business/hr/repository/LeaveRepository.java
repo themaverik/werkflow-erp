@@ -18,6 +18,8 @@ import java.util.List;
 public interface LeaveRepository extends JpaRepository<Leave, Long> {
 
     // Tenant-scoped methods (NEW)
+    List<Leave> findByTenantId(@Param("tenantId") String tenantId);
+
     List<Leave> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
                                             @Param("employeeId") Long employeeId);
 
