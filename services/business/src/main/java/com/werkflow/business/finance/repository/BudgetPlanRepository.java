@@ -22,6 +22,8 @@ public interface BudgetPlanRepository extends JpaRepository<BudgetPlan, Long> {
 
     Optional<BudgetPlan> findByDepartmentIdAndFiscalYear(Long departmentId, Integer fiscalYear);
 
+    Optional<BudgetPlan> findByDepartmentIdAndFiscalYearAndTenantId(Long departmentId, Integer fiscalYear, String tenantId);
+
     List<BudgetPlan> findByFiscalYear(Integer fiscalYear);
 
     List<BudgetPlan> findByStatus(BudgetStatus status);

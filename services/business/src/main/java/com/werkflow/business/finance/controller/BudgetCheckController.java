@@ -1,5 +1,6 @@
 package com.werkflow.business.finance.controller;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.finance.dto.BudgetCheckRequest;
 import com.werkflow.business.finance.dto.BudgetCheckResponse;
 import com.werkflow.business.finance.service.BudgetCheckService;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class BudgetCheckController {
 
     private final BudgetCheckService budgetCheckService;
+    private final TenantContext tenantContext;
 
     @PostMapping("/check")
     @Operation(
@@ -33,8 +35,8 @@ public class BudgetCheckController {
     public ResponseEntity<BudgetCheckResponse> checkBudgetAvailability(
             @Valid @RequestBody BudgetCheckRequest request) {
 
-        log.info("Received budget check request - Department: {}, Amount: {}, Cost Center: {}",
-                request.getDepartmentId(), request.getAmount(), request.getCostCenter());
+        log.info("Received budget check request - Tenant: {}, Department: {}, Amount: {}, Cost Center: {}",
+                tenantContext.getTenantId(), request.getDepartmentId(), request.getAmount(), request.getCostCenter());
 
         BudgetCheckResponse response = budgetCheckService.checkBudgetAvailability(request);
 
