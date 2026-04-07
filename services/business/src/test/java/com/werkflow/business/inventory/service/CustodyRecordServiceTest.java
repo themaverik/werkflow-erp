@@ -20,8 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.springframework.security.access.AccessDeniedException;
+
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -123,5 +124,66 @@ class CustodyRecordServiceTest {
         assertEquals(CustodyRecord.CustodyType.PERMANENT, response.getCustodyType());
         assertEquals(FIXED_DATE, response.getStartDate());
         assertEquals("ASSET-001", response.getAssetInstance().getAssetTag());
+
+        // Verify asset stub was correctly configured for tenant isolation check
+        assertEquals(TENANT_ID, response.getAssetInstance().getTenantId());
+
+        verify(custodyRepository).save(any(CustodyRecord.class));
+    }
+
+    @Test
+    void createCustodyRecord_withAssetFromDifferentTenant_throwsAccessDeniedException() {
+        // Given: asset exists but belongs to a different tenant
+        AssetInstance assetFromOtherTenant = AssetInstance.builder()
+            .id(1L)
+            .tenantId("OTHER_TENANT")
+            .assetTag("ASSET-001")
+            .build();
+
+        CustodyRecord record = CustodyRecord.builder()
+            .assetInstance(assetFromOtherTenant)
+            .custodianDeptId(1L)
+            .custodyType(CustodyRecord.CustodyType.PERMANENT)
+            .startDate(FIXED_DATE)
+            .build();
+
+        when(tenantContext.getTenantId()).thenReturn(TENANT_ID);
+        when(assetRepository.findById(1L)).thenReturn(Optional.of(assetFromOtherTenant));
+
+        // When/Then: should throw AccessDeniedException
+        AccessDeniedException exception = assertThrows(
+            AccessDeniedException.class,
+            () -> custodyRecordService.createCustodyRecord(record)
+        );
+
+        assertTrue(exception.getMessage().contains("does not belong"));
+    }
+
+    @Test
+    void createCustodyRecord_withNonExistentAsset_throwsEntityNotFoundException() {
+        // Given: asset does not exist
+        AssetInstance assetStub = AssetInstance.builder()
+            .id(1L)
+            .tenantId(TENANT_ID)
+            .assetTag("ASSET-001")
+            .build();
+
+        CustodyRecord record = CustodyRecord.builder()
+            .assetInstance(assetStub)
+            .custodianDeptId(1L)
+            .custodyType(CustodyRecord.CustodyType.PERMANENT)
+            .startDate(FIXED_DATE)
+            .build();
+
+        when(tenantContext.getTenantId()).thenReturn(TENANT_ID);
+        when(assetRepository.findById(1L)).thenReturn(Optional.empty());
+
+        // When/Then: should throw EntityNotFoundException
+        EntityNotFoundException exception = assertThrows(
+            EntityNotFoundException.class,
+            () -> custodyRecordService.createCustodyRecord(record)
+        );
+
+        assertTrue(exception.getMessage().contains("Asset instance not found"));
     }
 }
