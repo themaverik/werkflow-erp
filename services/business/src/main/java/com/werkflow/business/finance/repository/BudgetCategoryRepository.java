@@ -14,6 +14,8 @@ public interface BudgetCategoryRepository extends JpaRepository<BudgetCategory, 
 
     List<BudgetCategory> findByTenantId(String tenantId);
 
+    Optional<BudgetCategory> findByIdAndTenantId(Long id, String tenantId);
+
     Optional<BudgetCategory> findByCode(String code);
 
     List<BudgetCategory> findByActiveTrue();
