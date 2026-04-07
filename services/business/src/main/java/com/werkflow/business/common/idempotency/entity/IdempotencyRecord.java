@@ -3,7 +3,6 @@ package com.werkflow.business.common.idempotency.entity;
 import com.werkflow.business.hr.entity.BaseEntity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 /**
@@ -25,12 +24,16 @@ import lombok.*;
 )
 @Getter
 @Setter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class IdempotencyRecord extends BaseEntity {
 
-    @NotNull
+    /**
+     * No @Builder: BaseEntity has no @SuperBuilder, so Lombok @Builder would omit
+     * inherited fields (id, createdAt, etc.). This entity is JPA-managed infrastructure;
+     * use the all-args constructor or JPA directly.
+     */
+    @NotBlank
     @Column(name = "tenant_id", nullable = false, length = 255)
     private String tenantId;
 
