@@ -708,6 +708,38 @@ Body: { id: 123, ... }  ← same response, not 201
 
 **Implementation**: `IdempotencyFilter` intercepts POST/PUT, stores `(idempotencyKey, responseBody, timestamp)` in a `IdempotencyRecord` table, TTL 24 hours.
 
+### Client Discovery: OpenAPI Documentation
+
+**All single-object creation endpoints document idempotency support via OpenAPI annotations:**
+
+```java
+@PostMapping
+@Operation(
+    summary = "Create new purchase request",
+    description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned."
+)
+@PreAuthorize("isAuthenticated()")
+public ResponseEntity<PurchaseRequestResponse> createPurchaseRequest(
+    @Valid @RequestBody PurchaseRequestRequest request,
+    @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
+    return ResponseEntity.status(HttpStatus.CREATED).body(prService.createPurchaseRequest(request));
+}
+```
+
+**Scope**: 22 single-object POST endpoints across 4 domains:
+- **Procurement** (4 endpoints): PurchaseRequest, PurchaseOrder, Receipt, Vendor
+- **Inventory** (7 endpoints): AssetRequest, AssetInstance, CustodyRecord, TransferRequest, MaintenanceRecord, AssetCategory, AssetDefinition
+- **Finance** (5 endpoints): ApprovalThreshold, BudgetCategory, BudgetLineItem, BudgetPlan, Expense
+- **HR** (6 endpoints): Attendance, Department, Employee, Leave, Payroll, PerformanceReview
+
+**Clients can discover idempotency support by:**
+1. Viewing the endpoint's `@Operation` description in Swagger/OpenAPI docs
+2. Checking the `Idempotency-Key` parameter in the request schema
+3. Following the documented behavior pattern (retry with same key = same response, different payload = 409 Conflict)
+
 ---
 
 ## Decision: Multi-Tenancy Scoping
