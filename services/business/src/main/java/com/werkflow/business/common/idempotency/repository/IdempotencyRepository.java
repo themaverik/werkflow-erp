@@ -15,4 +15,8 @@ public interface IdempotencyRepository extends JpaRepository<IdempotencyRecord, 
     @Modifying
     @Transactional
     int deleteByTenantIdAndCreatedAtBefore(String tenantId, LocalDateTime cutoff);
+
+    @Modifying
+    @Transactional
+    long deleteByCreatedAtBefore(LocalDateTime cutoff);
 }

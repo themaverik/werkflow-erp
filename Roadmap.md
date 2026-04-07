@@ -30,9 +30,9 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P0.1.2 COMPLETE ✓ — All Multi-Tenant Isolation Tasks Done
+**Status**: P0.2.1-P0.2.2 COMPLETE ✓ — Idempotency infrastructure ready
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
-**Next Phase**: P0.2 — Idempotency for Safe Retries
+**Next Phase**: P0.2.3 — Document Idempotency-Key header in endpoints
 **Last Commit**: All P0.1.2 tasks committed
 **Branch**: feature/p0-multi-tenancy
 
@@ -102,18 +102,18 @@ Must complete before any production deployment.
   - [x] Completed: 1.5 hours
 
 #### P0.2 — Idempotency for Safe Retries
-- [ ] **P0.2.1** Create `IdempotencyRecord` entity and repository
-  - [ ] Fields: `idempotencyKey (UUID, unique)`, `responseBody (JSON)`, `statusCode (int)`, `createdAt (timestamp)`, `tenantId (FK)`
-  - [ ] Repository: `findByIdempotencyKeyAndTenantId(String key, String tenantId)`
-  - [ ] TTL cleanup: Scheduled task to delete records older than 24 hours
-  - [ ] V22 Flyway migration
+- [x] **P0.2.1** Create `IdempotencyRecord` entity and repository *(commit: 6940637)*
+  - [x] Fields: `idempotencyKey (UUID, unique)`, `responseBody (JSON)`, `statusCode (int)`, `createdAt (timestamp)`, `tenantId (FK)`
+  - [x] Repository: `findByIdempotencyKeyAndTenantId(String key, String tenantId)`
+  - [x] TTL cleanup: Scheduled task to delete records older than 24 hours
+  - [x] V22 Flyway migration
   - [ ] Estimated: 2 hours
 
-- [ ] **P0.2.2** Create `IdempotencyInterceptor` and wire to SecurityFilterChain
-  - [ ] Intercepts POST/PUT requests
-  - [ ] Checks `Idempotency-Key` header
-  - [ ] On duplicate key: return cached response with 200 OK
-  - [ ] On first call: stores response after controller returns
+- [x] **P0.2.2** Create `IdempotencyFilter` and wire to SecurityFilterChain *(includes lazy + scheduled cleanup)* *(commit: 2d8c5e5)*
+  - [x] Intercepts POST/PUT requests
+  - [x] Checks `Idempotency-Key` header
+  - [x] On duplicate key: return cached response with 200 OK
+  - [x] On first call: stores response after controller returns
   - [ ] Estimated: 3 hours
 
 - [ ] **P0.2.3** Update POST/PUT endpoints to include `X-Idempotency-Key` documentation

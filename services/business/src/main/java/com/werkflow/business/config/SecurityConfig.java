@@ -1,6 +1,7 @@
 package com.werkflow.business.config;
 
 import com.werkflow.business.common.filter.TenantContextFilter;
+import com.werkflow.business.common.idempotency.filter.IdempotencyFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,7 +36,9 @@ public class SecurityConfig {
     private String jwkSetUri;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, TenantContextFilter tenantContextFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   TenantContextFilter tenantContextFilter,
+                                                   IdempotencyFilter idempotencyFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -56,7 +59,8 @@ public class SecurityConfig {
                 )
             )
             // Add TenantContextFilter AFTER OAuth2 authentication filters
-            .addFilterAfter(tenantContextFilter, BearerTokenAuthenticationFilter.class);
+            .addFilterAfter(tenantContextFilter, BearerTokenAuthenticationFilter.class)
+            .addFilterAfter(idempotencyFilter, TenantContextFilter.class);
 
         return http.build();
     }
