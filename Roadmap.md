@@ -2,7 +2,7 @@
 
 **Project**: Standalone ERP Data Service for HR, Finance, Procurement, Inventory
 **Status**: Pre-MVP — Extracted from main werkflow platform
-**Last Updated**: 2026-04-07
+**Last Updated**: 2026-04-07 (P0.4 complete)
 **Architecture**: See `docs/ADR-001-Service-Boundary-Architecture.md`
 
 ---
@@ -30,10 +30,10 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P0.1-P0.3 COMPLETE ✓ — Multi-tenancy, idempotency, and processInstanceId pattern ready
+**Status**: P0.1-P0.4 COMPLETE ✓ — Multi-tenancy, idempotency, processInstanceId, and cross-domain FK validation ready
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
-**Next Phase**: P0.4 — Cross-Domain FK Validation
-**Last Commit**: All P0.3 tasks committed
+**Next Phase**: P0.5 — API Versioning (/api/v1)
+**Last Commit**: P0.4 implementation complete with comprehensive test coverage (1dcb091)
 **Branch**: feature/p0-multi-tenancy
 
 **P0.1.2 Completion Summary**:
@@ -53,14 +53,17 @@ Single source of truth for task tracking and session continuity.
 
 ## Project Health
 
-**Current State**: werkflow-erp extracted as standalone service, all CRUD APIs implemented with P0.1-P0.2 complete:
+**Current State**: werkflow-erp extracted as standalone service, all CRUD APIs implemented with P0.1-P0.4 complete:
 - ✅ Multi-tenant scoping (COMPLETE — P0.1)
 - ✅ Idempotency for safe retries (COMPLETE — P0.2)
-- Remaining for MVP: Cross-domain FK validation, API versioning, Pagination on list endpoints
+- ✅ Cross-domain FK validation (COMPLETE — P0.4)
+- Remaining for MVP: API versioning, Pagination on list endpoints
 
 **Completed Phases**:
 - P0.1: Multi-Tenant Isolation (TenantContext, TenantContextFilter, all 23 entities scoped)
 - P0.2: Idempotency (IdempotencyRecord entity, IdempotencyFilter, 22 endpoint documentation)
+- P0.3: processInstanceId Pattern (asset/purchase request workflows with processInstanceId support)
+- P0.4: Cross-Domain FK Validation (CrossDomainValidator service with Department/BudgetCategory validators, integrated into PurchaseRequestService and CustodyRecordService, 13 new tests, 40/40 tests passing)
 
 **Architecture**: Pure CRUD service layer with request deduplication. Orchestration, approvals, and workflow logic stay in main werkflow platform.
 
@@ -139,17 +142,23 @@ Must complete before any production deployment.
   - [x] Update create DTOs and service for PurchaseOrder
 
 #### P0.4 — Cross-Domain FK Validation
-- [ ] **P0.4.1** Create `CrossDomainValidator` service
-  - [ ] Methods: `validateBudgetCategoryExists(id)`, `validateDepartmentExists(id)`
-  - [ ] Inject `BudgetCategoryRepository`, `DepartmentRepository`
-  - [ ] Throw `EntityNotFoundException` on missing FK
-  - [ ] Estimated: 1 hour
+- [x] **P0.4.1** Create `CrossDomainValidator` service *(commit: adbf853)*
+  - [x] Methods: `validateDepartmentExists(Long, String)`, `validateBudgetCategoryExists(Long, String)`
+  - [x] Inject `DepartmentRepository`, `BudgetCategoryRepository`
+  - [x] Throw `EntityNotFoundException` on missing FK (tenant-scoped validation)
+  - [x] 7 unit tests: happy path, null IDs, missing FK, cross-tenant isolation
+  - [x] TODO comments for future validators (Vendor, Employee, Asset*, Budget*)
+  - [x] Completed: 2+ hours with full test coverage and code review
 
-- [ ] **P0.4.2** Wire validation into service layer
-  - [ ] `PurchaseRequestService.create()` calls `validator.validateBudgetCategoryExists()`
-  - [ ] `CustodyRecordService.create()` calls `validator.validateDepartmentExists()`
-  - [ ] Test: unit tests for each validation
-  - [ ] Estimated: 2 hours
+- [x] **P0.4.2** Wire validation into service layer *(commit: 32db564, 6dadb27)*
+  - [x] `PurchaseRequestService.create()` and `updatePurchaseRequest()` call `validator.validateDepartmentExists()`
+  - [x] `CustodyRecordService.create()` and `updateCustodyRecord()` call `validator.validateDepartmentExists()`
+  - [x] Test: 2 tests for PurchaseRequestService FK validation (invalid dept, valid dept)
+  - [x] Test: 4 tests for CustodyRecordService FK validation (invalid dept, valid dept, cross-tenant asset, asset not found)
+  - [x] Javadoc updated in both services to document FK validation behavior
+  - [x] Full test suite passes (40/40 tests)
+  - [x] ADR-001 updated with FK validation pattern decision
+  - [x] Completed: 3+ hours with subagent-driven development (spec design, implementation, comprehensive testing, code review cycles)
 
 #### P0.5 — API Versioning (/api/v1)
 - [ ] **P0.5.1** Update application.yml context-path to include version
