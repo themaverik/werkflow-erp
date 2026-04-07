@@ -30,10 +30,10 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P0.1-P0.5 COMPLETE ✓ — Multi-tenancy, idempotency, processInstanceId, FK validation, and API versioning ready
+**Status**: P0.1-P0.6 IN PROGRESS — Pagination design complete, implementation starting
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
-**Next Phase**: P0.6 — Pagination on List Endpoints
-**Last Commit**: P0.5 API versioning complete — all tests passing, deployment-ready
+**Resuming Task**: P0.6.1 — Add pagination to all GET list endpoints
+**Last Commit**: docs(P0.5): mark P0.5 API versioning complete in ROADMAP
 **Branch**: feature/p0-multi-tenancy
 
 **P0.1.2 Completion Summary**:
@@ -186,17 +186,28 @@ Must complete before any production deployment.
   - [x] Completed: ~10 minutes
 
 #### P0.6 — Pagination on List Endpoints
-- [ ] **P0.6.1** Add pagination to all GET list endpoints
+- [~] **P0.6.1** Add pagination to all GET list endpoints
   - [ ] Add `Pageable` parameter: `?page=0&size=20&sort=createdAt,desc`
   - [ ] Return `Page<Dto>` instead of `List<Dto>`
   - [ ] Controllers: EmployeeController, DepartmentController, etc. (all domains)
+  - [ ] Update all 18-20 list endpoints across HR, Finance, Procurement, Inventory
+  - [ ] Design complete (2026-04-07-pagination-design.md), implementation starting
   - [ ] Estimated: 3 hours
 
-- [ ] **P0.6.2** Set sensible defaults
-  - [ ] Default size: 20
-  - [ ] Max size: 1000
-  - [ ] Default sort: createdAt DESC
+- [~] **P0.6.2** Set sensible defaults
+  - [x] Default size: 20 (configured in application.yml)
+  - [x] Max size: 1000 (configured in application.yml)
+  - [x] Default sort: createdAt DESC (Spring Data default)
+  - [ ] Verify in all controllers
   - [ ] Estimated: 1 hour
+
+- [x] **P0.6.14** Pagination integration tests (Task 14)
+  - [x] EmployeeControllerPaginationTest — HR domain (5 scenarios)
+  - [x] BudgetPlanControllerPaginationTest — Finance domain (5 scenarios)
+  - [x] PurchaseRequestControllerPaginationTest — Procurement domain (5 scenarios)
+  - [x] AssetInstanceControllerPaginationTest — Inventory domain (5 scenarios)
+  - [x] Covers: default pagination, custom size, second page, size capping, custom sort
+  - [x] Uses @WebMvcTest + @MockBean; all 20 new tests pass (total: 60 tests, 0 failures)
 
 ### P1 — Quality & Integration (Weeks 3)
 
