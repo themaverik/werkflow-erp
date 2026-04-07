@@ -44,6 +44,13 @@ spring:
     time-zone: UTC
     default-property-inclusion: non_null
 
+  cache:
+    type: caffeine
+    cache-names:
+      - idempotency
+    caffeine:
+      spec: "maximumSize=10000,expireAfterWrite=24h"
+
   liquibase:
     enabled: false
 
