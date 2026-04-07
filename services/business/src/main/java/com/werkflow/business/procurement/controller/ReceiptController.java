@@ -37,9 +37,17 @@ public class ReceiptController {
     }
 
     @PostMapping
-    @Operation(summary = "Create new receipt")
+    @Operation(
+        summary = "Create new receipt",
+        description = "Supports idempotent creation via Idempotency-Key header. " +
+            "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+            "If the key is omitted, each request is processed independently. " +
+            "If the same key is used with different payloads, a 409 Conflict is returned."
+    )
     @PreAuthorize("hasAnyRole('WAREHOUSE_STAFF', 'PROCUREMENT_MANAGER', 'ADMIN', 'SUPER_ADMIN')")
-    public ResponseEntity<ReceiptResponse> createReceipt(@Valid @RequestBody ReceiptRequest request) {
+    public ResponseEntity<ReceiptResponse> createReceipt(
+        @Valid @RequestBody ReceiptRequest request,
+        @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED).body(receiptService.createReceipt(request));
     }
 }

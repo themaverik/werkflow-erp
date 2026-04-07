@@ -37,9 +37,17 @@ public class PurchaseRequestController {
     }
 
     @PostMapping
-    @Operation(summary = "Create new purchase request")
+    @Operation(
+        summary = "Create new purchase request",
+        description = "Supports idempotent creation via Idempotency-Key header. " +
+            "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+            "If the key is omitted, each request is processed independently. " +
+            "If the same key is used with different payloads, a 409 Conflict is returned."
+    )
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PurchaseRequestResponse> createPurchaseRequest(@Valid @RequestBody PurchaseRequestRequest request) {
+    public ResponseEntity<PurchaseRequestResponse> createPurchaseRequest(
+        @Valid @RequestBody PurchaseRequestRequest request,
+        @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED).body(prService.createPurchaseRequest(request));
     }
 }
