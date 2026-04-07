@@ -101,6 +101,7 @@ public class PurchaseOrderService {
             .deliveryAddress(request.getDeliveryAddress())
             .paymentTerms(request.getPaymentTerms())
             .notes(request.getNotes())
+            .processInstanceId(request.getProcessInstanceId())
             .build();
 
         PurchaseOrder saved = poRepository.save(po);
