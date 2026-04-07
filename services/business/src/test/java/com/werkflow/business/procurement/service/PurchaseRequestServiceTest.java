@@ -18,11 +18,17 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PurchaseRequestServiceTest {
@@ -50,7 +56,7 @@ class PurchaseRequestServiceTest {
         PurchaseRequestRequest request = PurchaseRequestRequest.builder()
             .requestingDeptId(99999L)
             .requesterUserId(1L)
-            .requestDate(LocalDate.now())
+            .requestDate(LocalDate.of(2026, 1, 15))
             .justification("Test PR with invalid dept")
             .build();
 
@@ -75,7 +81,7 @@ class PurchaseRequestServiceTest {
         PurchaseRequestRequest request = PurchaseRequestRequest.builder()
             .requestingDeptId(validDeptId)
             .requesterUserId(2L)
-            .requestDate(LocalDate.now())
+            .requestDate(LocalDate.of(2026, 1, 15))
             .justification("Test PR with valid dept")
             .build();
 
@@ -88,7 +94,7 @@ class PurchaseRequestServiceTest {
             .prNumber("PR-12345")
             .requestingDeptId(validDeptId)
             .requesterUserId(2L)
-            .requestDate(LocalDate.now())
+            .requestDate(LocalDate.of(2026, 1, 15))
             .justification("Test PR with valid dept")
             .totalAmount(BigDecimal.ZERO)
             .status(PurchaseRequest.PrStatus.DRAFT)
@@ -105,5 +111,13 @@ class PurchaseRequestServiceTest {
         // Then: should succeed
         assertNotNull(response.getId());
         assertEquals(validDeptId, response.getRequestingDeptId());
+
+        // Verify validator was invoked with correct arguments
+        verify(validator).validateDepartmentExists(validDeptId, TENANT_ID);
+
+        // Verify response fields
+        assertEquals(PurchaseRequest.PrStatus.DRAFT, response.getStatus());
+        assertNotNull(response.getPrNumber());
+        assertEquals(2L, response.getRequesterUserId());
     }
 }
