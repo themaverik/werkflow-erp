@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.validator.CrossDomainValidator;
 import com.werkflow.business.procurement.dto.PrLineItemRequest;
 import com.werkflow.business.procurement.dto.PrLineItemResponse;
 import com.werkflow.business.procurement.dto.PurchaseRequestRequest;
@@ -42,6 +43,7 @@ public class PurchaseRequestService {
     private final PurchaseRequestRepository prRepository;
     private final PrLineItemRepository lineItemRepository;
     private final TenantContext tenantContext;
+    private final CrossDomainValidator validator;
 
     private String getTenantId() {
         return tenantContext.getTenantId();
@@ -70,6 +72,8 @@ public class PurchaseRequestService {
     public PurchaseRequestResponse createPurchaseRequest(PurchaseRequestRequest request) {
         String tenantId = getTenantId();
         log.info("Creating purchase request for tenant: {}", tenantId);
+
+        validator.validateDepartmentExists(request.getRequestingDeptId(), tenantId);
 
         PurchaseRequest pr = PurchaseRequest.builder()
             .tenantId(tenantId)
@@ -108,6 +112,10 @@ public class PurchaseRequestService {
             .orElseThrow(() -> new EntityNotFoundException("Purchase request not found with id: " + id));
         if (!pr.getTenantId().equals(tenantId)) {
             throw new AccessDeniedException("Not authorized to update this PurchaseRequest");
+        }
+
+        if (request.getRequestingDeptId() != null && !request.getRequestingDeptId().equals(pr.getRequestingDeptId())) {
+            validator.validateDepartmentExists(request.getRequestingDeptId(), tenantId);
         }
 
         pr.setRequestingDeptId(request.getRequestingDeptId());
