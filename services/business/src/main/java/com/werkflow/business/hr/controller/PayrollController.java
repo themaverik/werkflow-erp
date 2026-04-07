@@ -4,9 +4,13 @@ import com.werkflow.business.hr.dto.PayrollRequest;
 import com.werkflow.business.hr.dto.PayrollResponse;
 import com.werkflow.business.hr.service.PayrollService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +26,14 @@ public class PayrollController {
     private final PayrollService payrollService;
 
     @GetMapping
-    @Operation(summary = "Get all payrolls", description = "Retrieve all payroll records")
-    public ResponseEntity<List<PayrollResponse>> getAllPayrolls() {
-        return ResponseEntity.ok(payrollService.getAllPayrolls());
+    @Operation(summary = "Get all payrolls", description = "Retrieve all payroll records", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<PayrollResponse>> getAllPayrolls(
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(payrollService.getAllPayrolls(pageable));
     }
 
     @GetMapping("/{id}")
@@ -35,16 +44,19 @@ public class PayrollController {
 
     @GetMapping("/employee/{employeeId}")
     @Operation(summary = "Get payrolls by employee", description = "Retrieve all payroll records for an employee")
-    public ResponseEntity<List<PayrollResponse>> getPayrollsByEmployee(@PathVariable Long employeeId) {
-        return ResponseEntity.ok(payrollService.getPayrollsByEmployee(employeeId));
+    public ResponseEntity<Page<PayrollResponse>> getPayrollsByEmployee(
+            @PathVariable Long employeeId,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(payrollService.getPayrollsByEmployee(employeeId, pageable));
     }
 
     @GetMapping("/period")
     @Operation(summary = "Get payrolls by period", description = "Retrieve payrolls for a specific month and year")
-    public ResponseEntity<List<PayrollResponse>> getPayrollsByMonthYear(
+    public ResponseEntity<Page<PayrollResponse>> getPayrollsByMonthYear(
             @RequestParam Integer month,
-            @RequestParam Integer year) {
-        return ResponseEntity.ok(payrollService.getPayrollsByMonthYear(month, year));
+            @RequestParam Integer year,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(payrollService.getPayrollsByMonthYear(month, year, pageable));
     }
 
     @PostMapping

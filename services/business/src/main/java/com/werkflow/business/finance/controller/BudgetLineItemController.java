@@ -4,9 +4,13 @@ import com.werkflow.business.finance.dto.BudgetLineItemRequest;
 import com.werkflow.business.finance.dto.BudgetLineItemResponse;
 import com.werkflow.business.finance.service.BudgetLineItemService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,10 +27,16 @@ public class BudgetLineItemController {
     private final BudgetLineItemService lineItemService;
 
     @GetMapping
-    @Operation(summary = "Get line items by budget plan")
+    @Operation(summary = "Get line items by budget plan", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<BudgetLineItemResponse>> getLineItemsByBudgetPlan(@RequestParam Long budgetPlanId) {
-        return ResponseEntity.ok(lineItemService.getLineItemsByBudgetPlan(budgetPlanId));
+    public ResponseEntity<Page<BudgetLineItemResponse>> getLineItemsByBudgetPlan(
+            @RequestParam Long budgetPlanId,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(lineItemService.getLineItemsByBudgetPlan(budgetPlanId, pageable));
     }
 
     @PostMapping

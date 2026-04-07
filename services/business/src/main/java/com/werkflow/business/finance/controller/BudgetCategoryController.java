@@ -4,9 +4,13 @@ import com.werkflow.business.finance.dto.BudgetCategoryRequest;
 import com.werkflow.business.finance.dto.BudgetCategoryResponse;
 import com.werkflow.business.finance.service.BudgetCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -23,10 +27,15 @@ public class BudgetCategoryController {
     private final BudgetCategoryService categoryService;
 
     @GetMapping
-    @Operation(summary = "Get all budget categories")
+    @Operation(summary = "Get all budget categories", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<BudgetCategoryResponse>> getAllCategories() {
-        return ResponseEntity.ok(categoryService.getAllCategories());
+    public ResponseEntity<Page<BudgetCategoryResponse>> getAllCategories(
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(categoryService.getAllCategories(pageable));
     }
 
     @GetMapping("/{id}")
