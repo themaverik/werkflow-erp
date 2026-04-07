@@ -1,6 +1,7 @@
 package com.werkflow.business.inventory.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.validator.CrossDomainValidator;
 import com.werkflow.business.inventory.entity.AssetInstance;
 import com.werkflow.business.inventory.entity.CustodyRecord;
 import com.werkflow.business.inventory.repository.AssetInstanceRepository;
@@ -28,6 +29,7 @@ public class CustodyRecordService {
     private final CustodyRecordRepository custodyRepository;
     private final AssetInstanceRepository assetRepository;
     private final TenantContext tenantContext;
+    private final CrossDomainValidator validator;
 
     private String getTenantId() {
         return tenantContext.getTenantId();
@@ -41,6 +43,8 @@ public class CustodyRecordService {
         String tenantId = getTenantId();
         log.info("Creating new custody record for asset: {} for tenant: {}",
             record.getAssetInstance().getAssetTag(), tenantId);
+
+        validator.validateDepartmentExists(record.getCustodianDeptId(), tenantId);
 
         // Validate that the asset instance belongs to the same tenant
         AssetInstance asset = assetRepository.findById(record.getAssetInstance().getId())
@@ -161,6 +165,11 @@ public class CustodyRecordService {
             .orElseThrow(() -> new EntityNotFoundException("Custody record not found with id: " + id));
         if (!record.getTenantId().equals(tenantId)) {
             throw new AccessDeniedException("Not authorized to update this CustodyRecord");
+        }
+
+        if (recordDetails.getCustodianDeptId() != null && !recordDetails.getCustodianDeptId().equals(record.getCustodianDeptId())) {
+            validator.validateDepartmentExists(recordDetails.getCustodianDeptId(), tenantId);
+            record.setCustodianDeptId(recordDetails.getCustodianDeptId());
         }
 
         record.setPhysicalLocation(recordDetails.getPhysicalLocation());
