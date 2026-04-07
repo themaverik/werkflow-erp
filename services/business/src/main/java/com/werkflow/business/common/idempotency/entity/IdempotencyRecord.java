@@ -13,6 +13,10 @@ import lombok.*;
  * and {@code statusCode} are non-nullable at both the JPA and database level.
  * {@code requestPayload}, {@code responseBody}, and {@code responseHeaders} are
  * optional TEXT columns and may be {@code null}.
+ *
+ * <p>No {@code @Builder}: {@code BaseEntity} has no {@code @SuperBuilder}, so Lombok
+ * {@code @Builder} would omit inherited fields ({@code id}, {@code createdAt}, etc.).
+ * This entity is JPA-managed infrastructure; use the all-args constructor or JPA directly.
  */
 @Entity
 @Table(
@@ -28,11 +32,6 @@ import lombok.*;
 @AllArgsConstructor
 public class IdempotencyRecord extends BaseEntity {
 
-    /**
-     * No @Builder: BaseEntity has no @SuperBuilder, so Lombok @Builder would omit
-     * inherited fields (id, createdAt, etc.). This entity is JPA-managed infrastructure;
-     * use the all-args constructor or JPA directly.
-     */
     @NotBlank
     @Column(name = "tenant_id", nullable = false, length = 255)
     private String tenantId;
