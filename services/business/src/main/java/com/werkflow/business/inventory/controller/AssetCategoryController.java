@@ -8,6 +8,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,18 +64,19 @@ public class AssetCategoryController {
 
     @GetMapping
     @Operation(summary = "Get asset categories", description = "Retrieve asset categories; pass parentCategoryId to filter by parent, or leafOnly=true for all subcategories")
-    public ResponseEntity<List<AssetCategoryResponseDto>> getAllCategories(
+    public ResponseEntity<?> getAllCategories(
             @RequestParam(required = false) Long parentCategoryId,
-            @RequestParam(required = false) Boolean leafOnly) {
-        List<AssetCategory> categories;
+            @RequestParam(required = false) Boolean leafOnly,
+            Pageable pageable) {
         if (parentCategoryId != null) {
-            categories = categoryService.getChildCategories(parentCategoryId);
+            List<AssetCategory> categories = categoryService.getChildCategories(parentCategoryId);
+            return ResponseEntity.ok(categories.stream().map(this::mapToResponse).collect(Collectors.toList()));
         } else if (Boolean.TRUE.equals(leafOnly)) {
-            categories = categoryService.getActiveSubcategories();
+            List<AssetCategory> categories = categoryService.getActiveSubcategories();
+            return ResponseEntity.ok(categories.stream().map(this::mapToResponse).collect(Collectors.toList()));
         } else {
-            categories = categoryService.getAllCategories();
+            return ResponseEntity.ok(categoryService.getAllCategories(pageable).map(this::mapToResponse));
         }
-        return ResponseEntity.ok(categories.stream().map(this::mapToResponse).collect(Collectors.toList()));
     }
 
     @GetMapping("/active")

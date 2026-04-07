@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -81,9 +83,8 @@ public class CustodyRecordController {
 
     @GetMapping
     @Operation(summary = "Get all custody records", description = "Retrieve all custody records")
-    public ResponseEntity<List<CustodyRecordResponseDto>> getAllCustodyRecords() {
-        List<CustodyRecord> records = custodyService.getAllCustodyRecords();
-        return ResponseEntity.ok(records.stream().map(this::mapToResponse).collect(Collectors.toList()));
+    public ResponseEntity<Page<CustodyRecordResponseDto>> getAllCustodyRecords(Pageable pageable) {
+        return ResponseEntity.ok(custodyService.getAllCustodyRecords(pageable).map(this::mapToResponse));
     }
 
     @GetMapping("/active")

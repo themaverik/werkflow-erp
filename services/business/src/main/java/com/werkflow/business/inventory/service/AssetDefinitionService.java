@@ -6,6 +6,8 @@ import com.werkflow.business.inventory.repository.AssetCategoryRepository;
 import com.werkflow.business.inventory.repository.AssetDefinitionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,9 +100,9 @@ public class AssetDefinitionService {
     /**
      * Get all asset definitions
      */
-    public List<AssetDefinition> getAllDefinitions() {
+    public Page<AssetDefinition> getAllDefinitions(Pageable pageable) {
         String tenantId = getTenantId();
-        return definitionRepository.findByTenantId(tenantId);
+        return definitionRepository.findByTenantId(tenantId, pageable);
     }
 
     /**

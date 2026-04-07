@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -65,9 +67,8 @@ public class MaintenanceRecordController {
 
     @GetMapping
     @Operation(summary = "Get all maintenance records", description = "Retrieve all maintenance records")
-    public ResponseEntity<List<MaintenanceRecordResponseDto>> getAllMaintenanceRecords() {
-        List<MaintenanceRecord> records = maintenanceService.getAllMaintenanceRecords();
-        return ResponseEntity.ok(records.stream().map(this::mapToResponse).collect(Collectors.toList()));
+    public ResponseEntity<Page<MaintenanceRecordResponseDto>> getAllMaintenanceRecords(Pageable pageable) {
+        return ResponseEntity.ok(maintenanceService.getAllMaintenanceRecords(pageable).map(this::mapToResponse));
     }
 
     @GetMapping("/asset/{assetId}")

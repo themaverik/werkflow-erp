@@ -6,6 +6,8 @@ import com.werkflow.business.inventory.service.AssetRequestService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,8 +38,8 @@ public class AssetRequestController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<AssetRequestResponse>> getByUser(@PathVariable String userId) {
-        return ResponseEntity.ok(assetRequestService.getRequestsByUser(userId));
+    public ResponseEntity<Page<AssetRequestResponse>> getByUser(@PathVariable String userId, Pageable pageable) {
+        return ResponseEntity.ok(assetRequestService.getRequestsByUser(userId, pageable));
     }
 
     @GetMapping("/{id}/process-variables")

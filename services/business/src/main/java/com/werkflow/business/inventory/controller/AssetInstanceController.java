@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -74,9 +76,8 @@ public class AssetInstanceController {
 
     @GetMapping
     @Operation(summary = "Get all asset instances", description = "Retrieve all physical asset instances")
-    public ResponseEntity<List<AssetInstanceResponseDto>> getAllInstances() {
-        List<AssetInstance> instances = instanceService.getAllInstances();
-        return ResponseEntity.ok(instances.stream().map(this::mapToResponse).collect(Collectors.toList()));
+    public ResponseEntity<Page<AssetInstanceResponseDto>> getAllInstances(Pageable pageable) {
+        return ResponseEntity.ok(instanceService.getAllInstances(pageable).map(this::mapToResponse));
     }
 
     @GetMapping("/definition/{definitionId}")

@@ -10,6 +10,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -67,9 +69,8 @@ public class TransferRequestController {
 
     @GetMapping
     @Operation(summary = "Get all transfer requests", description = "Retrieve all transfer requests")
-    public ResponseEntity<List<TransferRequestResponseDto>> getAllTransfers() {
-        List<TransferRequest> requests = transferService.getAllTransfers();
-        return ResponseEntity.ok(requests.stream().map(this::mapToResponse).collect(Collectors.toList()));
+    public ResponseEntity<Page<TransferRequestResponseDto>> getAllTransfers(Pageable pageable) {
+        return ResponseEntity.ok(transferService.getAllTransfers(pageable).map(this::mapToResponse));
     }
 
     @GetMapping("/asset/{assetId}")

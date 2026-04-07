@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -76,12 +78,14 @@ public class AssetDefinitionController {
 
     @GetMapping
     @Operation(summary = "Get asset definitions", description = "Retrieve asset definitions; pass categoryId to filter by category")
-    public ResponseEntity<List<AssetDefinitionResponseDto>> getAllDefinitions(
-            @RequestParam(required = false) Long categoryId) {
-        List<AssetDefinition> definitions = categoryId != null
-            ? definitionService.getDefinitionsByCategory(categoryId)
-            : definitionService.getAllDefinitions();
-        return ResponseEntity.ok(definitions.stream().map(this::mapToResponse).collect(Collectors.toList()));
+    public ResponseEntity<?> getAllDefinitions(
+            @RequestParam(required = false) Long categoryId,
+            Pageable pageable) {
+        if (categoryId != null) {
+            List<AssetDefinition> definitions = definitionService.getDefinitionsByCategory(categoryId);
+            return ResponseEntity.ok(definitions.stream().map(this::mapToResponse).collect(Collectors.toList()));
+        }
+        return ResponseEntity.ok(definitionService.getAllDefinitions(pageable).map(this::mapToResponse));
     }
 
     @GetMapping("/active")

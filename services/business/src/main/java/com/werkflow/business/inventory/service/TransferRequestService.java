@@ -7,6 +7,8 @@ import com.werkflow.business.inventory.repository.AssetInstanceRepository;
 import com.werkflow.business.inventory.repository.TransferRequestRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -247,9 +249,9 @@ public class TransferRequestService {
     /**
      * Get all transfer requests
      */
-    public List<TransferRequest> getAllTransfers() {
+    public Page<TransferRequest> getAllTransfers(Pageable pageable) {
         String tenantId = getTenantId();
-        return transferRepository.findByTenantId(tenantId);
+        return transferRepository.findByTenantId(tenantId, pageable);
     }
 
     /**

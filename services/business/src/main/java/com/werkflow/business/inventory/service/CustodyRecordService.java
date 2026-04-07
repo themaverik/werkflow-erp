@@ -8,6 +8,8 @@ import com.werkflow.business.inventory.repository.AssetInstanceRepository;
 import com.werkflow.business.inventory.repository.CustodyRecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -187,8 +189,8 @@ public class CustodyRecordService {
     /**
      * Get all custody records
      */
-    public List<CustodyRecord> getAllCustodyRecords() {
+    public Page<CustodyRecord> getAllCustodyRecords(Pageable pageable) {
         String tenantId = getTenantId();
-        return custodyRepository.findByTenantId(tenantId);
+        return custodyRepository.findByTenantId(tenantId, pageable);
     }
 }
