@@ -1,5 +1,6 @@
 package com.werkflow.business.common.idempotency.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.common.idempotency.dto.CachedResponse;
 import com.werkflow.business.common.idempotency.exception.IdempotencyException;
@@ -38,9 +39,11 @@ class IdempotencyFilterTest {
 
     private IdempotencyFilter filter;
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @BeforeEach
     void setUp() {
-        filter = new IdempotencyFilter(idempotencyService, tenantContext);
+        filter = new IdempotencyFilter(idempotencyService, tenantContext, objectMapper);
     }
 
     @Test
@@ -138,5 +141,6 @@ class IdempotencyFilterTest {
         verify(filterChain).doFilter(any(), any());
         verify(idempotencyService).store(eq("tenant-1"), eq("key-456"), any(), any(CachedResponse.class));
         assertThat(response.getStatus()).isEqualTo(201);
+        assertThat(response.getContentAsString()).contains("order-99");
     }
 }

@@ -1,5 +1,6 @@
 package com.werkflow.business.common.idempotency.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.werkflow.business.common.idempotency.dto.CachedResponse;
 import com.werkflow.business.common.idempotency.exception.IdempotencyException;
 import com.werkflow.business.common.idempotency.service.IdempotencyService;
@@ -18,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,10 +31,13 @@ public class IdempotencyFilter extends OncePerRequestFilter {
 
     private final IdempotencyService idempotencyService;
     private final TenantContext tenantContext;
+    private final ObjectMapper objectMapper;
 
-    public IdempotencyFilter(IdempotencyService idempotencyService, TenantContext tenantContext) {
+    public IdempotencyFilter(IdempotencyService idempotencyService, TenantContext tenantContext,
+                             ObjectMapper objectMapper) {
         this.idempotencyService = idempotencyService;
         this.tenantContext = tenantContext;
+        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -56,23 +61,31 @@ public class IdempotencyFilter extends OncePerRequestFilter {
         // Get tenant ID from TenantContext
         String tenantId = tenantContext.getTenantId();
         if (tenantId == null) {
+            logger.warn("IdempotencyFilter: TenantContext.getTenantId() returned null; bypassing idempotency check");
             chain.doFilter(request, response);
             return;
         }
 
-        // Wrap request to capture body
-        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
-
-        // Capture request body for payload validation
+        // Read body directly before wrapping — ContentCachingRequestWrapper.getContentAsByteArray()
+        // returns empty until the body has been consumed by downstream; reading it here forces capture.
         String requestPayload;
         try {
-            byte[] body = wrappedRequest.getContentAsByteArray();
-            requestPayload = new String(body, StandardCharsets.UTF_8);
+            StringBuilder sb = new StringBuilder();
+            try (java.io.BufferedReader reader = request.getReader()) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+            requestPayload = sb.toString();
         } catch (Exception e) {
             logger.warn("Failed to capture request body", e);
-            chain.doFilter(wrappedRequest, response);
+            chain.doFilter(request, response);
             return;
         }
+
+        // Wrap request so downstream can still read the body via getInputStream/getReader
+        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
 
         // Check cache
         try {
@@ -95,7 +108,8 @@ public class IdempotencyFilter extends OncePerRequestFilter {
             logger.info("Idempotency validation failed: {}", e.getMessage());
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             response.setContentType("application/json");
-            response.getWriter().write("{\"error\":\"" + e.getMessage() + "\"}");
+            Map<String, String> errorBody = Map.of("error", e.getMessage());
+            response.getWriter().write(objectMapper.writeValueAsString(errorBody));
             return;
         }
 
@@ -127,7 +141,10 @@ public class IdempotencyFilter extends OncePerRequestFilter {
     private Map<String, String> extractHeaders(HttpServletResponse response) {
         Map<String, String> headers = new HashMap<>();
         for (String headerName : response.getHeaderNames()) {
-            headers.put(headerName, response.getHeader(headerName));
+            Collection<String> values = response.getHeaders(headerName);
+            if (!values.isEmpty()) {
+                headers.put(headerName, String.join(",", values));
+            }
         }
         return headers;
     }
