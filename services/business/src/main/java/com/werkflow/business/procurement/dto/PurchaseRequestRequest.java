@@ -38,4 +38,6 @@ public class PurchaseRequestRequest {
 
     @Valid
     private List<PrLineItemRequest> lineItems;
+
+    private String processInstanceId;
 }

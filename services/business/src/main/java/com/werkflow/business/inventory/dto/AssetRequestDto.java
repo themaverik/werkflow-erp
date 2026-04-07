@@ -33,4 +33,6 @@ public class AssetRequestDto {
     private LocalDate deliveryDate;
 
     @Size(max = 2000) private String justification;
+
+    private String processInstanceId;
 }

@@ -45,6 +45,7 @@ public class AssetRequestService {
             .approxPrice(dto.getApproxPrice())
             .deliveryDate(dto.getDeliveryDate())
             .justification(dto.getJustification())
+            .processInstanceId(dto.getProcessInstanceId())
             .status(AssetRequestStatus.PENDING)
             .build();
         return toResponse(assetRequestRepository.save(request));

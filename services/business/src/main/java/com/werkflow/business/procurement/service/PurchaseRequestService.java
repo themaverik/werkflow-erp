@@ -83,6 +83,7 @@ public class PurchaseRequestService {
             .status(PurchaseRequest.PrStatus.DRAFT)
             .justification(request.getJustification())
             .notes(request.getNotes())
+            .processInstanceId(request.getProcessInstanceId())
             .build();
 
         PurchaseRequest saved = prRepository.save(pr);
