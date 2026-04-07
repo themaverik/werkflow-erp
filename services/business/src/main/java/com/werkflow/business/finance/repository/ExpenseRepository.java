@@ -2,6 +2,8 @@ package com.werkflow.business.finance.repository;
 
 import com.werkflow.business.finance.entity.Expense;
 import com.werkflow.business.finance.entity.Expense.ExpenseStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,15 +16,15 @@ import java.util.List;
 @Repository
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
 
-    List<Expense> findByTenantId(String tenantId);
+    Page<Expense> findByTenantId(String tenantId, Pageable pageable);
 
-    List<Expense> findByDepartmentId(Long departmentId);
+    Page<Expense> findByDepartmentId(Long departmentId, Pageable pageable);
 
-    List<Expense> findBySubmittedByUserId(Long userId);
+    Page<Expense> findBySubmittedByUserId(Long userId, Pageable pageable);
 
-    List<Expense> findByStatus(ExpenseStatus status);
+    Page<Expense> findByStatus(ExpenseStatus status, Pageable pageable);
 
-    List<Expense> findByDepartmentIdAndStatus(Long departmentId, ExpenseStatus status);
+    Page<Expense> findByDepartmentIdAndStatus(Long departmentId, ExpenseStatus status, Pageable pageable);
 
     List<Expense> findByCategoryId(Long categoryId);
 

@@ -1,6 +1,8 @@
 package com.werkflow.business.finance.repository;
 
 import com.werkflow.business.finance.entity.BudgetCategory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +14,7 @@ import java.util.Optional;
 @Repository
 public interface BudgetCategoryRepository extends JpaRepository<BudgetCategory, Long> {
 
-    List<BudgetCategory> findByTenantId(String tenantId);
+    Page<BudgetCategory> findByTenantId(String tenantId, Pageable pageable);
 
     Optional<BudgetCategory> findByIdAndTenantId(Long id, String tenantId);
 

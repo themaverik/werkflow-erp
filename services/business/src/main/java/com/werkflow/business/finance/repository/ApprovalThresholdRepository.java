@@ -1,6 +1,8 @@
 package com.werkflow.business.finance.repository;
 
 import com.werkflow.business.finance.entity.ApprovalThreshold;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +15,7 @@ import java.util.Optional;
 @Repository
 public interface ApprovalThresholdRepository extends JpaRepository<ApprovalThreshold, Long> {
 
-    List<ApprovalThreshold> findByTenantId(String tenantId);
+    Page<ApprovalThreshold> findByTenantId(String tenantId, Pageable pageable);
 
     List<ApprovalThreshold> findByActiveTrue();
 
