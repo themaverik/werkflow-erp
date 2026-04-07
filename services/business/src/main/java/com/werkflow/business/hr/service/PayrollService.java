@@ -10,6 +10,8 @@ import com.werkflow.business.hr.repository.PayrollRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +33,11 @@ public class PayrollService {
         return tenantContext.getTenantId();
     }
 
-    public List<PayrollResponse> getAllPayrolls() {
+    public Page<PayrollResponse> getAllPayrolls(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all payrolls for tenant: {}", tenantId);
-        return payrollRepository.findByTenantId(tenantId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return payrollRepository.findByTenantId(tenantId, pageable)
+            .map(this::convertToResponse);
     }
 
     public PayrollResponse getPayrollById(Long id) {
@@ -48,22 +49,18 @@ public class PayrollService {
         return convertToResponse(payroll);
     }
 
-    public List<PayrollResponse> getPayrollsByEmployee(Long employeeId) {
+    public Page<PayrollResponse> getPayrollsByEmployee(Long employeeId, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching payrolls for employee: {} in tenant: {}", employeeId, tenantId);
-        return payrollRepository.findByTenantIdAndEmployeeIdOrderByPaymentDateDesc(tenantId, employeeId)
-            .stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return payrollRepository.findByTenantIdAndEmployeeIdOrderByPaymentDateDesc(tenantId, employeeId, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<PayrollResponse> getPayrollsByMonthYear(Integer month, Integer year) {
+    public Page<PayrollResponse> getPayrollsByMonthYear(Integer month, Integer year, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching payrolls for month: {} year: {} in tenant: {}", month, year, tenantId);
-        return payrollRepository.findByTenantIdAndMonthAndYear(tenantId, month, year)
-            .stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return payrollRepository.findByTenantIdAndMonthAndYear(tenantId, month, year, pageable)
+            .map(this::convertToResponse);
     }
 
     @Transactional

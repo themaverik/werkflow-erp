@@ -10,6 +10,8 @@ import com.werkflow.business.hr.repository.PerformanceReviewRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +33,11 @@ public class PerformanceReviewService {
         return tenantContext.getTenantId();
     }
 
-    public List<PerformanceReviewResponse> getAllReviews() {
+    public Page<PerformanceReviewResponse> getAllReviews(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all performance reviews for tenant: {}", tenantId);
-        return reviewRepository.findByTenantId(tenantId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return reviewRepository.findByTenantId(tenantId, pageable)
+            .map(this::convertToResponse);
     }
 
     public PerformanceReviewResponse getReviewById(Long id) {
@@ -48,13 +49,11 @@ public class PerformanceReviewService {
         return convertToResponse(review);
     }
 
-    public List<PerformanceReviewResponse> getReviewsByEmployee(Long employeeId) {
+    public Page<PerformanceReviewResponse> getReviewsByEmployee(Long employeeId, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching performance reviews for employee: {} in tenant: {}", employeeId, tenantId);
-        return reviewRepository.findByTenantIdAndEmployeeIdOrderByReviewDateDesc(tenantId, employeeId)
-            .stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return reviewRepository.findByTenantIdAndEmployeeIdOrderByReviewDateDesc(tenantId, employeeId, pageable)
+            .map(this::convertToResponse);
     }
 
     @Transactional

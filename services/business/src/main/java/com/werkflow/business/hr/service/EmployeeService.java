@@ -11,6 +11,8 @@ import com.werkflow.business.hr.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,12 +39,11 @@ public class EmployeeService {
         return tenantContext.getTenantId();
     }
 
-    public List<EmployeeResponse> getAllEmployees() {
+    public Page<EmployeeResponse> getAllEmployees(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all employees for tenant: {}", tenantId);
-        return employeeRepository.findByTenantId(tenantId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return employeeRepository.findByTenantId(tenantId, pageable)
+            .map(this::convertToResponse);
     }
 
     public EmployeeResponse getEmployeeById(Long id) {
@@ -71,44 +72,39 @@ public class EmployeeService {
         return convertToResponse(employee);
     }
 
-    public List<EmployeeResponse> getEmployeesByOrganization(Long orgId) {
+    public Page<EmployeeResponse> getEmployeesByOrganization(Long orgId, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching employees for org: {} in tenant: {}", orgId, tenantId);
-        return employeeRepository.findByTenantIdAndOrganizationId(tenantId, orgId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return employeeRepository.findByTenantIdAndOrganizationId(tenantId, orgId, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<EmployeeResponse> getEmployeesByDepartment(Long departmentId) {
+    public Page<EmployeeResponse> getEmployeesByDepartment(Long departmentId, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching employees for department: {} in tenant: {}", departmentId, tenantId);
-        return employeeRepository.findByTenantIdAndDepartmentId(tenantId, departmentId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return employeeRepository.findByTenantIdAndDepartmentId(tenantId, departmentId, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<EmployeeResponse> getEmployeesByDepartmentCode(String code) {
+    public Page<EmployeeResponse> getEmployeesByDepartmentCode(String code, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching employees for department code: {} in tenant: {}", code, tenantId);
-        return employeeRepository.findByTenantIdAndDepartmentCode(tenantId, code).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return employeeRepository.findByTenantIdAndDepartmentCode(tenantId, code, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<EmployeeResponse> getEmployeesByStatus(EmploymentStatus status) {
+    public Page<EmployeeResponse> getEmployeesByStatus(EmploymentStatus status, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching employees by status: {} in tenant: {}", status, tenantId);
-        return employeeRepository.findByTenantIdAndEmploymentStatus(tenantId, status).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return employeeRepository.findByTenantIdAndEmploymentStatus(tenantId, status, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<EmployeeResponse> searchEmployees(String searchTerm) {
+    public Page<EmployeeResponse> searchEmployees(String searchTerm, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Searching employees for term: {} in tenant: {}", searchTerm, tenantId);
-        return employeeRepository.searchEmployeesByTenant(tenantId, searchTerm).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return employeeRepository.searchEmployeesByTenant(tenantId, searchTerm, pageable)
+            .map(this::convertToResponse);
     }
 
     @Transactional

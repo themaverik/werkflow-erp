@@ -11,6 +11,8 @@ import com.werkflow.business.hr.repository.LeaveRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,12 +34,11 @@ public class LeaveService {
         return tenantContext.getTenantId();
     }
 
-    public List<LeaveResponse> getAllLeaves() {
+    public Page<LeaveResponse> getAllLeaves(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all leaves for tenant: {}", tenantId);
-        return leaveRepository.findByTenantId(tenantId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return leaveRepository.findByTenantId(tenantId, pageable)
+            .map(this::convertToResponse);
     }
 
     public LeaveResponse getLeaveById(Long id) {
@@ -49,20 +50,18 @@ public class LeaveService {
         return convertToResponse(leave);
     }
 
-    public List<LeaveResponse> getLeavesByEmployee(Long employeeId) {
+    public Page<LeaveResponse> getLeavesByEmployee(Long employeeId, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching leaves for employee: {} in tenant: {}", employeeId, tenantId);
-        return leaveRepository.findByTenantIdAndEmployeeId(tenantId, employeeId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return leaveRepository.findByTenantIdAndEmployeeId(tenantId, employeeId, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<LeaveResponse> getLeavesByStatus(LeaveStatus status) {
+    public Page<LeaveResponse> getLeavesByStatus(LeaveStatus status, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching leaves by status: {} in tenant: {}", status, tenantId);
-        return leaveRepository.findByTenantIdAndStatus(tenantId, status).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return leaveRepository.findByTenantIdAndStatus(tenantId, status, pageable)
+            .map(this::convertToResponse);
     }
 
     @Transactional

@@ -8,6 +8,8 @@ import com.werkflow.business.hr.repository.DepartmentRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +33,11 @@ public class DepartmentService {
         return tenantContext.getTenantId();
     }
 
-    public List<DepartmentResponse> getAllDepartments() {
+    public Page<DepartmentResponse> getAllDepartments(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all departments for tenant: {}", tenantId);
-        return departmentRepository.findByTenantId(tenantId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return departmentRepository.findByTenantId(tenantId, pageable)
+            .map(this::convertToResponse);
     }
 
     public DepartmentResponse getDepartmentById(Long id) {
@@ -56,20 +57,18 @@ public class DepartmentService {
         return convertToResponse(department);
     }
 
-    public List<DepartmentResponse> getActiveDepartments() {
+    public Page<DepartmentResponse> getActiveDepartments(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching active departments for tenant: {}", tenantId);
-        return departmentRepository.findByTenantIdAndIsActive(tenantId, true).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return departmentRepository.findByTenantIdAndIsActive(tenantId, true, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<DepartmentResponse> getDepartmentsByOrganization(Long organizationId) {
+    public Page<DepartmentResponse> getDepartmentsByOrganization(Long organizationId, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching departments for organization: {} in tenant: {}", organizationId, tenantId);
-        return departmentRepository.findByTenantIdAndOrganizationId(tenantId, organizationId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return departmentRepository.findByTenantIdAndOrganizationId(tenantId, organizationId, pageable)
+            .map(this::convertToResponse);
     }
 
     @Transactional

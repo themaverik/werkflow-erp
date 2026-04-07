@@ -10,6 +10,8 @@ import com.werkflow.business.hr.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,12 +33,11 @@ public class AttendanceService {
         return tenantContext.getTenantId();
     }
 
-    public List<AttendanceResponse> getAllAttendances() {
+    public Page<AttendanceResponse> getAllAttendances(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all attendances for tenant: {}", tenantId);
-        return attendanceRepository.findByTenantId(tenantId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return attendanceRepository.findByTenantId(tenantId, pageable)
+            .map(this::convertToResponse);
     }
 
     public AttendanceResponse getAttendanceById(Long id) {
@@ -48,24 +49,22 @@ public class AttendanceService {
         return convertToResponse(attendance);
     }
 
-    public List<AttendanceResponse> getAttendancesByEmployee(Long employeeId) {
+    public Page<AttendanceResponse> getAttendancesByEmployee(Long employeeId, Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching attendances for employee: {} in tenant: {}", employeeId, tenantId);
-        return attendanceRepository.findByTenantIdAndEmployeeId(tenantId, employeeId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return attendanceRepository.findByTenantIdAndEmployeeId(tenantId, employeeId, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<AttendanceResponse> getAttendancesByDateRange(Long employeeId,
+    public Page<AttendanceResponse> getAttendancesByDateRange(Long employeeId,
                                                               LocalDate startDate,
-                                                              LocalDate endDate) {
+                                                              LocalDate endDate,
+                                                              Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching attendances for employee: {} between {} and {} in tenant: {}",
             employeeId, startDate, endDate, tenantId);
-        return attendanceRepository.findByTenantIdAndEmployeeIdAndDateRange(tenantId, employeeId, startDate, endDate)
-            .stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+        return attendanceRepository.findByTenantIdAndEmployeeIdAndDateRange(tenantId, employeeId, startDate, endDate, pageable)
+            .map(this::convertToResponse);
     }
 
     @Transactional
