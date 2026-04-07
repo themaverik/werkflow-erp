@@ -1,5 +1,6 @@
 package com.werkflow.business.finance.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.finance.dto.BudgetCheckRequest;
 import com.werkflow.business.finance.dto.BudgetCheckResponse;
 import com.werkflow.business.finance.entity.BudgetPlan;
@@ -21,11 +22,14 @@ import java.time.LocalDate;
 public class BudgetCheckService {
 
     private final BudgetPlanRepository budgetPlanRepository;
+    private final TenantContext tenantContext;
 
     @Transactional(readOnly = true)
     public BudgetCheckResponse checkBudgetAvailability(BudgetCheckRequest request) {
-        log.debug("Checking budget availability for department: {}, amount: {}",
-                request.getDepartmentId(), request.getAmount());
+        String tenantId = tenantContext.getTenantId();
+
+        log.debug("Checking budget availability for tenant: {}, department: {}, amount: {}",
+                tenantId, request.getDepartmentId(), request.getAmount());
 
         Integer fiscalYear = request.getFiscalYear();
         if (fiscalYear == null) {
@@ -34,7 +38,7 @@ public class BudgetCheckService {
 
         final Integer finalFiscalYear = fiscalYear;
         BudgetPlan budgetPlan = budgetPlanRepository
-                .findByDepartmentIdAndFiscalYear(request.getDepartmentId(), fiscalYear)
+                .findByDepartmentIdAndFiscalYearAndTenantId(request.getDepartmentId(), fiscalYear, tenantId)
                 .orElse(null);
 
         if (budgetPlan == null) {

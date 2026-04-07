@@ -5,9 +5,13 @@ import com.werkflow.business.inventory.dto.AssetCategoryResponseDto;
 import com.werkflow.business.inventory.entity.AssetCategory;
 import com.werkflow.business.inventory.service.AssetCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,8 +31,13 @@ public class AssetCategoryController {
     private final AssetCategoryService categoryService;
 
     @PostMapping
-    @Operation(summary = "Create asset category", description = "Create a new asset category")
-    public ResponseEntity<AssetCategoryResponseDto> createCategory(@Valid @RequestBody AssetCategoryRequestDto requestDto) {
+    @Operation(summary = "Create asset category", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<AssetCategoryResponseDto> createCategory(
+            @Valid @RequestBody AssetCategoryRequestDto requestDto,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         AssetCategory category = AssetCategory.builder()
             .name(requestDto.getName())
             .code(requestDto.getCode())
@@ -56,19 +65,24 @@ public class AssetCategoryController {
     }
 
     @GetMapping
-    @Operation(summary = "Get asset categories", description = "Retrieve asset categories; pass parentCategoryId to filter by parent, or leafOnly=true for all subcategories")
-    public ResponseEntity<List<AssetCategoryResponseDto>> getAllCategories(
+    @Operation(summary = "Get asset categories", description = "Retrieve asset categories; pass parentCategoryId to filter by parent, or leafOnly=true for all subcategories", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<?> getAllCategories(
             @RequestParam(required = false) Long parentCategoryId,
-            @RequestParam(required = false) Boolean leafOnly) {
-        List<AssetCategory> categories;
+            @RequestParam(required = false) Boolean leafOnly,
+            @ParameterObject Pageable pageable) {
         if (parentCategoryId != null) {
-            categories = categoryService.getChildCategories(parentCategoryId);
+            List<AssetCategory> categories = categoryService.getChildCategories(parentCategoryId);
+            return ResponseEntity.ok(categories.stream().map(this::mapToResponse).collect(Collectors.toList()));
         } else if (Boolean.TRUE.equals(leafOnly)) {
-            categories = categoryService.getActiveSubcategories();
+            List<AssetCategory> categories = categoryService.getActiveSubcategories();
+            return ResponseEntity.ok(categories.stream().map(this::mapToResponse).collect(Collectors.toList()));
         } else {
-            categories = categoryService.getAllCategories();
+            return ResponseEntity.ok(categoryService.getAllCategories(pageable).map(this::mapToResponse));
         }
-        return ResponseEntity.ok(categories.stream().map(this::mapToResponse).collect(Collectors.toList()));
     }
 
     @GetMapping("/active")

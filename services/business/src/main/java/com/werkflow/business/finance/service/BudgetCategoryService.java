@@ -1,13 +1,19 @@
 package com.werkflow.business.finance.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.finance.dto.BudgetCategoryRequest;
 import com.werkflow.business.finance.dto.BudgetCategoryResponse;
 import com.werkflow.business.finance.entity.BudgetCategory;
 import com.werkflow.business.finance.repository.BudgetCategoryRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,9 +24,22 @@ import java.util.stream.Collectors;
 public class BudgetCategoryService {
 
     private final BudgetCategoryRepository categoryRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     @Transactional(readOnly = true)
-    public List<BudgetCategoryResponse> getAllCategories() {
+    public Page<BudgetCategoryResponse> getAllCategories(Pageable pageable) {
+        String tenantId = getTenantId();
+        log.debug("Fetching all budget categories for tenant: {}", tenantId);
+        return categoryRepository.findByTenantId(tenantId, pageable).map(this::toResponse);
+    }
+
+    @Deprecated
+    @Transactional(readOnly = true)
+    public List<BudgetCategoryResponse> getAllCategoriesUnscoped() {
         return categoryRepository.findAll().stream()
             .map(this::toResponse)
             .collect(Collectors.toList());
@@ -28,18 +47,24 @@ public class BudgetCategoryService {
 
     @Transactional(readOnly = true)
     public BudgetCategoryResponse getCategoryById(Long id) {
+        String tenantId = getTenantId();
         BudgetCategory category = categoryRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Budget category not found: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("BudgetCategory not found with id: " + id));
+        if (!category.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this BudgetCategory");
+        }
         return toResponse(category);
     }
 
     @Transactional
     public BudgetCategoryResponse createCategory(BudgetCategoryRequest request) {
+        String tenantId = getTenantId();
         if (request.getCode() != null && categoryRepository.existsByCode(request.getCode())) {
             throw new RuntimeException("Category with code already exists: " + request.getCode());
         }
 
         BudgetCategory category = BudgetCategory.builder()
+            .tenantId(tenantId)
             .name(request.getName())
             .code(request.getCode())
             .description(request.getDescription())
@@ -48,7 +73,7 @@ public class BudgetCategoryService {
 
         if (request.getParentCategoryId() != null) {
             BudgetCategory parent = categoryRepository.findById(request.getParentCategoryId())
-                .orElseThrow(() -> new RuntimeException("Parent category not found"));
+                .orElseThrow(() -> new EntityNotFoundException("Parent category not found"));
             category.setParentCategory(parent);
         }
 
@@ -59,8 +84,12 @@ public class BudgetCategoryService {
 
     @Transactional
     public BudgetCategoryResponse updateCategory(Long id, BudgetCategoryRequest request) {
+        String tenantId = getTenantId();
         BudgetCategory category = categoryRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Budget category not found: " + id));
+            .orElseThrow(() -> new EntityNotFoundException("BudgetCategory not found with id: " + id));
+        if (!category.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this BudgetCategory");
+        }
 
         category.setName(request.getName());
         category.setDescription(request.getDescription());
@@ -75,6 +104,12 @@ public class BudgetCategoryService {
 
     @Transactional
     public void deleteCategory(Long id) {
+        String tenantId = getTenantId();
+        BudgetCategory category = categoryRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("BudgetCategory not found with id: " + id));
+        if (!category.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this BudgetCategory");
+        }
         categoryRepository.deleteById(id);
         log.info("Deleted budget category: {}", id);
     }

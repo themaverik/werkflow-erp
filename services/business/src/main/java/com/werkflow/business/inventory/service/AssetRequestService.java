@@ -12,6 +12,8 @@ import com.werkflow.business.inventory.repository.AssetCategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +47,7 @@ public class AssetRequestService {
             .approxPrice(dto.getApproxPrice())
             .deliveryDate(dto.getDeliveryDate())
             .justification(dto.getJustification())
+            .processInstanceId(dto.getProcessInstanceId())
             .status(AssetRequestStatus.PENDING)
             .build();
         return toResponse(assetRequestRepository.save(request));
@@ -54,8 +57,8 @@ public class AssetRequestService {
         return toResponse(findOrThrow(id));
     }
 
-    public List<AssetRequestResponse> getRequestsByUser(String userId) {
-        return assetRequestRepository.findByRequesterUserId(userId).stream().map(this::toResponse).toList();
+    public Page<AssetRequestResponse> getRequestsByUser(String userId, Pageable pageable) {
+        return assetRequestRepository.findByRequesterUserId(userId, pageable).map(this::toResponse);
     }
 
     @Transactional

@@ -1,5 +1,6 @@
 package com.werkflow.business.hr.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.hr.dto.PayrollRequest;
 import com.werkflow.business.hr.dto.PayrollResponse;
 import com.werkflow.business.hr.entity.Employee;
@@ -9,6 +10,8 @@ import com.werkflow.business.hr.repository.PayrollRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,47 +27,59 @@ public class PayrollService {
 
     private final PayrollRepository payrollRepository;
     private final EmployeeRepository employeeRepository;
+    private final TenantContext tenantContext;
 
-    public List<PayrollResponse> getAllPayrolls() {
-        return payrollRepository.findAll().stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
+
+    public Page<PayrollResponse> getAllPayrolls(Pageable pageable) {
+        String tenantId = getTenantId();
+        log.debug("Fetching all payrolls for tenant: {}", tenantId);
+        return payrollRepository.findByTenantId(tenantId, pageable)
+            .map(this::convertToResponse);
     }
 
     public PayrollResponse getPayrollById(Long id) {
+        String tenantId = getTenantId();
+        log.debug("Fetching payroll by id: {} for tenant: {}", id, tenantId);
         Payroll payroll = payrollRepository.findById(id)
+            .filter(p -> p.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Payroll not found"));
         return convertToResponse(payroll);
     }
 
-    public List<PayrollResponse> getPayrollsByEmployee(Long employeeId) {
-        return payrollRepository.findByEmployeeIdOrderByPaymentDateDesc(employeeId)
-            .stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+    public Page<PayrollResponse> getPayrollsByEmployee(Long employeeId, Pageable pageable) {
+        String tenantId = getTenantId();
+        log.debug("Fetching payrolls for employee: {} in tenant: {}", employeeId, tenantId);
+        return payrollRepository.findByTenantIdAndEmployeeIdOrderByPaymentDateDesc(tenantId, employeeId, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<PayrollResponse> getPayrollsByMonthYear(Integer month, Integer year) {
-        return payrollRepository.findByMonthAndYear(month, year)
-            .stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+    public Page<PayrollResponse> getPayrollsByMonthYear(Integer month, Integer year, Pageable pageable) {
+        String tenantId = getTenantId();
+        log.debug("Fetching payrolls for month: {} year: {} in tenant: {}", month, year, tenantId);
+        return payrollRepository.findByTenantIdAndMonthAndYear(tenantId, month, year, pageable)
+            .map(this::convertToResponse);
     }
 
     @Transactional
     public PayrollResponse createPayroll(PayrollRequest request) {
-        log.info("Creating payroll for employee: {}", request.getEmployeeId());
+        String tenantId = getTenantId();
+        log.info("Creating payroll for employee: {} in tenant: {}", request.getEmployeeId(), tenantId);
 
         Employee employee = employeeRepository.findById(request.getEmployeeId())
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
 
         // Check if payroll already exists for this month/year
-        if (payrollRepository.existsByEmployeeIdAndPaymentMonthAndPaymentYear(
-            request.getEmployeeId(), request.getPaymentMonth(), request.getPaymentYear())) {
+        if (payrollRepository.existsByTenantIdAndEmployeeIdAndPaymentMonthAndPaymentYear(
+            tenantId, request.getEmployeeId(), request.getPaymentMonth(), request.getPaymentYear())) {
             throw new IllegalStateException("Payroll already exists for this month/year");
         }
 
         Payroll payroll = Payroll.builder()
+            .tenantId(tenantId)
             .employee(employee)
             .paymentMonth(request.getPaymentMonth())
             .paymentYear(request.getPaymentYear())
@@ -87,7 +102,11 @@ public class PayrollService {
 
     @Transactional
     public PayrollResponse updatePayroll(Long id, PayrollRequest request) {
+        String tenantId = getTenantId();
+        log.info("Updating payroll {} in tenant: {}", id, tenantId);
+
         Payroll payroll = payrollRepository.findById(id)
+            .filter(p -> p.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Payroll not found"));
 
         payroll.setPaymentDate(request.getPaymentDate());
@@ -105,8 +124,12 @@ public class PayrollService {
 
     @Transactional
     public PayrollResponse markAsPaid(Long id) {
+        String tenantId = getTenantId();
+        log.info("Marking payroll {} as paid for tenant: {}", id, tenantId);
+
         Payroll payroll = payrollRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Payroll not found"));
+            .filter(p -> p.getTenantId().equals(tenantId))
+            .orElseThrow(() -> new EntityNotFoundException("Payroll not found with id: " + id));
 
         payroll.setIsPaid(true);
         return convertToResponse(payrollRepository.save(payroll));
@@ -114,7 +137,14 @@ public class PayrollService {
 
     @Transactional
     public void deletePayroll(Long id) {
-        payrollRepository.deleteById(id);
+        String tenantId = getTenantId();
+        log.info("Deleting payroll {} in tenant: {}", id, tenantId);
+
+        Payroll payroll = payrollRepository.findById(id)
+            .filter(p -> p.getTenantId().equals(tenantId))
+            .orElseThrow(() -> new EntityNotFoundException("Payroll not found with id: " + id));
+
+        payrollRepository.delete(payroll);
     }
 
     private PayrollResponse convertToResponse(Payroll payroll) {

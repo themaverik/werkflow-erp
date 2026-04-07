@@ -1,11 +1,15 @@
 package com.werkflow.business.inventory.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.inventory.entity.AssetInstance;
 import com.werkflow.business.inventory.entity.MaintenanceRecord;
 import com.werkflow.business.inventory.repository.AssetInstanceRepository;
 import com.werkflow.business.inventory.repository.MaintenanceRecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,107 +19,133 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Service for MaintenanceRecord operations
+ * Service for MaintenanceRecord operations.
+ * All queries are tenant-scoped via TenantContext.
  */
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 @Slf4j
 public class MaintenanceRecordService {
 
     private final MaintenanceRecordRepository maintenanceRepository;
     private final AssetInstanceRepository assetRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     /**
      * Create a new maintenance record
      */
+    @Transactional
     public MaintenanceRecord createMaintenanceRecord(MaintenanceRecord record) {
-        log.info("Creating new maintenance record for asset: {}", record.getAssetInstance().getAssetTag());
+        String tenantId = getTenantId();
+        log.info("Creating new maintenance record for asset: {} for tenant: {}",
+            record.getAssetInstance().getAssetTag(), tenantId);
 
-        // Ensure asset exists
+        // Validate that the asset instance belongs to the same tenant
         AssetInstance asset = assetRepository.findById(record.getAssetInstance().getId())
             .orElseThrow(() -> new EntityNotFoundException("Asset instance not found"));
+        if (!asset.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("AssetInstance does not belong to the current tenant");
+        }
 
+        record.setTenantId(tenantId);
         MaintenanceRecord saved = maintenanceRepository.save(record);
-        log.info("Maintenance record created with id: {}", saved.getId());
+        log.info("Maintenance record created with id: {} for tenant: {}", saved.getId(), tenantId);
         return saved;
     }
 
     /**
      * Get maintenance record by ID
      */
-    @Transactional(readOnly = true)
     public MaintenanceRecord getMaintenanceRecordById(Long id) {
-        return maintenanceRepository.findById(id)
+        String tenantId = getTenantId();
+        MaintenanceRecord record = maintenanceRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Maintenance record not found with id: " + id));
+        if (!record.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this MaintenanceRecord");
+        }
+        return record;
     }
 
     /**
      * Get maintenance history for an asset
      */
-    @Transactional(readOnly = true)
     public List<MaintenanceRecord> getMaintenanceHistory(Long assetId) {
+        String tenantId = getTenantId();
         AssetInstance asset = assetRepository.findById(assetId)
             .orElseThrow(() -> new EntityNotFoundException("Asset instance not found with id: " + assetId));
+        if (!asset.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("AssetInstance does not belong to the current tenant");
+        }
 
-        return maintenanceRepository.findByAssetInstanceOrderByScheduledDateDesc(asset);
+        return maintenanceRepository.findByAssetInstanceForTenantOrderByScheduledDateDesc(tenantId, asset);
     }
 
     /**
      * Get maintenance records by type
      */
-    @Transactional(readOnly = true)
     public List<MaintenanceRecord> getMaintenanceByType(String maintenanceType) {
-        return maintenanceRepository.findByMaintenanceType(maintenanceType);
+        String tenantId = getTenantId();
+        return maintenanceRepository.findByTenantIdAndMaintenanceType(tenantId, maintenanceType);
     }
 
     /**
      * Get incomplete maintenance records
      */
-    @Transactional(readOnly = true)
     public List<MaintenanceRecord> getIncompleteMaintenanceRecords() {
-        return maintenanceRepository.findIncompleteMaintenanceRecords();
+        String tenantId = getTenantId();
+        return maintenanceRepository.findIncompleteMaintenanceRecordsForTenant(tenantId);
     }
 
     /**
      * Get overdue maintenance records
      */
-    @Transactional(readOnly = true)
     public List<MaintenanceRecord> getOverdueMaintenanceRecords() {
-        return maintenanceRepository.findOverdueMaintenanceRecords(LocalDate.now());
+        String tenantId = getTenantId();
+        return maintenanceRepository.findOverdueMaintenanceRecordsForTenant(tenantId, LocalDate.now());
     }
 
     /**
      * Get completed maintenance records
      */
-    @Transactional(readOnly = true)
     public List<MaintenanceRecord> getCompletedMaintenanceRecords() {
-        return maintenanceRepository.findCompletedMaintenanceRecords();
+        String tenantId = getTenantId();
+        return maintenanceRepository.findCompletedMaintenanceRecordsForTenant(tenantId);
     }
 
     /**
      * Get scheduled maintenance coming due
      */
-    @Transactional(readOnly = true)
     public List<MaintenanceRecord> getScheduledMaintenanceDue(LocalDate dueDate) {
-        return maintenanceRepository.findScheduledMaintenanceDue(dueDate);
+        String tenantId = getTenantId();
+        return maintenanceRepository.findScheduledMaintenanceDueForTenant(tenantId, dueDate);
     }
 
     /**
      * Get expensive maintenance records
      */
-    @Transactional(readOnly = true)
     public List<MaintenanceRecord> getExpensiveMaintenanceRecords(BigDecimal minCost) {
-        return maintenanceRepository.findExpensiveMaintenanceRecords(minCost);
+        String tenantId = getTenantId();
+        return maintenanceRepository.findExpensiveMaintenanceRecordsForTenant(tenantId, minCost);
     }
 
     /**
      * Update maintenance record
      */
+    @Transactional
     public MaintenanceRecord updateMaintenanceRecord(Long id, MaintenanceRecord recordDetails) {
-        log.info("Updating maintenance record with id: {}", id);
+        String tenantId = getTenantId();
+        log.info("Updating maintenance record with id: {} for tenant: {}", id, tenantId);
 
-        MaintenanceRecord record = getMaintenanceRecordById(id);
+        MaintenanceRecord record = maintenanceRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Maintenance record not found with id: " + id));
+        if (!record.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to update this MaintenanceRecord");
+        }
 
         record.setScheduledDate(recordDetails.getScheduledDate());
         record.setCompletedDate(recordDetails.getCompletedDate());
@@ -130,21 +160,20 @@ public class MaintenanceRecordService {
     /**
      * Complete maintenance record
      */
+    @Transactional
     public MaintenanceRecord completeMaintenanceRecord(Long id, LocalDate completedDate, LocalDate nextMaintenanceDate) {
         log.info("Completing maintenance record with id: {}", id);
-
         MaintenanceRecord record = getMaintenanceRecordById(id);
         record.setCompletedDate(completedDate);
         record.setNextMaintenanceDate(nextMaintenanceDate);
-
         return maintenanceRepository.save(record);
     }
 
     /**
      * Get all maintenance records
      */
-    @Transactional(readOnly = true)
-    public List<MaintenanceRecord> getAllMaintenanceRecords() {
-        return maintenanceRepository.findAll();
+    public Page<MaintenanceRecord> getAllMaintenanceRecords(Pageable pageable) {
+        String tenantId = getTenantId();
+        return maintenanceRepository.findByTenantId(tenantId, pageable);
     }
 }

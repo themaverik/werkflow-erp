@@ -29,6 +29,7 @@ public class PurchaseOrderResponse {
     private String deliveryAddress;
     private String paymentTerms;
     private String notes;
+    private String processInstanceId;
     private List<PoLineItemResponse> lineItems;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

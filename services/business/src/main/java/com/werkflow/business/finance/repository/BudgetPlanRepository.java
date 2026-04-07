@@ -2,6 +2,8 @@ package com.werkflow.business.finance.repository;
 
 import com.werkflow.business.finance.entity.BudgetPlan;
 import com.werkflow.business.finance.entity.BudgetPlan.BudgetStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,16 +16,14 @@ import java.util.Optional;
 @Repository
 public interface BudgetPlanRepository extends JpaRepository<BudgetPlan, Long> {
 
-    List<BudgetPlan> findByDepartmentId(Long departmentId);
+    Page<BudgetPlan> findByTenantId(String tenantId, Pageable pageable);
 
-    List<BudgetPlan> findByDepartmentIdAndStatus(Long departmentId, BudgetStatus status);
+    Optional<BudgetPlan> findByDepartmentIdAndFiscalYearAndTenantId(Long departmentId, Integer fiscalYear, String tenantId);
 
-    Optional<BudgetPlan> findByDepartmentIdAndFiscalYear(Long departmentId, Integer fiscalYear);
-
-    List<BudgetPlan> findByFiscalYear(Integer fiscalYear);
-
-    List<BudgetPlan> findByStatus(BudgetStatus status);
-
+    // NOTE: findActiveBudgetForDepartment and findBudgetsExceedingThreshold below are
+    // unscoped custom queries (no tenantId filter). They must not be called from
+    // tenant-facing code paths. Retain only for potential future admin tooling;
+    // scope them before any production use.
     @Query("SELECT bp FROM BudgetPlan bp WHERE bp.departmentId = :deptId " +
            "AND bp.periodStart <= :date AND bp.periodEnd >= :date")
     Optional<BudgetPlan> findActiveBudgetForDepartment(
@@ -34,6 +34,4 @@ public interface BudgetPlanRepository extends JpaRepository<BudgetPlan, Long> {
     @Query("SELECT bp FROM BudgetPlan bp WHERE bp.status = 'ACTIVE' " +
            "AND (bp.spentAmount / bp.totalAmount) > :threshold")
     List<BudgetPlan> findBudgetsExceedingThreshold(@Param("threshold") Double threshold);
-
-    boolean existsByDepartmentIdAndFiscalYear(Long departmentId, Integer fiscalYear);
 }

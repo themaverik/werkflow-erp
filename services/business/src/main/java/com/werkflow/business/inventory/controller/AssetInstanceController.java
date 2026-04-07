@@ -7,9 +7,13 @@ import com.werkflow.business.inventory.entity.AssetInstance;
 import com.werkflow.business.inventory.service.AssetDefinitionService;
 import com.werkflow.business.inventory.service.AssetInstanceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,8 +35,13 @@ public class AssetInstanceController {
     private final AssetDefinitionService definitionService;
 
     @PostMapping
-    @Operation(summary = "Create asset instance", description = "Create a new physical asset instance")
-    public ResponseEntity<AssetInstanceResponseDto> createInstance(@Valid @RequestBody AssetInstanceRequestDto requestDto) {
+    @Operation(summary = "Create asset instance", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<AssetInstanceResponseDto> createInstance(
+            @Valid @RequestBody AssetInstanceRequestDto requestDto,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         AssetDefinition definition = definitionService.getDefinitionById(requestDto.getAssetDefinitionId());
 
         AssetInstance instance = AssetInstance.builder()
@@ -68,10 +77,13 @@ public class AssetInstanceController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all asset instances", description = "Retrieve all physical asset instances")
-    public ResponseEntity<List<AssetInstanceResponseDto>> getAllInstances() {
-        List<AssetInstance> instances = instanceService.getAllInstances();
-        return ResponseEntity.ok(instances.stream().map(this::mapToResponse).collect(Collectors.toList()));
+    @Operation(summary = "Get all asset instances", description = "Retrieve all physical asset instances", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<AssetInstanceResponseDto>> getAllInstances(@ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(instanceService.getAllInstances(pageable).map(this::mapToResponse));
     }
 
     @GetMapping("/definition/{definitionId}")

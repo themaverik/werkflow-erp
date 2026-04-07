@@ -68,6 +68,14 @@ logs/
 .specstory/
 .claude/
 
+# LLM configurations (do not commit)
+LLM.md
+CLAUDE.md
+CHATGPT.md
+GROK.md
+DEEPSEEK.md
+GEMINI.md
+
 # Database
 *.db
 *.sqlite

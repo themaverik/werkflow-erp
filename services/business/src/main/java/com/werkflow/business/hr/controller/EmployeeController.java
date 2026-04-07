@@ -5,9 +5,13 @@ import com.werkflow.business.hr.dto.EmployeeResponse;
 import com.werkflow.business.hr.entity.EmploymentStatus;
 import com.werkflow.business.hr.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,9 +31,14 @@ public class EmployeeController {
     private final EmployeeService employeeService;
 
     @GetMapping
-    @Operation(summary = "Get all employees", description = "Retrieve a list of all employees")
-    public ResponseEntity<List<EmployeeResponse>> getAllEmployees() {
-        return ResponseEntity.ok(employeeService.getAllEmployees());
+    @Operation(summary = "Get all employees", description = "Retrieve a list of all employees", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<EmployeeResponse>> getAllEmployees(
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(employeeService.getAllEmployees(pageable));
     }
 
     @GetMapping("/{id}")
@@ -52,37 +61,52 @@ public class EmployeeController {
 
     @GetMapping("/organization/{orgId}")
     @Operation(summary = "Get employees by organization", description = "Retrieve all employees in an organization")
-    public ResponseEntity<List<EmployeeResponse>> getEmployeesByOrganization(@PathVariable Long orgId) {
-        return ResponseEntity.ok(employeeService.getEmployeesByOrganization(orgId));
+    public ResponseEntity<Page<EmployeeResponse>> getEmployeesByOrganization(
+            @PathVariable Long orgId,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(employeeService.getEmployeesByOrganization(orgId, pageable));
     }
 
     @GetMapping("/department/{departmentId}")
     @Operation(summary = "Get employees by department ID", description = "Retrieve all employees in a department by FK ID")
-    public ResponseEntity<List<EmployeeResponse>> getEmployeesByDepartment(@PathVariable Long departmentId) {
-        return ResponseEntity.ok(employeeService.getEmployeesByDepartment(departmentId));
+    public ResponseEntity<Page<EmployeeResponse>> getEmployeesByDepartment(
+            @PathVariable Long departmentId,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(employeeService.getEmployeesByDepartment(departmentId, pageable));
     }
 
     @GetMapping("/department/code/{code}")
     @Operation(summary = "Get employees by department code", description = "Retrieve all employees in a department by code")
-    public ResponseEntity<List<EmployeeResponse>> getEmployeesByDepartmentCode(@PathVariable String code) {
-        return ResponseEntity.ok(employeeService.getEmployeesByDepartmentCode(code));
+    public ResponseEntity<Page<EmployeeResponse>> getEmployeesByDepartmentCode(
+            @PathVariable String code,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(employeeService.getEmployeesByDepartmentCode(code, pageable));
     }
 
     @GetMapping("/status/{status}")
     @Operation(summary = "Get employees by status", description = "Retrieve employees by employment status")
-    public ResponseEntity<List<EmployeeResponse>> getEmployeesByStatus(@PathVariable EmploymentStatus status) {
-        return ResponseEntity.ok(employeeService.getEmployeesByStatus(status));
+    public ResponseEntity<Page<EmployeeResponse>> getEmployeesByStatus(
+            @PathVariable EmploymentStatus status,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(employeeService.getEmployeesByStatus(status, pageable));
     }
 
     @GetMapping("/search")
     @Operation(summary = "Search employees", description = "Search employees by name or email")
-    public ResponseEntity<List<EmployeeResponse>> searchEmployees(@RequestParam String searchTerm) {
-        return ResponseEntity.ok(employeeService.searchEmployees(searchTerm));
+    public ResponseEntity<Page<EmployeeResponse>> searchEmployees(
+            @RequestParam String searchTerm,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(employeeService.searchEmployees(searchTerm, pageable));
     }
 
     @PostMapping
-    @Operation(summary = "Create employee", description = "Create a new employee")
-    public ResponseEntity<EmployeeResponse> createEmployee(@Valid @RequestBody EmployeeRequest request) {
+    @Operation(summary = "Create employee", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<EmployeeResponse> createEmployee(
+            @Valid @RequestBody EmployeeRequest request,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(employeeService.createEmployee(request));
     }

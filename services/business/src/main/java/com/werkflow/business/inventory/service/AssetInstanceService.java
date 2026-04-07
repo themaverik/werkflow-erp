@@ -1,11 +1,15 @@
 package com.werkflow.business.inventory.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.inventory.entity.AssetDefinition;
 import com.werkflow.business.inventory.entity.AssetInstance;
 import com.werkflow.business.inventory.repository.AssetDefinitionRepository;
 import com.werkflow.business.inventory.repository.AssetInstanceRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,120 +18,147 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Service for AssetInstance operations
+ * Service for AssetInstance operations.
+ * All queries are tenant-scoped via TenantContext.
  */
 @Service
 @RequiredArgsConstructor
-@Transactional
+@Transactional(readOnly = true)
 @Slf4j
 public class AssetInstanceService {
 
     private final AssetInstanceRepository instanceRepository;
     private final AssetDefinitionRepository definitionRepository;
+    private final TenantContext tenantContext;
+
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
 
     /**
      * Create a new asset instance
      */
+    @Transactional
     public AssetInstance createInstance(AssetInstance instance) {
-        log.info("Creating new asset instance with tag: {}", instance.getAssetTag());
+        String tenantId = getTenantId();
+        log.info("Creating new asset instance with tag: {} for tenant: {}", instance.getAssetTag(), tenantId);
 
-        if (instanceRepository.findByAssetTag(instance.getAssetTag()).isPresent()) {
+        if (instanceRepository.findByTenantIdAndAssetTag(tenantId, instance.getAssetTag()).isPresent()) {
             throw new IllegalArgumentException("Asset instance with tag already exists: " + instance.getAssetTag());
         }
 
+        // Validate that the asset definition belongs to the same tenant
+        if (instance.getAssetDefinition() != null && instance.getAssetDefinition().getId() != null) {
+            definitionRepository.findById(instance.getAssetDefinition().getId())
+                .filter(def -> def.getTenantId().equals(tenantId))
+                .orElseThrow(() -> new AccessDeniedException("AssetDefinition does not belong to the current tenant"));
+        }
+
+        instance.setTenantId(tenantId);
         AssetInstance saved = instanceRepository.save(instance);
-        log.info("Asset instance created with id: {}", saved.getId());
+        log.info("Asset instance created with id: {} for tenant: {}", saved.getId(), tenantId);
         return saved;
     }
 
     /**
      * Get asset instance by ID
      */
-    @Transactional(readOnly = true)
     public AssetInstance getInstanceById(Long id) {
-        return instanceRepository.findById(id)
+        String tenantId = getTenantId();
+        AssetInstance instance = instanceRepository.findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Asset instance not found with id: " + id));
+        if (!instance.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to access this AssetInstance");
+        }
+        return instance;
     }
 
     /**
      * Get asset instance by asset tag
      */
-    @Transactional(readOnly = true)
     public AssetInstance getInstanceByAssetTag(String assetTag) {
-        return instanceRepository.findByAssetTag(assetTag)
+        String tenantId = getTenantId();
+        return instanceRepository.findByTenantIdAndAssetTag(tenantId, assetTag)
             .orElseThrow(() -> new EntityNotFoundException("Asset instance not found with tag: " + assetTag));
     }
 
     /**
      * Get asset instances by asset definition
      */
-    @Transactional(readOnly = true)
     public List<AssetInstance> getInstancesByDefinition(Long definitionId) {
-        AssetDefinition definition = definitionRepository.findById(definitionId)
+        String tenantId = getTenantId();
+        // Validate definition belongs to this tenant before querying instances
+        definitionRepository.findById(definitionId)
+            .filter(def -> def.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Asset definition not found with id: " + definitionId));
-
-        return instanceRepository.findByAssetDefinition(definition);
+        return instanceRepository.findByAssetDefinitionIdAndTenantId(definitionId, tenantId);
     }
 
     /**
      * Get asset instances by status
      */
-    @Transactional(readOnly = true)
     public List<AssetInstance> getInstancesByStatus(String status) {
-        return instanceRepository.findByStatus(status);
+        String tenantId = getTenantId();
+        return instanceRepository.findByTenantIdAndStatus(tenantId, status);
     }
 
     /**
      * Get available assets
      */
-    @Transactional(readOnly = true)
     public List<AssetInstance> getAvailableAssets() {
-        return instanceRepository.findAvailableAssets();
+        String tenantId = getTenantId();
+        return instanceRepository.findAvailableAssetsForTenant(tenantId);
     }
 
     /**
      * Get assets in use
      */
-    @Transactional(readOnly = true)
     public List<AssetInstance> getAssetsInUse() {
-        return instanceRepository.findAssetsInUse();
+        String tenantId = getTenantId();
+        return instanceRepository.findAssetsInUseForTenant(tenantId);
     }
 
     /**
      * Get assets requiring maintenance
      */
-    @Transactional(readOnly = true)
     public List<AssetInstance> getAssetsRequiringMaintenance() {
-        return instanceRepository.findAssetsRequiringMaintenance();
+        String tenantId = getTenantId();
+        return instanceRepository.findAssetsRequiringMaintenanceForTenant(tenantId);
     }
 
     /**
      * Get assets with warranty expiring soon
      */
-    @Transactional(readOnly = true)
     public List<AssetInstance> getAssetsWithExpiringWarranty(LocalDate expiryDate) {
-        return instanceRepository.findAssetsWithExpiringWarranty(expiryDate);
+        String tenantId = getTenantId();
+        return instanceRepository.findAssetsWithExpiringWarrantyForTenant(tenantId, expiryDate);
     }
 
     /**
      * Get all asset instances
      */
-    @Transactional(readOnly = true)
-    public List<AssetInstance> getAllInstances() {
-        return instanceRepository.findAll();
+    public Page<AssetInstance> getAllInstances(Pageable pageable) {
+        String tenantId = getTenantId();
+        return instanceRepository.findByTenantId(tenantId, pageable);
     }
 
     /**
      * Update asset instance
      */
+    @Transactional
     public AssetInstance updateInstance(Long id, AssetInstance instanceDetails) {
-        log.info("Updating asset instance with id: {}", id);
+        String tenantId = getTenantId();
+        log.info("Updating asset instance with id: {} for tenant: {}", id, tenantId);
 
-        AssetInstance instance = getInstanceById(id);
+        AssetInstance instance = instanceRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Asset instance not found with id: " + id));
+        if (!instance.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to update this AssetInstance");
+        }
 
         // Validate asset tag uniqueness if changed
         if (!instance.getAssetTag().equals(instanceDetails.getAssetTag())) {
-            if (instanceRepository.findByAssetTag(instanceDetails.getAssetTag()).isPresent()) {
+            if (instanceRepository.findByTenantIdAndAssetTag(tenantId, instanceDetails.getAssetTag()).isPresent()) {
                 throw new IllegalArgumentException("Asset instance with tag already exists: " + instanceDetails.getAssetTag());
             }
         }
@@ -144,39 +175,42 @@ public class AssetInstanceService {
         instance.setMetadata(instanceDetails.getMetadata());
 
         if (instanceDetails.getAssetDefinition() != null) {
+            // Validate that the new definition belongs to the same tenant
+            definitionRepository.findById(instanceDetails.getAssetDefinition().getId())
+                .filter(def -> def.getTenantId().equals(tenantId))
+                .orElseThrow(() -> new AccessDeniedException("AssetDefinition does not belong to the current tenant"));
             instance.setAssetDefinition(instanceDetails.getAssetDefinition());
         }
 
         AssetInstance updated = instanceRepository.save(instance);
-        log.info("Asset instance updated with id: {}", id);
+        log.info("Asset instance updated with id: {} for tenant: {}", id, tenantId);
         return updated;
     }
 
     /**
      * Update asset status
      */
+    @Transactional
     public AssetInstance updateStatus(Long id, String status) {
         log.info("Updating asset instance status to: {}", status);
-
         AssetInstance instance = getInstanceById(id);
         instance.setStatus(AssetInstance.AssetStatus.valueOf(status));
-
         return instanceRepository.save(instance);
     }
 
     /**
      * Search asset instances
      */
-    @Transactional(readOnly = true)
     public List<AssetInstance> searchInstances(String searchTerm) {
-        return instanceRepository.searchAssets(searchTerm);
+        String tenantId = getTenantId();
+        return instanceRepository.searchAssetsForTenant(tenantId, searchTerm);
     }
 
     /**
      * Get assets needing attention
      */
-    @Transactional(readOnly = true)
     public List<AssetInstance> getAssetsNeedingAttention() {
-        return instanceRepository.findAssetsNeedingAttention();
+        String tenantId = getTenantId();
+        return instanceRepository.findAssetsNeedingAttentionForTenant(tenantId);
     }
 }

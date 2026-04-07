@@ -7,9 +7,13 @@ import com.werkflow.business.inventory.entity.MaintenanceRecord;
 import com.werkflow.business.inventory.service.AssetInstanceService;
 import com.werkflow.business.inventory.service.MaintenanceRecordService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -32,8 +36,13 @@ public class MaintenanceRecordController {
     private final AssetInstanceService assetService;
 
     @PostMapping
-    @Operation(summary = "Create maintenance record", description = "Create a new maintenance record for an asset")
-    public ResponseEntity<MaintenanceRecordResponseDto> createMaintenanceRecord(@Valid @RequestBody MaintenanceRecordRequestDto requestDto) {
+    @Operation(summary = "Create maintenance record", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<MaintenanceRecordResponseDto> createMaintenanceRecord(
+            @Valid @RequestBody MaintenanceRecordRequestDto requestDto,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         AssetInstance asset = assetService.getInstanceById(requestDto.getAssetInstanceId());
 
         MaintenanceRecord record = MaintenanceRecord.builder()
@@ -59,10 +68,13 @@ public class MaintenanceRecordController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all maintenance records", description = "Retrieve all maintenance records")
-    public ResponseEntity<List<MaintenanceRecordResponseDto>> getAllMaintenanceRecords() {
-        List<MaintenanceRecord> records = maintenanceService.getAllMaintenanceRecords();
-        return ResponseEntity.ok(records.stream().map(this::mapToResponse).collect(Collectors.toList()));
+    @Operation(summary = "Get all maintenance records", description = "Retrieve all maintenance records", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<MaintenanceRecordResponseDto>> getAllMaintenanceRecords(@ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(maintenanceService.getAllMaintenanceRecords(pageable).map(this::mapToResponse));
     }
 
     @GetMapping("/asset/{assetId}")

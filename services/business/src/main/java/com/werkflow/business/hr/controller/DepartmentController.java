@@ -4,9 +4,13 @@ import com.werkflow.business.hr.dto.DepartmentRequest;
 import com.werkflow.business.hr.dto.DepartmentResponse;
 import com.werkflow.business.hr.service.DepartmentService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -25,9 +29,14 @@ public class DepartmentController {
     private final DepartmentService departmentService;
 
     @GetMapping
-    @Operation(summary = "Get all departments", description = "Retrieve a list of all departments")
-    public ResponseEntity<List<DepartmentResponse>> getAllDepartments() {
-        return ResponseEntity.ok(departmentService.getAllDepartments());
+    @Operation(summary = "Get all departments", description = "Retrieve a list of all departments", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<DepartmentResponse>> getAllDepartments(
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(departmentService.getAllDepartments(pageable));
     }
 
     @GetMapping("/{id}")
@@ -44,19 +53,27 @@ public class DepartmentController {
 
     @GetMapping("/active")
     @Operation(summary = "Get active departments", description = "Retrieve all active departments")
-    public ResponseEntity<List<DepartmentResponse>> getActiveDepartments() {
-        return ResponseEntity.ok(departmentService.getActiveDepartments());
+    public ResponseEntity<Page<DepartmentResponse>> getActiveDepartments(
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(departmentService.getActiveDepartments(pageable));
     }
 
     @GetMapping("/organization/{organizationId}")
     @Operation(summary = "Get departments by organization", description = "Retrieve all departments for an organization")
-    public ResponseEntity<List<DepartmentResponse>> getDepartmentsByOrganization(@PathVariable Long organizationId) {
-        return ResponseEntity.ok(departmentService.getDepartmentsByOrganization(organizationId));
+    public ResponseEntity<Page<DepartmentResponse>> getDepartmentsByOrganization(
+            @PathVariable Long organizationId,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(departmentService.getDepartmentsByOrganization(organizationId, pageable));
     }
 
     @PostMapping
-    @Operation(summary = "Create department", description = "Create a new department")
-    public ResponseEntity<DepartmentResponse> createDepartment(@Valid @RequestBody DepartmentRequest request) {
+    @Operation(summary = "Create department", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<DepartmentResponse> createDepartment(
+            @Valid @RequestBody DepartmentRequest request,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(departmentService.createDepartment(request));
     }

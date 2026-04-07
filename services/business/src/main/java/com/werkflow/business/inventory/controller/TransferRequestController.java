@@ -7,9 +7,13 @@ import com.werkflow.business.inventory.entity.TransferRequest;
 import com.werkflow.business.inventory.service.AssetInstanceService;
 import com.werkflow.business.inventory.service.TransferRequestService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -31,8 +35,13 @@ public class TransferRequestController {
     private final AssetInstanceService assetService;
 
     @PostMapping
-    @Operation(summary = "Create transfer request", description = "Create a new asset transfer request")
-    public ResponseEntity<TransferRequestResponseDto> createTransferRequest(@Valid @RequestBody TransferRequestRequestDto requestDto) {
+    @Operation(summary = "Create transfer request", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<TransferRequestResponseDto> createTransferRequest(
+            @Valid @RequestBody TransferRequestRequestDto requestDto,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         AssetInstance asset = assetService.getInstanceById(requestDto.getAssetInstanceId());
 
         TransferRequest request = TransferRequest.builder()
@@ -61,10 +70,13 @@ public class TransferRequestController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all transfer requests", description = "Retrieve all transfer requests")
-    public ResponseEntity<List<TransferRequestResponseDto>> getAllTransfers() {
-        List<TransferRequest> requests = transferService.getAllTransfers();
-        return ResponseEntity.ok(requests.stream().map(this::mapToResponse).collect(Collectors.toList()));
+    @Operation(summary = "Get all transfer requests", description = "Retrieve all transfer requests", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<TransferRequestResponseDto>> getAllTransfers(@ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(transferService.getAllTransfers(pageable).map(this::mapToResponse));
     }
 
     @GetMapping("/asset/{assetId}")

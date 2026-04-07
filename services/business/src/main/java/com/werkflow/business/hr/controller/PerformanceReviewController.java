@@ -4,9 +4,13 @@ import com.werkflow.business.hr.dto.PerformanceReviewRequest;
 import com.werkflow.business.hr.dto.PerformanceReviewResponse;
 import com.werkflow.business.hr.service.PerformanceReviewService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,9 +26,14 @@ public class PerformanceReviewController {
     private final PerformanceReviewService reviewService;
 
     @GetMapping
-    @Operation(summary = "Get all reviews", description = "Retrieve all performance reviews")
-    public ResponseEntity<List<PerformanceReviewResponse>> getAllReviews() {
-        return ResponseEntity.ok(reviewService.getAllReviews());
+    @Operation(summary = "Get all reviews", description = "Retrieve all performance reviews", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<PerformanceReviewResponse>> getAllReviews(
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(reviewService.getAllReviews(pageable));
     }
 
     @GetMapping("/{id}")
@@ -35,13 +44,20 @@ public class PerformanceReviewController {
 
     @GetMapping("/employee/{employeeId}")
     @Operation(summary = "Get reviews by employee", description = "Retrieve all performance reviews for an employee")
-    public ResponseEntity<List<PerformanceReviewResponse>> getReviewsByEmployee(@PathVariable Long employeeId) {
-        return ResponseEntity.ok(reviewService.getReviewsByEmployee(employeeId));
+    public ResponseEntity<Page<PerformanceReviewResponse>> getReviewsByEmployee(
+            @PathVariable Long employeeId,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(reviewService.getReviewsByEmployee(employeeId, pageable));
     }
 
     @PostMapping
-    @Operation(summary = "Create review", description = "Create a new performance review")
-    public ResponseEntity<PerformanceReviewResponse> createReview(@Valid @RequestBody PerformanceReviewRequest request) {
+    @Operation(summary = "Create review", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<PerformanceReviewResponse> createReview(
+            @Valid @RequestBody PerformanceReviewRequest request,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(reviewService.createReview(request));
     }

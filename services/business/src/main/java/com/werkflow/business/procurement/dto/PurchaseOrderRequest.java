@@ -38,6 +38,8 @@ public class PurchaseOrderRequest {
     @Size(max = 1000)
     private String notes;
 
+    private String processInstanceId;
+
     @Valid
     private List<PoLineItemRequest> lineItems;
 }

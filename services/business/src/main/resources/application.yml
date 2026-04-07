@@ -44,13 +44,27 @@ spring:
     time-zone: UTC
     default-property-inclusion: non_null
 
+  cache:
+    type: caffeine
+    cache-names:
+      - idempotency
+    caffeine:
+      spec: "maximumSize=10000,expireAfterWrite=24h"
+
   liquibase:
     enabled: false
+
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 1000
+        one-indexed-parameters: false
 
 server:
   port: ${SERVER_PORT:8084}
   servlet:
-    context-path: /api
+    context-path: /api/v1
   error:
     include-message: always
     include-binding-errors: always
@@ -82,6 +96,7 @@ springdoc:
     enabled: true
     operations-sorter: method
     tags-sorter: alpha
+    oauth2-redirect-url: http://localhost:8084/api/v1/swagger-ui/oauth2-redirect.html
   show-actuator: true
 
 logging:

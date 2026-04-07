@@ -1,5 +1,6 @@
 package com.werkflow.business.hr.service;
 
+import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.hr.dto.AttendanceRequest;
 import com.werkflow.business.hr.dto.AttendanceResponse;
 import com.werkflow.business.hr.entity.Attendance;
@@ -9,6 +10,8 @@ import com.werkflow.business.hr.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,48 +27,63 @@ public class AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
     private final EmployeeRepository employeeRepository;
+    private final TenantContext tenantContext;
 
-    public List<AttendanceResponse> getAllAttendances() {
-        return attendanceRepository.findAll().stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+    private String getTenantId() {
+        return tenantContext.getTenantId();
+    }
+
+    public Page<AttendanceResponse> getAllAttendances(Pageable pageable) {
+        String tenantId = getTenantId();
+        log.debug("Fetching all attendances for tenant: {}", tenantId);
+        return attendanceRepository.findByTenantId(tenantId, pageable)
+            .map(this::convertToResponse);
     }
 
     public AttendanceResponse getAttendanceById(Long id) {
+        String tenantId = getTenantId();
+        log.debug("Fetching attendance by id: {} for tenant: {}", id, tenantId);
         Attendance attendance = attendanceRepository.findById(id)
+            .filter(a -> a.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Attendance not found"));
         return convertToResponse(attendance);
     }
 
-    public List<AttendanceResponse> getAttendancesByEmployee(Long employeeId) {
-        return attendanceRepository.findByEmployeeId(employeeId).stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+    public Page<AttendanceResponse> getAttendancesByEmployee(Long employeeId, Pageable pageable) {
+        String tenantId = getTenantId();
+        log.debug("Fetching attendances for employee: {} in tenant: {}", employeeId, tenantId);
+        return attendanceRepository.findByTenantIdAndEmployeeId(tenantId, employeeId, pageable)
+            .map(this::convertToResponse);
     }
 
-    public List<AttendanceResponse> getAttendancesByDateRange(Long employeeId,
+    public Page<AttendanceResponse> getAttendancesByDateRange(Long employeeId,
                                                               LocalDate startDate,
-                                                              LocalDate endDate) {
-        return attendanceRepository.findByEmployeeIdAndDateRange(employeeId, startDate, endDate)
-            .stream()
-            .map(this::convertToResponse)
-            .collect(Collectors.toList());
+                                                              LocalDate endDate,
+                                                              Pageable pageable) {
+        String tenantId = getTenantId();
+        log.debug("Fetching attendances for employee: {} between {} and {} in tenant: {}",
+            employeeId, startDate, endDate, tenantId);
+        return attendanceRepository.findByTenantIdAndEmployeeIdAndDateRange(tenantId, employeeId, startDate, endDate, pageable)
+            .map(this::convertToResponse);
     }
 
     @Transactional
     public AttendanceResponse createAttendance(AttendanceRequest request) {
-        log.info("Creating attendance for employee: {}", request.getEmployeeId());
+        String tenantId = getTenantId();
+        log.info("Creating attendance for employee: {} in tenant: {}", request.getEmployeeId(), tenantId);
 
         Employee employee = employeeRepository.findById(request.getEmployeeId())
+            .filter(e -> e.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Employee not found"));
 
         // Check if attendance already exists
-        if (attendanceRepository.existsByEmployeeIdAndAttendanceDate(
-            request.getEmployeeId(), request.getAttendanceDate())) {
+        if (attendanceRepository.existsByTenantIdAndEmployeeIdAndAttendanceDate(
+            tenantId, request.getEmployeeId(), request.getAttendanceDate())) {
             throw new IllegalStateException("Attendance already exists for this date");
         }
 
         Attendance attendance = Attendance.builder()
+            .tenantId(tenantId)
             .employee(employee)
             .attendanceDate(request.getAttendanceDate())
             .checkInTime(request.getCheckInTime())
@@ -81,7 +99,11 @@ public class AttendanceService {
 
     @Transactional
     public AttendanceResponse updateAttendance(Long id, AttendanceRequest request) {
+        String tenantId = getTenantId();
+        log.info("Updating attendance {} in tenant: {}", id, tenantId);
+
         Attendance attendance = attendanceRepository.findById(id)
+            .filter(a -> a.getTenantId().equals(tenantId))
             .orElseThrow(() -> new EntityNotFoundException("Attendance not found"));
 
         attendance.setCheckInTime(request.getCheckInTime());
@@ -94,7 +116,14 @@ public class AttendanceService {
 
     @Transactional
     public void deleteAttendance(Long id) {
-        attendanceRepository.deleteById(id);
+        String tenantId = getTenantId();
+        log.info("Deleting attendance {} in tenant: {}", id, tenantId);
+
+        Attendance attendance = attendanceRepository.findById(id)
+            .filter(a -> a.getTenantId().equals(tenantId))
+            .orElseThrow(() -> new EntityNotFoundException("Attendance not found"));
+
+        attendanceRepository.delete(attendance);
     }
 
     private AttendanceResponse convertToResponse(Attendance attendance) {

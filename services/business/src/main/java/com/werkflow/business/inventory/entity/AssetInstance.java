@@ -29,6 +29,9 @@ public class AssetInstance {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "tenant_id", nullable = false, length = 255)
+    private String tenantId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "asset_definition_id", nullable = false)
     private AssetDefinition assetDefinition;

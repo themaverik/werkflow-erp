@@ -2,6 +2,8 @@ package com.werkflow.business.inventory.repository;
 
 import com.werkflow.business.inventory.entity.AssetInstance;
 import com.werkflow.business.inventory.entity.CustodyRecord;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,62 +14,74 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository for CustodyRecord entity
+ * Repository for CustodyRecord entity.
+ * Tenant-scoped query methods follow the pattern established in Tasks 4-6.
  */
 @Repository
 public interface CustodyRecordRepository extends JpaRepository<CustodyRecord, Long> {
 
-    /**
-     * Find current custody record for an asset (active custody, no end date)
-     */
+    // Tenant-scoped methods
+    Page<CustodyRecord> findByTenantId(String tenantId, Pageable pageable);
+
+    @Query("SELECT c FROM CustodyRecord c WHERE c.tenantId = :tenantId AND c.assetInstance = :assetInstance AND c.endDate IS NULL")
+    Optional<CustodyRecord> findCurrentCustodyForTenant(@Param("tenantId") String tenantId,
+                                                        @Param("assetInstance") AssetInstance assetInstance);
+
+    @Query("SELECT c FROM CustodyRecord c WHERE c.tenantId = :tenantId AND c.assetInstance = :assetInstance ORDER BY c.startDate DESC")
+    List<CustodyRecord> findByAssetInstanceForTenantOrderByStartDateDesc(@Param("tenantId") String tenantId,
+                                                                         @Param("assetInstance") AssetInstance assetInstance);
+
+    List<CustodyRecord> findByTenantIdAndCustodianDeptId(String tenantId, Long deptId);
+
+    List<CustodyRecord> findByTenantIdAndCustodianUserId(String tenantId, Long userId);
+
+    List<CustodyRecord> findByTenantIdAndCustodyType(String tenantId, String custodyType);
+
+    @Query("SELECT c FROM CustodyRecord c WHERE c.tenantId = :tenantId AND c.endDate IS NULL")
+    List<CustodyRecord> findActiveCustodyRecordsForTenant(@Param("tenantId") String tenantId);
+
+    @Query("SELECT c FROM CustodyRecord c WHERE c.tenantId = :tenantId " +
+           "AND c.custodyType = 'TEMPORARY' AND c.endDate <= :currentDate AND c.endDate IS NOT NULL")
+    List<CustodyRecord> findOverdueTemporaryCustodyForTenant(@Param("tenantId") String tenantId,
+                                                             @Param("currentDate") LocalDateTime currentDate);
+
+    @Query("SELECT c FROM CustodyRecord c WHERE c.tenantId = :tenantId " +
+           "AND c.custodianDeptId = :deptId AND c.endDate IS NULL")
+    List<CustodyRecord> findActiveCustodyByDepartmentForTenant(@Param("tenantId") String tenantId,
+                                                               @Param("deptId") Long deptId);
+
+    // Legacy unscoped methods
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT c FROM CustodyRecord c WHERE c.assetInstance = :assetInstance AND c.endDate IS NULL")
     Optional<CustodyRecord> findCurrentCustody(@Param("assetInstance") AssetInstance assetInstance);
 
-    /**
-     * Find custody history for an asset
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<CustodyRecord> findByAssetInstanceOrderByStartDateDesc(AssetInstance assetInstance);
 
-    /**
-     * Find custody records by custodian department
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<CustodyRecord> findByCustodianDeptId(Long deptId);
 
-    /**
-     * Find custody records by custodian user
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<CustodyRecord> findByCustodianUserId(Long userId);
 
-    /**
-     * Find custody records by custody type
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<CustodyRecord> findByCustodyType(String custodyType);
 
-    /**
-     * Find current custody records (active, no end date)
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT c FROM CustodyRecord c WHERE c.endDate IS NULL")
     List<CustodyRecord> findActiveCustodyRecords();
 
-    /**
-     * Find temporary custody records that are past their end date
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT c FROM CustodyRecord c WHERE c.custodyType = 'TEMPORARY' AND c.endDate <= :currentDate AND c.endDate IS NOT NULL")
     List<CustodyRecord> findOverdueTemporaryCustody(@Param("currentDate") LocalDateTime currentDate);
 
-    /**
-     * Find custody records by asset instance and custody type
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<CustodyRecord> findByAssetInstanceAndCustodyType(AssetInstance assetInstance, String custodyType);
 
-    /**
-     * Find custody records for specific department and user
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     List<CustodyRecord> findByCustodianDeptIdAndCustodianUserId(Long deptId, Long userId);
 
-    /**
-     * Find all custody records for a department
-     */
+    @Deprecated(forRemoval = false, since = "1.0.0")
     @Query("SELECT c FROM CustodyRecord c WHERE c.custodianDeptId = :deptId AND c.endDate IS NULL")
     List<CustodyRecord> findActiveCustodyByDepartment(@Param("deptId") Long deptId);
 }

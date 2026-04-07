@@ -5,9 +5,13 @@ import com.werkflow.business.hr.dto.LeaveResponse;
 import com.werkflow.business.hr.entity.LeaveStatus;
 import com.werkflow.business.hr.service.LeaveService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,9 +27,14 @@ public class LeaveController {
     private final LeaveService leaveService;
 
     @GetMapping
-    @Operation(summary = "Get all leaves", description = "Retrieve all leave requests")
-    public ResponseEntity<List<LeaveResponse>> getAllLeaves() {
-        return ResponseEntity.ok(leaveService.getAllLeaves());
+    @Operation(summary = "Get all leaves", description = "Retrieve all leave requests", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<LeaveResponse>> getAllLeaves(
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(leaveService.getAllLeaves(pageable));
     }
 
     @GetMapping("/{id}")
@@ -36,19 +45,28 @@ public class LeaveController {
 
     @GetMapping("/employee/{employeeId}")
     @Operation(summary = "Get leaves by employee", description = "Retrieve all leaves for an employee")
-    public ResponseEntity<List<LeaveResponse>> getLeavesByEmployee(@PathVariable Long employeeId) {
-        return ResponseEntity.ok(leaveService.getLeavesByEmployee(employeeId));
+    public ResponseEntity<Page<LeaveResponse>> getLeavesByEmployee(
+            @PathVariable Long employeeId,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(leaveService.getLeavesByEmployee(employeeId, pageable));
     }
 
     @GetMapping("/status/{status}")
     @Operation(summary = "Get leaves by status", description = "Retrieve leaves by status")
-    public ResponseEntity<List<LeaveResponse>> getLeavesByStatus(@PathVariable LeaveStatus status) {
-        return ResponseEntity.ok(leaveService.getLeavesByStatus(status));
+    public ResponseEntity<Page<LeaveResponse>> getLeavesByStatus(
+            @PathVariable LeaveStatus status,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(leaveService.getLeavesByStatus(status, pageable));
     }
 
     @PostMapping
-    @Operation(summary = "Create leave request", description = "Create a new leave request")
-    public ResponseEntity<LeaveResponse> createLeave(@Valid @RequestBody LeaveRequest request) {
+    @Operation(summary = "Create leave request", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<LeaveResponse> createLeave(
+            @Valid @RequestBody LeaveRequest request,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(leaveService.createLeave(request));
     }
