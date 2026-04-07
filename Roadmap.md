@@ -2,7 +2,7 @@
 
 **Project**: Standalone ERP Data Service for HR, Finance, Procurement, Inventory
 **Status**: Pre-MVP — Extracted from main werkflow platform
-**Last Updated**: 2026-04-06
+**Last Updated**: 2026-04-07
 **Architecture**: See `docs/ADR-001-Service-Boundary-Architecture.md`
 
 ---
