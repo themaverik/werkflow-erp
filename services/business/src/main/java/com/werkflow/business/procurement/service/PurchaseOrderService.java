@@ -216,6 +216,7 @@ public class PurchaseOrderService {
             .deliveryAddress(po.getDeliveryAddress())
             .paymentTerms(po.getPaymentTerms())
             .notes(po.getNotes())
+            .processInstanceId(po.getProcessInstanceId())
             .lineItems(lineItems)
             .createdAt(po.getCreatedAt())
             .updatedAt(po.getUpdatedAt())
