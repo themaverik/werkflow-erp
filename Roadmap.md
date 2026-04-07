@@ -53,14 +53,16 @@ Single source of truth for task tracking and session continuity.
 
 ## Project Health
 
-**Current State**: werkflow-erp extracted as standalone service, all CRUD APIs implemented but missing:
-- Multi-tenant scoping (CRITICAL)
-- Idempotency for safe retries
-- Cross-domain FK validation
-- API versioning
-- Pagination on list endpoints
+**Current State**: werkflow-erp extracted as standalone service, all CRUD APIs implemented with P0.1-P0.2 complete:
+- ✅ Multi-tenant scoping (COMPLETE — P0.1)
+- ✅ Idempotency for safe retries (COMPLETE — P0.2)
+- Remaining for MVP: Cross-domain FK validation, API versioning, Pagination on list endpoints
 
-**Architecture**: Pure CRUD service layer. Orchestration, approvals, and workflow logic stay in main werkflow platform.
+**Completed Phases**:
+- P0.1: Multi-Tenant Isolation (TenantContext, TenantContextFilter, all 23 entities scoped)
+- P0.2: Idempotency (IdempotencyRecord entity, IdempotencyFilter, 22 endpoint documentation)
+
+**Architecture**: Pure CRUD service layer with request deduplication. Orchestration, approvals, and workflow logic stay in main werkflow platform.
 
 **Optional Deployment**: werkflow-erp can be deployed independently or replaced by client's own ERP system via Connector Registry.
 
