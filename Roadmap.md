@@ -30,10 +30,10 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P0.2.1-P0.2.3 COMPLETE ✓ — Idempotency fully integrated and documented
+**Status**: P0.1-P0.3 COMPLETE ✓ — Multi-tenancy, idempotency, and processInstanceId pattern ready
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
-**Next Phase**: P0.3 — processInstanceId Race Condition Fix
-**Last Commit**: All P0.2.1-P0.2.3 tasks committed
+**Next Phase**: P0.4 — Cross-Domain FK Validation
+**Last Commit**: All P0.3 tasks committed
 **Branch**: feature/p0-multi-tenancy
 
 **P0.1.2 Completion Summary**:
@@ -125,20 +125,18 @@ Must complete before any production deployment.
   - [x] All tests passing (27/27)
 
 #### P0.3 — processInstanceId Race Condition Fix
-- [ ] **P0.3.1** Allow `processInstanceId` in asset request create payload
-  - [ ] Update `AssetRequestCreateRequest` DTO to include optional `processInstanceId`
-  - [ ] Update `AssetRequestController.create()` to accept it
-  - [ ] Update `AssetRequestService.create()` to store it
-  - [ ] Estimated: 1 hour
+- [x] **P0.3.1** Allow `processInstanceId` in asset request create payload *(commit: f7708ae)*
+  - [x] Update `AssetRequestCreateRequest` DTO to include optional `processInstanceId`
+  - [x] Update `AssetRequestController.create()` to accept it
+  - [x] Update `AssetRequestService.create()` to store it
 
-- [ ] **P0.3.2** Update werkflow integration docs
-  - [ ] Document: werkflow should generate processInstanceId first, then call POST
-  - [ ] Document fallback: if unavailable, use existing `PATCH /api/v1/inventory/asset-requests/{id}` endpoint
-  - [ ] Estimated: 1 hour
+- [x] **P0.3.2** Update werkflow integration docs *(commit: 3a0c38c)*
+  - [x] Document: werkflow should generate processInstanceId first, then call POST
+  - [x] Document fallback: if unavailable, use existing `PATCH /api/v1/inventory/asset-requests/{id}` endpoint
 
-- [ ] **P0.3.3** Apply same pattern to PurchaseRequest and PurchaseOrder
-  - [ ] Update create DTOs and service
-  - [ ] Estimated: 2 hours
+- [x] **P0.3.3** Apply same pattern to PurchaseRequest and PurchaseOrder *(commit: 597bda4)*
+  - [x] Update create DTOs and service for PurchaseRequest
+  - [x] Update create DTOs and service for PurchaseOrder
 
 #### P0.4 — Cross-Domain FK Validation
 - [ ] **P0.4.1** Create `CrossDomainValidator` service
