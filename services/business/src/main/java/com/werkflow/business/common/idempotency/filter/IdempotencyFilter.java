@@ -66,12 +66,14 @@ public class IdempotencyFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Read body directly before wrapping — ContentCachingRequestWrapper.getContentAsByteArray()
-        // returns empty until the body has been consumed by downstream; reading it here forces capture.
+        // Wrap FIRST so downstream can still read the body via getInputStream/getReader
+        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
+
+        // Read body from the wrapper — downstream can re-read via the cached wrapper
         String requestPayload;
         try {
             StringBuilder sb = new StringBuilder();
-            try (java.io.BufferedReader reader = request.getReader()) {
+            try (java.io.BufferedReader reader = wrappedRequest.getReader()) {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line);
@@ -80,12 +82,9 @@ public class IdempotencyFilter extends OncePerRequestFilter {
             requestPayload = sb.toString();
         } catch (Exception e) {
             logger.warn("Failed to capture request body", e);
-            chain.doFilter(request, response);
+            chain.doFilter(wrappedRequest, response);
             return;
         }
-
-        // Wrap request so downstream can still read the body via getInputStream/getReader
-        ContentCachingRequestWrapper wrappedRequest = new ContentCachingRequestWrapper(request);
 
         // Check cache
         try {
@@ -96,7 +95,7 @@ public class IdempotencyFilter extends OncePerRequestFilter {
 
                 // Set headers
                 if (cachedResp.getHeaders() != null) {
-                    cachedResp.getHeaders().forEach(response::setHeader);
+                    cachedResp.getHeaders().forEach(response::addHeader);
                 }
 
                 // Write body
