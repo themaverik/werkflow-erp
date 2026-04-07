@@ -19,6 +19,11 @@ import java.util.List;
 /**
  * Service for CustodyRecord operations (Inter-department asset assignments).
  * All queries are tenant-scoped via TenantContext.
+ *
+ * <p>Cross-domain FK validation is performed for {@code custodianDeptId} via
+ * {@link com.werkflow.business.common.validator.CrossDomainValidator}.
+ * Validation is tenant-scoped: the department must exist and belong to the current tenant.
+ * {@code custodianUserId} and {@code assignedByUserId} are not yet validated.
  */
 @Service
 @RequiredArgsConstructor
