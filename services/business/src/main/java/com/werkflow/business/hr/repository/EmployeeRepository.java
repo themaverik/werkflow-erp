@@ -2,6 +2,8 @@ package com.werkflow.business.hr.repository;
 
 import com.werkflow.business.hr.entity.Employee;
 import com.werkflow.business.hr.entity.EmploymentStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,7 +20,7 @@ import java.util.Optional;
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     // Tenant-scoped methods (NEW)
-    List<Employee> findByTenantId(@Param("tenantId") String tenantId);
+    Page<Employee> findByTenantId(@Param("tenantId") String tenantId, Pageable pageable);
 
     Optional<Employee> findByTenantIdAndEmail(@Param("tenantId") String tenantId,
                                               @Param("email") String email);
@@ -26,44 +28,53 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     Optional<Employee> findByTenantIdAndKeycloakUserId(@Param("tenantId") String tenantId,
                                                        @Param("keycloakUserId") String keycloakUserId);
 
-    List<Employee> findByTenantIdAndOrganizationId(@Param("tenantId") String tenantId,
-                                                   @Param("organizationId") Long orgId);
+    Page<Employee> findByTenantIdAndOrganizationId(@Param("tenantId") String tenantId,
+                                                   @Param("organizationId") Long orgId,
+                                                   Pageable pageable);
 
-    List<Employee> findByTenantIdAndDepartmentCode(@Param("tenantId") String tenantId,
-                                                   @Param("code") String code);
+    Page<Employee> findByTenantIdAndDepartmentCode(@Param("tenantId") String tenantId,
+                                                   @Param("code") String code,
+                                                   Pageable pageable);
 
-    List<Employee> findByTenantIdAndOrganizationIdAndDepartmentCode(@Param("tenantId") String tenantId,
+    Page<Employee> findByTenantIdAndOrganizationIdAndDepartmentCode(@Param("tenantId") String tenantId,
                                                                     @Param("organizationId") Long orgId,
-                                                                    @Param("code") String code);
+                                                                    @Param("code") String code,
+                                                                    Pageable pageable);
 
-    List<Employee> findByTenantIdAndDoaLevelGreaterThanEqual(@Param("tenantId") String tenantId,
-                                                             @Param("level") Integer level);
+    Page<Employee> findByTenantIdAndDoaLevelGreaterThanEqual(@Param("tenantId") String tenantId,
+                                                             @Param("level") Integer level,
+                                                             Pageable pageable);
 
-    List<Employee> findByTenantIdAndEmploymentStatus(@Param("tenantId") String tenantId,
-                                                     @Param("status") EmploymentStatus status);
+    Page<Employee> findByTenantIdAndEmploymentStatus(@Param("tenantId") String tenantId,
+                                                     @Param("status") EmploymentStatus status,
+                                                     Pageable pageable);
 
     @Query("SELECT e FROM Employee e WHERE e.tenantId = :tenantId AND e.department.id = :departmentId")
-    List<Employee> findByTenantIdAndDepartmentId(@Param("tenantId") String tenantId,
-                                                 @Param("departmentId") Long departmentId);
+    Page<Employee> findByTenantIdAndDepartmentId(@Param("tenantId") String tenantId,
+                                                 @Param("departmentId") Long departmentId,
+                                                 Pageable pageable);
 
     @Query("SELECT e FROM Employee e WHERE e.tenantId = :tenantId AND e.department.id = :departmentId " +
            "AND e.employmentStatus = :status")
-    List<Employee> findByTenantIdAndDepartmentIdAndStatus(@Param("tenantId") String tenantId,
+    Page<Employee> findByTenantIdAndDepartmentIdAndStatus(@Param("tenantId") String tenantId,
                                                           @Param("departmentId") Long departmentId,
-                                                          @Param("status") EmploymentStatus status);
+                                                          @Param("status") EmploymentStatus status,
+                                                          Pageable pageable);
 
     @Query("SELECT e FROM Employee e WHERE e.tenantId = :tenantId AND " +
            "(LOWER(e.firstName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR LOWER(e.lastName) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR LOWER(e.email) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
-    List<Employee> searchEmployeesByTenant(@Param("tenantId") String tenantId,
-                                          @Param("searchTerm") String searchTerm);
+    Page<Employee> searchEmployeesByTenant(@Param("tenantId") String tenantId,
+                                           @Param("searchTerm") String searchTerm,
+                                           Pageable pageable);
 
     @Query("SELECT e FROM Employee e WHERE e.tenantId = :tenantId " +
            "AND e.dateOfJoining BETWEEN :startDate AND :endDate")
-    List<Employee> findByTenantIdAndJoinDateBetween(@Param("tenantId") String tenantId,
+    Page<Employee> findByTenantIdAndJoinDateBetween(@Param("tenantId") String tenantId,
                                                     @Param("startDate") LocalDate startDate,
-                                                    @Param("endDate") LocalDate endDate);
+                                                    @Param("endDate") LocalDate endDate,
+                                                    Pageable pageable);
 
     boolean existsByTenantIdAndEmail(@Param("tenantId") String tenantId,
                                      @Param("email") String email);

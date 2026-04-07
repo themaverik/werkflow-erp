@@ -1,6 +1,8 @@
 package com.werkflow.business.hr.repository;
 
 import com.werkflow.business.hr.entity.Payroll;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,10 +19,11 @@ import java.util.Optional;
 public interface PayrollRepository extends JpaRepository<Payroll, Long> {
 
     // Tenant-scoped methods (NEW)
-    List<Payroll> findByTenantId(@Param("tenantId") String tenantId);
+    Page<Payroll> findByTenantId(@Param("tenantId") String tenantId, Pageable pageable);
 
-    List<Payroll> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
-                                              @Param("employeeId") Long employeeId);
+    Page<Payroll> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
+                                              @Param("employeeId") Long employeeId,
+                                              Pageable pageable);
 
     Optional<Payroll> findByTenantIdAndEmployeeIdAndPaymentMonthAndPaymentYear(@Param("tenantId") String tenantId,
                                                                                 @Param("employeeId") Long employeeId,
@@ -29,28 +32,33 @@ public interface PayrollRepository extends JpaRepository<Payroll, Long> {
 
     @Query("SELECT p FROM Payroll p WHERE p.tenantId = :tenantId AND p.employee.id = :employeeId " +
            "ORDER BY p.paymentYear DESC, p.paymentMonth DESC")
-    List<Payroll> findByTenantIdAndEmployeeIdOrderByPaymentDateDesc(@Param("tenantId") String tenantId,
-                                                                     @Param("employeeId") Long employeeId);
+    Page<Payroll> findByTenantIdAndEmployeeIdOrderByPaymentDateDesc(@Param("tenantId") String tenantId,
+                                                                     @Param("employeeId") Long employeeId,
+                                                                     Pageable pageable);
 
     @Query("SELECT p FROM Payroll p WHERE p.tenantId = :tenantId AND p.paymentMonth = :month AND p.paymentYear = :year")
-    List<Payroll> findByTenantIdAndMonthAndYear(@Param("tenantId") String tenantId,
+    Page<Payroll> findByTenantIdAndMonthAndYear(@Param("tenantId") String tenantId,
                                                 @Param("month") Integer month,
-                                                @Param("year") Integer year);
+                                                @Param("year") Integer year,
+                                                Pageable pageable);
 
     @Query("SELECT p FROM Payroll p WHERE p.tenantId = :tenantId AND p.paymentDate BETWEEN :startDate AND :endDate")
-    List<Payroll> findByTenantIdAndPaymentDateBetween(@Param("tenantId") String tenantId,
+    Page<Payroll> findByTenantIdAndPaymentDateBetween(@Param("tenantId") String tenantId,
                                                       @Param("startDate") LocalDate startDate,
-                                                      @Param("endDate") LocalDate endDate);
+                                                      @Param("endDate") LocalDate endDate,
+                                                      Pageable pageable);
 
-    List<Payroll> findByTenantIdAndIsPaid(@Param("tenantId") String tenantId,
-                                          @Param("isPaid") Boolean isPaid);
+    Page<Payroll> findByTenantIdAndIsPaid(@Param("tenantId") String tenantId,
+                                          @Param("isPaid") Boolean isPaid,
+                                          Pageable pageable);
 
     @Query("SELECT p FROM Payroll p WHERE p.tenantId = :tenantId AND p.employee.department.id = :departmentId " +
            "AND p.paymentMonth = :month AND p.paymentYear = :year")
-    List<Payroll> findByTenantIdAndDepartmentAndMonthYear(@Param("tenantId") String tenantId,
+    Page<Payroll> findByTenantIdAndDepartmentAndMonthYear(@Param("tenantId") String tenantId,
                                                           @Param("departmentId") Long departmentId,
                                                           @Param("month") Integer month,
-                                                          @Param("year") Integer year);
+                                                          @Param("year") Integer year,
+                                                          Pageable pageable);
 
     @Query("SELECT SUM(p.netSalary) FROM Payroll p WHERE p.tenantId = :tenantId AND p.paymentMonth = :month " +
            "AND p.paymentYear = :year AND p.isPaid = true")

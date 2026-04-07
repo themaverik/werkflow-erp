@@ -2,6 +2,8 @@ package com.werkflow.business.hr.repository;
 
 import com.werkflow.business.hr.entity.Attendance;
 import com.werkflow.business.hr.entity.AttendanceStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,34 +20,38 @@ import java.util.Optional;
 public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     // Tenant-scoped methods (NEW)
-    List<Attendance> findByTenantId(@Param("tenantId") String tenantId);
+    Page<Attendance> findByTenantId(@Param("tenantId") String tenantId, Pageable pageable);
 
     Optional<Attendance> findByTenantIdAndEmployeeIdAndAttendanceDate(@Param("tenantId") String tenantId,
                                                                       @Param("employeeId") Long employeeId,
                                                                       @Param("attendanceDate") LocalDate attendanceDate);
 
-    List<Attendance> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
-                                                 @Param("employeeId") Long employeeId);
+    Page<Attendance> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
+                                                 @Param("employeeId") Long employeeId,
+                                                 Pageable pageable);
 
-    List<Attendance> findByTenantIdAndAttendanceDate(@Param("tenantId") String tenantId,
-                                                     @Param("attendanceDate") LocalDate attendanceDate);
+    Page<Attendance> findByTenantIdAndAttendanceDate(@Param("tenantId") String tenantId,
+                                                     @Param("attendanceDate") LocalDate attendanceDate,
+                                                     Pageable pageable);
 
     @Query("SELECT a FROM Attendance a WHERE a.tenantId = :tenantId AND a.employee.id = :employeeId " +
            "AND a.attendanceDate BETWEEN :startDate AND :endDate " +
            "ORDER BY a.attendanceDate DESC")
-    List<Attendance> findByTenantIdAndEmployeeIdAndDateRange(@Param("tenantId") String tenantId,
+    Page<Attendance> findByTenantIdAndEmployeeIdAndDateRange(@Param("tenantId") String tenantId,
                                                              @Param("employeeId") Long employeeId,
                                                              @Param("startDate") LocalDate startDate,
-                                                             @Param("endDate") LocalDate endDate);
+                                                             @Param("endDate") LocalDate endDate,
+                                                             Pageable pageable);
 
     @Query("SELECT a FROM Attendance a WHERE a.tenantId = :tenantId AND a.employee.id = :employeeId " +
            "AND a.status = :status " +
            "AND a.attendanceDate BETWEEN :startDate AND :endDate")
-    List<Attendance> findByTenantIdAndEmployeeIdAndStatusAndDateRange(@Param("tenantId") String tenantId,
+    Page<Attendance> findByTenantIdAndEmployeeIdAndStatusAndDateRange(@Param("tenantId") String tenantId,
                                                                       @Param("employeeId") Long employeeId,
                                                                       @Param("status") AttendanceStatus status,
                                                                       @Param("startDate") LocalDate startDate,
-                                                                      @Param("endDate") LocalDate endDate);
+                                                                      @Param("endDate") LocalDate endDate,
+                                                                      Pageable pageable);
 
     @Query("SELECT SUM(a.workedHours) FROM Attendance a WHERE a.tenantId = :tenantId AND a.employee.id = :employeeId " +
            "AND a.attendanceDate BETWEEN :startDate AND :endDate")

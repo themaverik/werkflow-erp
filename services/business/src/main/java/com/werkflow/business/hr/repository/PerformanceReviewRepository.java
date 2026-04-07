@@ -2,6 +2,8 @@ package com.werkflow.business.hr.repository;
 
 import com.werkflow.business.hr.entity.PerformanceRating;
 import com.werkflow.business.hr.entity.PerformanceReview;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,40 +19,47 @@ import java.util.List;
 public interface PerformanceReviewRepository extends JpaRepository<PerformanceReview, Long> {
 
     // Tenant-scoped methods (NEW)
-    List<PerformanceReview> findByTenantId(@Param("tenantId") String tenantId);
+    Page<PerformanceReview> findByTenantId(@Param("tenantId") String tenantId, Pageable pageable);
 
-    List<PerformanceReview> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
-                                                        @Param("employeeId") Long employeeId);
+    Page<PerformanceReview> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
+                                                        @Param("employeeId") Long employeeId,
+                                                        Pageable pageable);
 
-    List<PerformanceReview> findByTenantIdAndReviewerId(@Param("tenantId") String tenantId,
-                                                        @Param("reviewerId") Long reviewerId);
+    Page<PerformanceReview> findByTenantIdAndReviewerId(@Param("tenantId") String tenantId,
+                                                        @Param("reviewerId") Long reviewerId,
+                                                        Pageable pageable);
 
-    List<PerformanceReview> findByTenantIdAndRating(@Param("tenantId") String tenantId,
-                                                    @Param("rating") PerformanceRating rating);
+    Page<PerformanceReview> findByTenantIdAndRating(@Param("tenantId") String tenantId,
+                                                    @Param("rating") PerformanceRating rating,
+                                                    Pageable pageable);
 
     @Query("SELECT pr FROM PerformanceReview pr WHERE pr.tenantId = :tenantId AND pr.employee.id = :employeeId " +
            "ORDER BY pr.reviewDate DESC")
-    List<PerformanceReview> findByTenantIdAndEmployeeIdOrderByReviewDateDesc(@Param("tenantId") String tenantId,
-                                                                              @Param("employeeId") Long employeeId);
+    Page<PerformanceReview> findByTenantIdAndEmployeeIdOrderByReviewDateDesc(@Param("tenantId") String tenantId,
+                                                                              @Param("employeeId") Long employeeId,
+                                                                              Pageable pageable);
 
     @Query("SELECT pr FROM PerformanceReview pr WHERE pr.tenantId = :tenantId AND pr.reviewDate BETWEEN :startDate AND :endDate")
-    List<PerformanceReview> findByTenantIdAndReviewDateBetween(@Param("tenantId") String tenantId,
+    Page<PerformanceReview> findByTenantIdAndReviewDateBetween(@Param("tenantId") String tenantId,
                                                                @Param("startDate") LocalDate startDate,
-                                                               @Param("endDate") LocalDate endDate);
+                                                               @Param("endDate") LocalDate endDate,
+                                                               Pageable pageable);
 
     @Query("SELECT pr FROM PerformanceReview pr WHERE pr.tenantId = :tenantId AND pr.employee.department.id = :departmentId " +
            "AND pr.reviewDate BETWEEN :startDate AND :endDate")
-    List<PerformanceReview> findByTenantIdAndDepartmentAndDateRange(@Param("tenantId") String tenantId,
+    Page<PerformanceReview> findByTenantIdAndDepartmentAndDateRange(@Param("tenantId") String tenantId,
                                                                     @Param("departmentId") Long departmentId,
                                                                     @Param("startDate") LocalDate startDate,
-                                                                    @Param("endDate") LocalDate endDate);
+                                                                    @Param("endDate") LocalDate endDate,
+                                                                    Pageable pageable);
 
     @Query("SELECT AVG(pr.score) FROM PerformanceReview pr WHERE pr.tenantId = :tenantId AND pr.employee.id = :employeeId")
     Double getAverageScoreByEmployeeTenant(@Param("tenantId") String tenantId,
                                            @Param("employeeId") Long employeeId);
 
     @Query("SELECT pr FROM PerformanceReview pr WHERE pr.tenantId = :tenantId AND pr.employeeAcknowledged = false")
-    List<PerformanceReview> findByTenantIdAndPendingAcknowledgement(@Param("tenantId") String tenantId);
+    Page<PerformanceReview> findByTenantIdAndPendingAcknowledgement(@Param("tenantId") String tenantId,
+                                                                    Pageable pageable);
 
     long countByTenantIdAndEmployeeIdAndRating(@Param("tenantId") String tenantId,
                                                @Param("employeeId") Long employeeId,

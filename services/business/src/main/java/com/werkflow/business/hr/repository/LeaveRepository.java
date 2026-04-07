@@ -3,6 +3,8 @@ package com.werkflow.business.hr.repository;
 import com.werkflow.business.hr.entity.Leave;
 import com.werkflow.business.hr.entity.LeaveStatus;
 import com.werkflow.business.hr.entity.LeaveType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -18,21 +20,25 @@ import java.util.List;
 public interface LeaveRepository extends JpaRepository<Leave, Long> {
 
     // Tenant-scoped methods (NEW)
-    List<Leave> findByTenantId(@Param("tenantId") String tenantId);
+    Page<Leave> findByTenantId(@Param("tenantId") String tenantId, Pageable pageable);
 
-    List<Leave> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
-                                            @Param("employeeId") Long employeeId);
+    Page<Leave> findByTenantIdAndEmployeeId(@Param("tenantId") String tenantId,
+                                            @Param("employeeId") Long employeeId,
+                                            Pageable pageable);
 
-    List<Leave> findByTenantIdAndStatus(@Param("tenantId") String tenantId,
-                                        @Param("status") LeaveStatus status);
+    Page<Leave> findByTenantIdAndStatus(@Param("tenantId") String tenantId,
+                                        @Param("status") LeaveStatus status,
+                                        Pageable pageable);
 
-    List<Leave> findByTenantIdAndLeaveType(@Param("tenantId") String tenantId,
-                                           @Param("leaveType") LeaveType leaveType);
+    Page<Leave> findByTenantIdAndLeaveType(@Param("tenantId") String tenantId,
+                                           @Param("leaveType") LeaveType leaveType,
+                                           Pageable pageable);
 
     @Query("SELECT l FROM Leave l WHERE l.tenantId = :tenantId AND l.employee.id = :employeeId AND l.status = :status")
-    List<Leave> findByTenantIdAndEmployeeIdAndStatus(@Param("tenantId") String tenantId,
+    Page<Leave> findByTenantIdAndEmployeeIdAndStatus(@Param("tenantId") String tenantId,
                                                      @Param("employeeId") Long employeeId,
-                                                     @Param("status") LeaveStatus status);
+                                                     @Param("status") LeaveStatus status,
+                                                     Pageable pageable);
 
     @Query("SELECT l FROM Leave l WHERE l.tenantId = :tenantId AND l.employee.id = :employeeId " +
            "AND l.startDate <= :endDate AND l.endDate >= :startDate")
@@ -42,9 +48,10 @@ public interface LeaveRepository extends JpaRepository<Leave, Long> {
                                                                @Param("endDate") LocalDate endDate);
 
     @Query("SELECT l FROM Leave l WHERE l.tenantId = :tenantId AND l.startDate BETWEEN :startDate AND :endDate")
-    List<Leave> findByTenantIdAndDateRange(@Param("tenantId") String tenantId,
+    Page<Leave> findByTenantIdAndDateRange(@Param("tenantId") String tenantId,
                                            @Param("startDate") LocalDate startDate,
-                                           @Param("endDate") LocalDate endDate);
+                                           @Param("endDate") LocalDate endDate,
+                                           Pageable pageable);
 
     @Query("SELECT SUM(l.numberOfDays) FROM Leave l WHERE l.tenantId = :tenantId AND l.employee.id = :employeeId " +
            "AND l.leaveType = :leaveType AND l.status = 'APPROVED' " +

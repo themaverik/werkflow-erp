@@ -2,6 +2,8 @@ package com.werkflow.business.hr.repository;
 
 import com.werkflow.business.hr.entity.Department;
 import com.werkflow.business.hr.entity.DepartmentType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -16,7 +18,7 @@ import java.util.Optional;
 public interface DepartmentRepository extends JpaRepository<Department, Long> {
 
     // Tenant-scoped methods (NEW)
-    List<Department> findByTenantId(@Param("tenantId") String tenantId);
+    Page<Department> findByTenantId(@Param("tenantId") String tenantId, Pageable pageable);
 
     Optional<Department> findByIdAndTenantId(@Param("id") Long id,
                                              @Param("tenantId") String tenantId);
@@ -27,15 +29,18 @@ public interface DepartmentRepository extends JpaRepository<Department, Long> {
     Optional<Department> findByTenantIdAndName(@Param("tenantId") String tenantId,
                                                @Param("name") String name);
 
-    List<Department> findByTenantIdAndIsActive(@Param("tenantId") String tenantId,
-                                               @Param("isActive") Boolean isActive);
+    Page<Department> findByTenantIdAndIsActive(@Param("tenantId") String tenantId,
+                                               @Param("isActive") Boolean isActive,
+                                               Pageable pageable);
 
-    List<Department> findByTenantIdAndOrganizationId(@Param("tenantId") String tenantId,
-                                                     @Param("organizationId") Long organizationId);
+    Page<Department> findByTenantIdAndOrganizationId(@Param("tenantId") String tenantId,
+                                                     @Param("organizationId") Long organizationId,
+                                                     Pageable pageable);
 
-    List<Department> findByTenantIdAndOrganizationIdAndDepartmentType(@Param("tenantId") String tenantId,
+    Page<Department> findByTenantIdAndOrganizationIdAndDepartmentType(@Param("tenantId") String tenantId,
                                                                       @Param("organizationId") Long organizationId,
-                                                                      @Param("departmentType") DepartmentType departmentType);
+                                                                      @Param("departmentType") DepartmentType departmentType,
+                                                                      Pageable pageable);
 
     boolean existsByTenantIdAndCode(@Param("tenantId") String tenantId,
                                     @Param("code") String code);
