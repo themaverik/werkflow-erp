@@ -48,7 +48,7 @@ class IdempotencyServiceTest {
     @Test
     void testGetIfPresent_CacheHit_PayloadMatches() {
         IdempotencyRecord record = buildRecord(TENANT_ID, KEY, PAYLOAD, 200,
-                LocalDateTime.now().minusHours(1));
+                LocalDateTime.now(ZoneOffset.UTC).minusHours(1));
         cache.put(TENANT_ID + ":" + KEY, record);
 
         Optional<CachedResponse> result = service.getIfPresent(TENANT_ID, KEY, PAYLOAD);
@@ -66,7 +66,7 @@ class IdempotencyServiceTest {
     @Test
     void testGetIfPresent_CacheHit_PayloadMismatch_ThrowsException() {
         IdempotencyRecord record = buildRecord(TENANT_ID, KEY, PAYLOAD, 200,
-                LocalDateTime.now().minusHours(1));
+                LocalDateTime.now(ZoneOffset.UTC).minusHours(1));
         cache.put(TENANT_ID + ":" + KEY, record);
 
         IdempotencyException ex = assertThrows(IdempotencyException.class,
@@ -79,7 +79,7 @@ class IdempotencyServiceTest {
     @Test
     void testGetIfPresent_CacheMiss_DatabaseHit() {
         IdempotencyRecord record = buildRecord(TENANT_ID, KEY, PAYLOAD, 201,
-                LocalDateTime.now().minusHours(2));
+                LocalDateTime.now(ZoneOffset.UTC).minusHours(2));
         when(repository.findByTenantIdAndIdempotencyKey(TENANT_ID, KEY))
                 .thenReturn(Optional.of(record));
 
@@ -107,7 +107,7 @@ class IdempotencyServiceTest {
     @Test
     void testStore_WriteThroughCache() {
         IdempotencyRecord saved = buildRecord(TENANT_ID, KEY, PAYLOAD, 200,
-                LocalDateTime.now());
+                LocalDateTime.now(ZoneOffset.UTC));
         when(repository.save(any(IdempotencyRecord.class))).thenReturn(saved);
 
         CachedResponse response = new CachedResponse();

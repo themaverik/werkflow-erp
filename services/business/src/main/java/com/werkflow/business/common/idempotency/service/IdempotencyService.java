@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -41,7 +40,7 @@ public class IdempotencyService {
         String cacheKey = buildCacheKey(tenantId, key);
 
         // 1. Check Caffeine cache
-        IdempotencyRecord cached = cache.get(cacheKey, IdempotencyRecord.class);
+        IdempotencyRecord cached = (cache != null) ? cache.get(cacheKey, IdempotencyRecord.class) : null;
         if (cached != null) {
             // Lazy cleanup: check if expired
             if (isExpired(cached)) {
@@ -67,7 +66,9 @@ public class IdempotencyService {
 
             // Populate cache and validate
             validatePayload(record.getRequestPayload(), currentPayload);
-            cache.put(cacheKey, record);
+            if (cache != null) {
+                cache.put(cacheKey, record);
+            }
             return Optional.of(toCachedResponse(record));
         }
 
@@ -84,20 +85,16 @@ public class IdempotencyService {
         record.setStatusCode(response.getStatusCode());
 
         // Write-through: save to DB, then cache
-        IdempotencyRecord saved;
-        try {
-            saved = repository.save(record);
-        } catch (DataAccessException e) {
-            logger.error("Failed to persist idempotency record for key: {}", key, e);
-            throw e;
-        }
+        IdempotencyRecord saved = repository.save(record);
 
         Cache cache = cacheManager.getCache(CACHE_NAME);
         String cacheKey = buildCacheKey(tenantId, key);
-        try {
-            cache.put(cacheKey, saved);
-        } catch (Exception e) {
-            logger.warn("Failed to cache idempotency record for key: {}", key, e);
+        if (cache != null) {
+            try {
+                cache.put(cacheKey, saved);
+            } catch (Exception e) {
+                logger.warn("Failed to cache idempotency record for tenant: {} key: {}", tenantId, key, e);
+            }
         }
     }
 
