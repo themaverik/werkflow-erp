@@ -47,8 +47,13 @@ public class LeaveController {
     }
 
     @PostMapping
-    @Operation(summary = "Create leave request", description = "Create a new leave request")
-    public ResponseEntity<LeaveResponse> createLeave(@Valid @RequestBody LeaveRequest request) {
+    @Operation(summary = "Create leave request", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<LeaveResponse> createLeave(
+            @Valid @RequestBody LeaveRequest request,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(leaveService.createLeave(request));
     }

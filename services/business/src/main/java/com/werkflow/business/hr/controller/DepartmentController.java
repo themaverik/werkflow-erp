@@ -55,8 +55,13 @@ public class DepartmentController {
     }
 
     @PostMapping
-    @Operation(summary = "Create department", description = "Create a new department")
-    public ResponseEntity<DepartmentResponse> createDepartment(@Valid @RequestBody DepartmentRequest request) {
+    @Operation(summary = "Create department", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<DepartmentResponse> createDepartment(
+            @Valid @RequestBody DepartmentRequest request,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED)
             .body(departmentService.createDepartment(request));
     }
