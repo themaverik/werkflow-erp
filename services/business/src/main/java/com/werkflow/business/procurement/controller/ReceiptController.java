@@ -4,18 +4,17 @@ import com.werkflow.business.procurement.dto.ReceiptRequest;
 import com.werkflow.business.procurement.dto.ReceiptResponse;
 import com.werkflow.business.procurement.service.ReceiptService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/receipts")
@@ -26,10 +25,14 @@ public class ReceiptController {
     private final ReceiptService receiptService;
 
     @GetMapping
-    @Operation(summary = "Get all receipts")
+    @Operation(summary = "Get all receipts", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<ReceiptResponse>> getAllReceipts(
-            @PageableDefault(size = 20) Pageable pageable) {
+            @ParameterObject Pageable pageable) {
         return ResponseEntity.ok(receiptService.getAllReceipts(pageable));
     }
 
