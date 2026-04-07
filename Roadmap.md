@@ -2,7 +2,7 @@
 
 **Project**: Standalone ERP Data Service for HR, Finance, Procurement, Inventory
 **Status**: Pre-MVP — Extracted from main werkflow platform
-**Last Updated**: 2026-04-07 (P0.4 complete)
+**Last Updated**: 2026-04-07 (P0.5 complete)
 **Architecture**: See `docs/ADR-001-Service-Boundary-Architecture.md`
 
 ---
@@ -30,10 +30,10 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P0.1-P0.4 COMPLETE ✓ — P0.5 Design & Plan READY ✓
+**Status**: P0.1-P0.5 COMPLETE ✓ — Multi-tenancy, idempotency, processInstanceId, FK validation, and API versioning ready
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
-**Current Task**: P0.5 implementation (API versioning context-path change)
-**Last Commit**: P0.5 design and implementation plan created and committed (awaiting execution)
+**Next Phase**: P0.6 — Pagination on List Endpoints
+**Last Commit**: P0.5 API versioning complete — all tests passing, deployment-ready
 **Branch**: feature/p0-multi-tenancy
 
 **P0.1.2 Completion Summary**:
@@ -53,12 +53,13 @@ Single source of truth for task tracking and session continuity.
 
 ## Project Health
 
-**Current State**: werkflow-erp extracted as standalone service, all CRUD APIs implemented with P0.1-P0.4 complete, P0.5 design ready:
+**Current State**: werkflow-erp extracted as standalone service, all CRUD APIs implemented with P0.1-P0.5 complete:
 - ✅ Multi-tenant scoping (COMPLETE — P0.1)
 - ✅ Idempotency for safe retries (COMPLETE — P0.2)
+- ✅ processInstanceId pattern support (COMPLETE — P0.3)
 - ✅ Cross-domain FK validation (COMPLETE — P0.4)
-- 🎯 API versioning (/api/v1) (DESIGN & PLAN READY — P0.5)
-- Remaining for MVP: P0.5 implementation, Pagination on list endpoints
+- ✅ API versioning (/api/v1) (COMPLETE — P0.5)
+- Remaining for MVP: Pagination on list endpoints (P0.6)
 
 **Completed Phases**:
 - P0.1: Multi-Tenant Isolation (TenantContext, TenantContextFilter, all 23 entities scoped)
@@ -163,26 +164,26 @@ Must complete before any production deployment.
 
 #### P0.5 — API Versioning (/api/v1)
 
-**Design**: `docs/superpowers/specs/2026-04-07-p0.5-api-versioning-design.md` (APPROVED)
-**Implementation Plan**: `docs/superpowers/plans/2026-04-07-p0.5-api-versioning.md` (READY)
+- [x] **P0.5.1** Update application.yml context-path and Swagger config *(commit: 64c938f)*
+  - [x] Change: `server.servlet.context-path: /api` → `/api/v1`
+  - [x] Update: Swagger `oauth2-redirect-url` to `/api/v1/swagger-ui/oauth2-redirect.html`
+  - [x] Fix: Dockerfile health check path to `/api/v1/actuator/health`
+  - [x] Verification: mvn clean compile successful, no YAML errors
+  - [x] Completed: ~15 minutes
 
-- [~] **P0.5.1** Update application.yml context-path and Swagger config
-  - [ ] Change: `server.servlet.context-path: /api` → `/api/v1`
-  - [ ] Update: `oauth2-redirect-url: http://localhost:8084/api/v1/swagger-ui/oauth2-redirect.html`
-  - [ ] Verify with compilation and grep
-  - [ ] Status: Ready for subagent-driven execution
+- [x] **P0.5.2** Update all documentation files to use /api/v1 endpoints *(commit: 3678aa1)*
+  - [x] Updated: `docs/WERKFLOW_INTEGRATION.md` (16 endpoint references)
+  - [x] Verified: `docs/Independence-Checklist.md` (already compliant, 6 references)
+  - [x] Verified: `Implementation-Summary.md` (already compliant, 5 references)
+  - [x] All documentation endpoint URLs now use `/api/v1/`
+  - [x] Completed: ~20 minutes
 
-- [ ] **P0.5.2** Update all documentation files to use /api/v1 endpoints
-  - [ ] Update: `docs/WERKFLOW_INTEGRATION.md`
-  - [ ] Update: `docs/Independence-Checklist.md`
-  - [ ] Update: `Implementation-Summary.md`
-  - [ ] Status: Ready for subagent-driven execution
-
-- [ ] **P0.5.3** Verify full test suite and update ROADMAP
-  - [ ] Run `mvn clean test` and `mvn verify`
-  - [ ] Verify no regressions
-  - [ ] Update ROADMAP.md to mark P0.5 complete
-  - [ ] Status: Ready for subagent-driven execution
+- [x] **P0.5.3** Verify full test suite and update ROADMAP *(commit: 1c8514c)*
+  - [x] Run: `mvn clean test` — 40/40 tests PASS
+  - [x] Run: `mvn verify` — BUILD SUCCESS, all integration tests pass
+  - [x] Verify: Service running and accessible at `/api/v1/swagger-ui.html` (HTTP 401 before auth)
+  - [x] No regressions detected
+  - [x] Completed: ~10 minutes
 
 #### P0.6 — Pagination on List Endpoints
 - [ ] **P0.6.1** Add pagination to all GET list endpoints
