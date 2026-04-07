@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
  * Service for PurchaseRequest operations.
  * All queries are tenant-scoped via TenantContext.
  *
- * <p>Cross-domain FK validation (vendor, budget, department) is NOT performed here.
- * {@code requestingDeptId} and {@code requesterUserId} are stored as opaque Long values —
- * the caller is trusted to supply valid IDs from their respective domains.
- * Full cross-domain validation is tracked under Roadmap P0.4 (CrossDomainValidator).
+ * <p>Cross-domain FK validation is performed for {@code requestingDeptId} via
+ * {@link com.werkflow.business.common.validator.CrossDomainValidator}.
+ * Validation is tenant-scoped: the department must exist and belong to the current tenant.
+ * {@code requesterUserId} and vendor/budget IDs on line items are not yet validated.
  *
  * <p>Tenant isolation IS enforced: read, update, and delete operations verify
  * that the requested PurchaseRequest belongs to the current tenant.
