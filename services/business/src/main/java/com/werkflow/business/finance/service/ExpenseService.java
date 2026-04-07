@@ -14,6 +14,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,10 +34,10 @@ public class ExpenseService {
     }
 
     @Transactional(readOnly = true)
-    public List<ExpenseResponse> getAllExpenses() {
+    public Page<ExpenseResponse> getAllExpenses(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all expenses for tenant: {}", tenantId);
-        return expenseRepository.findByTenantId(tenantId).stream().map(this::toResponse).collect(Collectors.toList());
+        return expenseRepository.findByTenantId(tenantId, pageable).map(this::toResponse);
     }
 
     @Deprecated

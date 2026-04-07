@@ -12,6 +12,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,10 +31,10 @@ public class BudgetPlanService {
     }
 
     @Transactional(readOnly = true)
-    public List<BudgetPlanResponse> getAllBudgetPlans() {
+    public Page<BudgetPlanResponse> getAllBudgetPlans(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all budget plans for tenant: {}", tenantId);
-        return budgetPlanRepository.findByTenantId(tenantId).stream().map(this::toResponse).collect(Collectors.toList());
+        return budgetPlanRepository.findByTenantId(tenantId, pageable).map(this::toResponse);
     }
 
     @Deprecated
