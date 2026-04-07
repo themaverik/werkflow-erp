@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS idempotency_record (
     updated_at TIMESTAMP,
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
-    version BIGINT,
+    version BIGINT DEFAULT 0,
     CONSTRAINT fk_idempotency_tenant FOREIGN KEY (tenant_id) REFERENCES tenant(id) ON DELETE CASCADE,
     UNIQUE (tenant_id, idempotency_key)
 );
