@@ -17,6 +17,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.List;
@@ -49,12 +52,11 @@ public class PurchaseRequestService {
         return tenantContext.getTenantId();
     }
 
-    public List<PurchaseRequestResponse> getAllPurchaseRequests() {
+    public Page<PurchaseRequestResponse> getAllPurchaseRequests(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all purchase requests for tenant: {}", tenantId);
-        return prRepository.findByTenantId(tenantId).stream()
-            .map(this::toResponse)
-            .collect(Collectors.toList());
+        return prRepository.findByTenantId(tenantId, pageable)
+            .map(this::toResponse);
     }
 
     public PurchaseRequestResponse getPurchaseRequestById(Long id) {

@@ -20,6 +20,9 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,12 +47,11 @@ public class ReceiptService {
         return tenantContext.getTenantId();
     }
 
-    public List<ReceiptResponse> getAllReceipts() {
+    public Page<ReceiptResponse> getAllReceipts(Pageable pageable) {
         String tenantId = getTenantId();
         log.debug("Fetching all receipts for tenant: {}", tenantId);
-        return receiptRepository.findByTenantId(tenantId).stream()
-            .map(this::toResponse)
-            .collect(Collectors.toList());
+        return receiptRepository.findByTenantId(tenantId, pageable)
+            .map(this::toResponse);
     }
 
     public ReceiptResponse getReceiptById(Long id) {

@@ -7,6 +7,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,8 +28,9 @@ public class ReceiptController {
     @GetMapping
     @Operation(summary = "Get all receipts")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<List<ReceiptResponse>> getAllReceipts() {
-        return ResponseEntity.ok(receiptService.getAllReceipts());
+    public ResponseEntity<Page<ReceiptResponse>> getAllReceipts(
+            @PageableDefault(size = 20) Pageable pageable) {
+        return ResponseEntity.ok(receiptService.getAllReceipts(pageable));
     }
 
     @GetMapping("/{id}")
