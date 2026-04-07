@@ -2,6 +2,8 @@ package com.werkflow.business.inventory.repository;
 
 import com.werkflow.business.inventory.entity.AssetInstance;
 import com.werkflow.business.inventory.entity.MaintenanceRecord;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +21,7 @@ import java.util.List;
 public interface MaintenanceRecordRepository extends JpaRepository<MaintenanceRecord, Long> {
 
     // Tenant-scoped methods
-    List<MaintenanceRecord> findByTenantId(String tenantId);
+    Page<MaintenanceRecord> findByTenantId(String tenantId, Pageable pageable);
 
     List<MaintenanceRecord> findByTenantIdAndMaintenanceType(String tenantId, String maintenanceType);
 

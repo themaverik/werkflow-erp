@@ -2,6 +2,8 @@ package com.werkflow.business.inventory.repository;
 
 import com.werkflow.business.inventory.entity.AssetInstance;
 import com.werkflow.business.inventory.entity.CustodyRecord;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +21,7 @@ import java.util.Optional;
 public interface CustodyRecordRepository extends JpaRepository<CustodyRecord, Long> {
 
     // Tenant-scoped methods
-    List<CustodyRecord> findByTenantId(String tenantId);
+    Page<CustodyRecord> findByTenantId(String tenantId, Pageable pageable);
 
     @Query("SELECT c FROM CustodyRecord c WHERE c.tenantId = :tenantId AND c.assetInstance = :assetInstance AND c.endDate IS NULL")
     Optional<CustodyRecord> findCurrentCustodyForTenant(@Param("tenantId") String tenantId,

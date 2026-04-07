@@ -1,6 +1,8 @@
 package com.werkflow.business.inventory.repository;
 
 import com.werkflow.business.inventory.entity.AssetCategory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -17,7 +19,7 @@ import java.util.Optional;
 public interface AssetCategoryRepository extends JpaRepository<AssetCategory, Long> {
 
     // Tenant-scoped methods
-    List<AssetCategory> findByTenantId(String tenantId);
+    Page<AssetCategory> findByTenantId(String tenantId, Pageable pageable);
 
     List<AssetCategory> findByTenantIdAndActiveTrue(String tenantId);
 

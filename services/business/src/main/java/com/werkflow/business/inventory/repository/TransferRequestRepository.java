@@ -2,6 +2,8 @@ package com.werkflow.business.inventory.repository;
 
 import com.werkflow.business.inventory.entity.AssetInstance;
 import com.werkflow.business.inventory.entity.TransferRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -19,7 +21,7 @@ import java.util.Optional;
 public interface TransferRequestRepository extends JpaRepository<TransferRequest, Long> {
 
     // Tenant-scoped methods
-    List<TransferRequest> findByTenantId(String tenantId);
+    Page<TransferRequest> findByTenantId(String tenantId, Pageable pageable);
 
     List<TransferRequest> findByTenantIdAndStatus(String tenantId, String status);
 
