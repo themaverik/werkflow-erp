@@ -30,10 +30,10 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P0.2.1-P0.2.2 COMPLETE ✓ — Idempotency infrastructure ready
+**Status**: P0.2.1-P0.2.3 COMPLETE ✓ — Idempotency fully integrated and documented
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
-**Next Phase**: P0.2.3 — Document Idempotency-Key header in endpoints
-**Last Commit**: All P0.2.1-P0.2.2 tasks committed
+**Next Phase**: P0.3 — processInstanceId Race Condition Fix
+**Last Commit**: All P0.2.1-P0.2.3 tasks committed
 **Branch**: feature/p0-multi-tenancy
 
 **P0.1.2 Completion Summary**:
@@ -116,10 +116,11 @@ Must complete before any production deployment.
   - [x] On first call: stores response after controller returns
   - [ ] Estimated: 3 hours
 
-- [ ] **P0.2.3** Update POST/PUT endpoints to include `X-Idempotency-Key` documentation
-  - [ ] Add `@RequestHeader(name = "X-Idempotency-Key")` to all creation methods
-  - [ ] Update Swagger/OpenAPI docs
-  - [ ] Estimated: 1 hour
+- [x] **P0.2.3** Update POST/PUT endpoints to include `X-Idempotency-Key` documentation *(commit: 5f01bb0)*
+  - [x] Added Idempotency-Key header parameter to all single-object POST endpoints (22 endpoints across 4 domains)
+  - [x] Enhanced @Operation descriptions with idempotency explanation
+  - [x] Verified Swagger/OpenAPI documentation rendering
+  - [x] All tests passing (27/27)
 
 #### P0.3 — processInstanceId Race Condition Fix
 - [ ] **P0.3.1** Allow `processInstanceId` in asset request create payload
