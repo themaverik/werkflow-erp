@@ -17,8 +17,8 @@ The recommended pattern for werkflow is to generate `processInstanceId` in the w
 # 1. Workflow engine generates processInstanceId
 PROCESS_ID="arn:aws:bpm:us-east-1:123456789:process/asset-approval/2026-04-07-12345"
 
-# 2. Call POST /api/v1/inventory/asset-requests with processInstanceId
-curl -X POST http://localhost:8080/api/v1/inventory/asset-requests \
+# 2. Call POST /api/inventory/asset-requests with processInstanceId
+curl -X POST http://localhost:8084/api/inventory/asset-requests \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H "Idempotency-Key: $(uuidgen)" \
@@ -42,15 +42,21 @@ curl -X POST http://localhost:8080/api/v1/inventory/asset-requests \
 # Workflow engine generates processInstanceId
 PROCESS_ID="arn:aws:bpm:us-east-1:123456789:process/pr-approval/2026-04-07-54321"
 
-# Call POST /api/v1/procurement/purchase-requests with processInstanceId
-curl -X POST http://localhost:8080/api/v1/procurement/purchase-requests \
+# Call POST /api/purchase-requests with processInstanceId
+curl -X POST http://localhost:8084/api/purchase-requests \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H "Idempotency-Key: $(uuidgen)" \
   -d '{
     "requesterUserId": "user123",
     "vendorId": 100,
-    "lineItems": [...],
+    "lineItems": [
+      {
+        "assetId": 10,
+        "quantity": 2,
+        "unitPrice": 50.00
+      }
+    ],
     "processInstanceId": "'$PROCESS_ID'"
   }'
 
@@ -68,11 +74,18 @@ If the workflow engine cannot generate `processInstanceId` before API creation, 
 
 ```bash
 # 1. Create asset request without processInstanceId
-RESPONSE=$(curl -X POST http://localhost:8080/api/v1/inventory/asset-requests \
+RESPONSE=$(curl -X POST http://localhost:8084/api/inventory/asset-requests \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -H "Idempotency-Key: $(uuidgen)" \
-  -d '{...}')
+  -d '{
+    "requesterUserId": "user123",
+    "requesterName": "John Doe",
+    "requesterEmail": "john@acme.com",
+    "officeLocation": "NEW_YORK",
+    "assetCategoryId": 42,
+    "quantity": 1
+  }')
 
 ASSET_REQUEST_ID=$(echo $RESPONSE | jq -r '.id')
 echo "Created asset request: $ASSET_REQUEST_ID"
@@ -81,8 +94,7 @@ echo "Created asset request: $ASSET_REQUEST_ID"
 PROCESS_ID="arn:aws:bpm:us-east-1:123456789:process/asset-approval/2026-04-07-12345"
 
 # 3. Update asset request with processInstanceId
-curl -X PATCH http://localhost:8080/api/v1/inventory/asset-requests/$ASSET_REQUEST_ID/process-instance \
-  -H "Content-Type: application/x-www-form-urlencoded" \
+curl -X POST http://localhost:8084/api/inventory/asset-requests/$ASSET_REQUEST_ID/process-instance \
   -H "Authorization: Bearer $JWT_TOKEN" \
   -d "processInstanceId=$PROCESS_ID"
 
@@ -90,7 +102,7 @@ echo "Linked asset request $ASSET_REQUEST_ID to process $PROCESS_ID"
 ```
 
 **Fallback applies to:**
-- Asset Requests: `PATCH /api/v1/inventory/asset-requests/{id}/process-instance?processInstanceId=...`
+- Asset Requests: `POST /api/inventory/asset-requests/{id}/process-instance?processInstanceId=...`
 - Purchase Requests: Similar endpoint (to be implemented)
 - Purchase Orders: Similar endpoint (to be implemented)
 
@@ -99,21 +111,12 @@ echo "Linked asset request $ASSET_REQUEST_ID to process $PROCESS_ID"
 ### Asset Request Lifecycle
 
 ```
-POST   /api/v1/inventory/asset-requests                 Create (processInstanceId optional)
-GET    /api/v1/inventory/asset-requests/{id}            Retrieve
-PATCH  /api/v1/inventory/asset-requests/{id}/process-instance   Update processInstanceId
-POST   /api/v1/inventory/asset-requests/{id}/approve    Approve (via workflow callback)
-POST   /api/v1/inventory/asset-requests/{id}/reject     Reject (via workflow callback)
-```
-
-### Callback Endpoints
-
-Workflow engine calls these after approval/rejection decisions:
-
-```
-POST   /api/v1/inventory/asset-requests/callback/approve     Body: { processInstanceId, approvedByUserId }
-POST   /api/v1/inventory/asset-requests/callback/reject      Body: { processInstanceId, approvedByUserId, reason }
-POST   /api/v1/inventory/asset-requests/callback/procurement Initiate procurement after approval
+POST   /api/inventory/asset-requests                         Create (processInstanceId optional)
+GET    /api/inventory/asset-requests/{id}                    Retrieve
+POST   /api/inventory/asset-requests/{id}/process-instance   Update processInstanceId
+POST   /api/inventory/asset-requests/callback/approve        Approve (via workflow callback)
+POST   /api/inventory/asset-requests/callback/reject         Reject (via workflow callback)
+POST   /api/inventory/asset-requests/callback/procurement    Initiate procurement after approval
 ```
 
 ## Tenant Isolation
@@ -135,12 +138,12 @@ Use the `Idempotency-Key` header for all POST/PUT requests. If the same key is u
 
 Example:
 ```bash
-curl -X POST http://localhost:8080/api/v1/inventory/asset-requests \
+curl -X POST http://localhost:8084/api/inventory/asset-requests \
   -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \
   -d '{...}'
 
 # Second call with same key returns the same response (200 OK)
-curl -X POST http://localhost:8080/api/v1/inventory/asset-requests \
+curl -X POST http://localhost:8084/api/inventory/asset-requests \
   -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \
   -d '{...}'
 ```
@@ -158,7 +161,7 @@ docker-compose up --build
 Test asset request creation with processInstanceId:
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/inventory/asset-requests \
+curl -X POST http://localhost:8084/api/inventory/asset-requests \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGc..." \
   -H "Idempotency-Key: test-key-1" \
