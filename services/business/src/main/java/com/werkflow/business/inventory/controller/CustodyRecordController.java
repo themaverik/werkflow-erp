@@ -7,9 +7,11 @@ import com.werkflow.business.inventory.entity.CustodyRecord;
 import com.werkflow.business.inventory.service.AssetInstanceService;
 import com.werkflow.business.inventory.service.CustodyRecordService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -82,8 +84,12 @@ public class CustodyRecordController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all custody records", description = "Retrieve all custody records")
-    public ResponseEntity<Page<CustodyRecordResponseDto>> getAllCustodyRecords(Pageable pageable) {
+    @Operation(summary = "Get all custody records", description = "Retrieve all custody records", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<CustodyRecordResponseDto>> getAllCustodyRecords(@ParameterObject Pageable pageable) {
         return ResponseEntity.ok(custodyService.getAllCustodyRecords(pageable).map(this::mapToResponse));
     }
 

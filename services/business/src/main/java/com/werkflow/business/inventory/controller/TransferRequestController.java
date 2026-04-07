@@ -7,9 +7,11 @@ import com.werkflow.business.inventory.entity.TransferRequest;
 import com.werkflow.business.inventory.service.AssetInstanceService;
 import com.werkflow.business.inventory.service.TransferRequestService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -68,8 +70,12 @@ public class TransferRequestController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all transfer requests", description = "Retrieve all transfer requests")
-    public ResponseEntity<Page<TransferRequestResponseDto>> getAllTransfers(Pageable pageable) {
+    @Operation(summary = "Get all transfer requests", description = "Retrieve all transfer requests", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<TransferRequestResponseDto>> getAllTransfers(@ParameterObject Pageable pageable) {
         return ResponseEntity.ok(transferService.getAllTransfers(pageable).map(this::mapToResponse));
     }
 

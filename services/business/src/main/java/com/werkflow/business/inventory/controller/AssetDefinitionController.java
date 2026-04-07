@@ -8,9 +8,11 @@ import com.werkflow.business.inventory.entity.ItemType;
 import com.werkflow.business.inventory.service.AssetCategoryService;
 import com.werkflow.business.inventory.service.AssetDefinitionService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -77,10 +79,14 @@ public class AssetDefinitionController {
     }
 
     @GetMapping
-    @Operation(summary = "Get asset definitions", description = "Retrieve asset definitions; pass categoryId to filter by category")
+    @Operation(summary = "Get asset definitions", description = "Retrieve asset definitions; pass categoryId to filter by category", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
     public ResponseEntity<?> getAllDefinitions(
             @RequestParam(required = false) Long categoryId,
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
         if (categoryId != null) {
             List<AssetDefinition> definitions = definitionService.getDefinitionsByCategory(categoryId);
             return ResponseEntity.ok(definitions.stream().map(this::mapToResponse).collect(Collectors.toList()));

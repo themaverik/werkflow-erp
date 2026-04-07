@@ -7,9 +7,11 @@ import com.werkflow.business.inventory.entity.AssetInstance;
 import com.werkflow.business.inventory.service.AssetDefinitionService;
 import com.werkflow.business.inventory.service.AssetInstanceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -75,8 +77,12 @@ public class AssetInstanceController {
     }
 
     @GetMapping
-    @Operation(summary = "Get all asset instances", description = "Retrieve all physical asset instances")
-    public ResponseEntity<Page<AssetInstanceResponseDto>> getAllInstances(Pageable pageable) {
+    @Operation(summary = "Get all asset instances", description = "Retrieve all physical asset instances", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
+    public ResponseEntity<Page<AssetInstanceResponseDto>> getAllInstances(@ParameterObject Pageable pageable) {
         return ResponseEntity.ok(instanceService.getAllInstances(pageable).map(this::mapToResponse));
     }
 

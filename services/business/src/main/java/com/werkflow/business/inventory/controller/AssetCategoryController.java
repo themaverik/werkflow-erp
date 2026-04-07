@@ -5,9 +5,11 @@ import com.werkflow.business.inventory.dto.AssetCategoryResponseDto;
 import com.werkflow.business.inventory.entity.AssetCategory;
 import com.werkflow.business.inventory.service.AssetCategoryService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -63,11 +65,15 @@ public class AssetCategoryController {
     }
 
     @GetMapping
-    @Operation(summary = "Get asset categories", description = "Retrieve asset categories; pass parentCategoryId to filter by parent, or leafOnly=true for all subcategories")
+    @Operation(summary = "Get asset categories", description = "Retrieve asset categories; pass parentCategoryId to filter by parent, or leafOnly=true for all subcategories", parameters = {
+        @Parameter(name = "page", description = "0-indexed page number"),
+        @Parameter(name = "size", description = "Page size (max 1000)"),
+        @Parameter(name = "sort", description = "Sort criteria (e.g., createdAt,desc)")
+    })
     public ResponseEntity<?> getAllCategories(
             @RequestParam(required = false) Long parentCategoryId,
             @RequestParam(required = false) Boolean leafOnly,
-            Pageable pageable) {
+            @ParameterObject Pageable pageable) {
         if (parentCategoryId != null) {
             List<AssetCategory> categories = categoryService.getChildCategories(parentCategoryId);
             return ResponseEntity.ok(categories.stream().map(this::mapToResponse).collect(Collectors.toList()));
