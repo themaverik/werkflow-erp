@@ -33,7 +33,7 @@ Single source of truth for task tracking and session continuity.
 **Status**: P0.2.1-P0.2.2 COMPLETE ✓ — Idempotency infrastructure ready
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
 **Next Phase**: P0.2.3 — Document Idempotency-Key header in endpoints
-**Last Commit**: All P0.1.2 tasks committed
+**Last Commit**: All P0.2.1-P0.2.2 tasks committed
 **Branch**: feature/p0-multi-tenancy
 
 **P0.1.2 Completion Summary**:

@@ -21,7 +21,7 @@ public class IdempotencyCleanupJob {
         this.repository = repository;
     }
 
-    @Scheduled(cron = "0 2 * * *")  // 2 AM UTC daily
+    @Scheduled(cron = "0 0 2 * * *")  // 2 AM UTC daily
     public void cleanupExpiredRecords() {
         try {
             LocalDateTime cutoff = LocalDateTime.now(ZoneOffset.UTC).minusHours(TTL_HOURS);
