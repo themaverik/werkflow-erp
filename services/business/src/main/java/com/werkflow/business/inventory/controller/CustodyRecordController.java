@@ -31,8 +31,13 @@ public class CustodyRecordController {
     private final AssetInstanceService assetService;
 
     @PostMapping
-    @Operation(summary = "Create custody record", description = "Create a new custody record for asset assignment")
-    public ResponseEntity<CustodyRecordResponseDto> createCustodyRecord(@Valid @RequestBody CustodyRecordRequestDto requestDto) {
+    @Operation(summary = "Create custody record", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<CustodyRecordResponseDto> createCustodyRecord(
+            @Valid @RequestBody CustodyRecordRequestDto requestDto,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         AssetInstance asset = assetService.getInstanceById(requestDto.getAssetInstanceId());
 
         CustodyRecord record = CustodyRecord.builder()

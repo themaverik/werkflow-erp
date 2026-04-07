@@ -31,8 +31,13 @@ public class AssetInstanceController {
     private final AssetDefinitionService definitionService;
 
     @PostMapping
-    @Operation(summary = "Create asset instance", description = "Create a new physical asset instance")
-    public ResponseEntity<AssetInstanceResponseDto> createInstance(@Valid @RequestBody AssetInstanceRequestDto requestDto) {
+    @Operation(summary = "Create asset instance", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<AssetInstanceResponseDto> createInstance(
+            @Valid @RequestBody AssetInstanceRequestDto requestDto,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         AssetDefinition definition = definitionService.getDefinitionById(requestDto.getAssetDefinitionId());
 
         AssetInstance instance = AssetInstance.builder()

@@ -3,6 +3,7 @@ package com.werkflow.business.inventory.controller;
 import com.werkflow.business.inventory.dto.AssetRequestDto;
 import com.werkflow.business.inventory.dto.AssetRequestResponse;
 import com.werkflow.business.inventory.service.AssetRequestService;
+import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +20,13 @@ public class AssetRequestController {
     private final AssetRequestService assetRequestService;
 
     @PostMapping
-    public ResponseEntity<AssetRequestResponse> createRequest(@Valid @RequestBody AssetRequestDto dto) {
+    @Operation(summary = "Create asset request", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<AssetRequestResponse> createRequest(
+            @Valid @RequestBody AssetRequestDto dto,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.ok(assetRequestService.createRequest(dto));
     }
 

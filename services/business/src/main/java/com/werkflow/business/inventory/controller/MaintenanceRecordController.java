@@ -32,8 +32,13 @@ public class MaintenanceRecordController {
     private final AssetInstanceService assetService;
 
     @PostMapping
-    @Operation(summary = "Create maintenance record", description = "Create a new maintenance record for an asset")
-    public ResponseEntity<MaintenanceRecordResponseDto> createMaintenanceRecord(@Valid @RequestBody MaintenanceRecordRequestDto requestDto) {
+    @Operation(summary = "Create maintenance record", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<MaintenanceRecordResponseDto> createMaintenanceRecord(
+            @Valid @RequestBody MaintenanceRecordRequestDto requestDto,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         AssetInstance asset = assetService.getInstanceById(requestDto.getAssetInstanceId());
 
         MaintenanceRecord record = MaintenanceRecord.builder()

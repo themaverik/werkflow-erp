@@ -27,8 +27,13 @@ public class AssetCategoryController {
     private final AssetCategoryService categoryService;
 
     @PostMapping
-    @Operation(summary = "Create asset category", description = "Create a new asset category")
-    public ResponseEntity<AssetCategoryResponseDto> createCategory(@Valid @RequestBody AssetCategoryRequestDto requestDto) {
+    @Operation(summary = "Create asset category", description = "Supports idempotent creation via Idempotency-Key header. " +
+        "Provide a unique idempotency key to safely retry failed requests without duplicating the resource. " +
+        "If the key is omitted, each request is processed independently. " +
+        "If the same key is used with different payloads, a 409 Conflict is returned.")
+    public ResponseEntity<AssetCategoryResponseDto> createCategory(
+            @Valid @RequestBody AssetCategoryRequestDto requestDto,
+            @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         AssetCategory category = AssetCategory.builder()
             .name(requestDto.getName())
             .code(requestDto.getCode())
