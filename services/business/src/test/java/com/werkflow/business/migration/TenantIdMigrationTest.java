@@ -1,5 +1,6 @@
 package com.werkflow.business.migration;
 
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -16,7 +17,9 @@ import static org.junit.jupiter.api.Assertions.*;
  * have tenant_id column with NOT NULL constraint after migration V21+
  *
  * This test directly queries the database to verify schema contracts.
+ * Requires a live PostgreSQL instance; excluded from unit test phase via @Tag("integration").
  */
+@Tag("integration")
 class TenantIdMigrationTest {
 
     private static final String DB_URL = System.getenv("POSTGRES_URL") != null
