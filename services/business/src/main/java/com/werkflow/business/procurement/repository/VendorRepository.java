@@ -2,6 +2,8 @@ package com.werkflow.business.procurement.repository;
 
 import com.werkflow.business.procurement.entity.Vendor;
 import com.werkflow.business.procurement.entity.Vendor.VendorStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,25 +16,27 @@ import java.util.List;
 public interface VendorRepository extends JpaRepository<Vendor, Long> {
 
     // Tenant-scoped methods
-    List<Vendor> findByTenantId(String tenantId);
+    Page<Vendor> findByTenantId(String tenantId, Pageable pageable);
 
-    List<Vendor> findByTenantIdAndStatus(String tenantId, VendorStatus status);
+    Page<Vendor> findByTenantIdAndStatus(String tenantId, VendorStatus status, Pageable pageable);
 
-    List<Vendor> findByTenantIdAndStatusIn(String tenantId, List<VendorStatus> statuses);
+    Page<Vendor> findByTenantIdAndStatusIn(String tenantId, List<VendorStatus> statuses, Pageable pageable);
 
     @Query("SELECT v FROM Vendor v WHERE v.tenantId = :tenantId AND v.status = 'ACTIVE' ORDER BY v.rating DESC")
-    List<Vendor> findActiveVendorsOrderByRatingForTenant(@Param("tenantId") String tenantId);
+    Page<Vendor> findActiveVendorsOrderByRatingForTenant(@Param("tenantId") String tenantId, Pageable pageable);
 
     @Query("SELECT v FROM Vendor v WHERE v.tenantId = :tenantId AND v.status = 'ACTIVE' " +
            "AND (v.rating IS NULL OR v.rating >= :minRating)")
-    List<Vendor> findActiveVendorsByMinRatingForTenant(@Param("tenantId") String tenantId,
-                                                       @Param("minRating") BigDecimal minRating);
+    Page<Vendor> findActiveVendorsByMinRatingForTenant(@Param("tenantId") String tenantId,
+                                                       @Param("minRating") BigDecimal minRating,
+                                                       Pageable pageable);
 
     @Query("SELECT v FROM Vendor v WHERE v.tenantId = :tenantId AND " +
            "(LOWER(v.name) LIKE LOWER(CONCAT('%', :searchTerm, '%')) " +
            "OR LOWER(v.contactPerson) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
-    List<Vendor> searchVendorsForTenant(@Param("tenantId") String tenantId,
-                                        @Param("searchTerm") String searchTerm);
+    Page<Vendor> searchVendorsForTenant(@Param("tenantId") String tenantId,
+                                        @Param("searchTerm") String searchTerm,
+                                        Pageable pageable);
 
     boolean existsByTenantIdAndNameIgnoreCase(String tenantId, String name);
 

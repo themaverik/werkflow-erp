@@ -2,6 +2,8 @@ package com.werkflow.business.procurement.repository;
 
 import com.werkflow.business.procurement.entity.Receipt;
 import com.werkflow.business.procurement.entity.Receipt.ReceiptStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,31 +17,33 @@ import java.util.Optional;
 public interface ReceiptRepository extends JpaRepository<Receipt, Long> {
 
     // Tenant-scoped methods
-    List<Receipt> findByTenantId(String tenantId);
+    Page<Receipt> findByTenantId(String tenantId, Pageable pageable);
 
     Optional<Receipt> findByReceiptNumberAndTenantId(String receiptNumber, String tenantId);
 
-    List<Receipt> findByPurchaseOrderIdAndTenantId(Long purchaseOrderId, String tenantId);
+    Page<Receipt> findByPurchaseOrderIdAndTenantId(Long purchaseOrderId, String tenantId, Pageable pageable);
 
-    List<Receipt> findByTenantIdAndStatus(String tenantId, ReceiptStatus status);
+    Page<Receipt> findByTenantIdAndStatus(String tenantId, ReceiptStatus status, Pageable pageable);
 
-    List<Receipt> findByTenantIdAndReceivedByUserId(String tenantId, Long userId);
+    Page<Receipt> findByTenantIdAndReceivedByUserId(String tenantId, Long userId, Pageable pageable);
 
     @Query("SELECT r FROM Receipt r WHERE r.tenantId = :tenantId AND r.status = 'DISCREPANCY'")
-    List<Receipt> findReceiptsWithDiscrepanciesForTenant(@Param("tenantId") String tenantId);
+    Page<Receipt> findReceiptsWithDiscrepanciesForTenant(@Param("tenantId") String tenantId, Pageable pageable);
 
     @Query("SELECT r FROM Receipt r WHERE r.tenantId = :tenantId " +
            "AND r.receiptDate BETWEEN :startDate AND :endDate ORDER BY r.receiptDate DESC")
-    List<Receipt> findByTenantIdAndReceiptDateRange(
+    Page<Receipt> findByTenantIdAndReceiptDateRange(
         @Param("tenantId") String tenantId,
         @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
+        @Param("endDate") LocalDate endDate,
+        Pageable pageable
     );
 
     @Query("SELECT r FROM Receipt r WHERE r.tenantId = :tenantId " +
            "AND r.purchaseOrder.vendor.id = :vendorId ORDER BY r.receiptDate DESC")
-    List<Receipt> findByTenantIdAndVendorId(@Param("tenantId") String tenantId,
-                                             @Param("vendorId") Long vendorId);
+    Page<Receipt> findByTenantIdAndVendorId(@Param("tenantId") String tenantId,
+                                             @Param("vendorId") Long vendorId,
+                                             Pageable pageable);
 
     boolean existsByReceiptNumberAndTenantId(String receiptNumber, String tenantId);
 

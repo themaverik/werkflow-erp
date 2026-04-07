@@ -3,6 +3,8 @@ package com.werkflow.business.procurement.repository;
 import com.werkflow.business.procurement.entity.PurchaseRequest;
 import com.werkflow.business.procurement.entity.PurchaseRequest.Priority;
 import com.werkflow.business.procurement.entity.PurchaseRequest.PrStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,42 +18,45 @@ import java.util.Optional;
 public interface PurchaseRequestRepository extends JpaRepository<PurchaseRequest, Long> {
 
     // Tenant-scoped methods
-    List<PurchaseRequest> findByTenantId(String tenantId);
+    Page<PurchaseRequest> findByTenantId(String tenantId, Pageable pageable);
 
     Optional<PurchaseRequest> findByPrNumberAndTenantId(String prNumber, String tenantId);
 
-    List<PurchaseRequest> findByTenantIdAndRequestingDeptId(String tenantId, Long deptId);
+    Page<PurchaseRequest> findByTenantIdAndRequestingDeptId(String tenantId, Long deptId, Pageable pageable);
 
-    List<PurchaseRequest> findByTenantIdAndRequesterUserId(String tenantId, Long userId);
+    Page<PurchaseRequest> findByTenantIdAndRequesterUserId(String tenantId, Long userId, Pageable pageable);
 
-    List<PurchaseRequest> findByTenantIdAndStatus(String tenantId, PrStatus status);
+    Page<PurchaseRequest> findByTenantIdAndStatus(String tenantId, PrStatus status, Pageable pageable);
 
-    List<PurchaseRequest> findByTenantIdAndStatusIn(String tenantId, List<PrStatus> statuses);
+    Page<PurchaseRequest> findByTenantIdAndStatusIn(String tenantId, List<PrStatus> statuses, Pageable pageable);
 
     @Query("SELECT pr FROM PurchaseRequest pr WHERE pr.tenantId = :tenantId " +
            "AND pr.requestingDeptId = :deptId AND pr.status = :status ORDER BY pr.requestDate DESC")
-    List<PurchaseRequest> findByTenantIdAndDepartmentAndStatus(
+    Page<PurchaseRequest> findByTenantIdAndDepartmentAndStatus(
         @Param("tenantId") String tenantId,
         @Param("deptId") Long departmentId,
-        @Param("status") PrStatus status
+        @Param("status") PrStatus status,
+        Pageable pageable
     );
 
     @Query("SELECT pr FROM PurchaseRequest pr WHERE pr.tenantId = :tenantId " +
            "AND pr.status IN ('SUBMITTED', 'PENDING_APPROVAL') " +
            "ORDER BY pr.priority DESC, pr.requestDate ASC")
-    List<PurchaseRequest> findPendingRequestsForTenant(@Param("tenantId") String tenantId);
+    Page<PurchaseRequest> findPendingRequestsForTenant(@Param("tenantId") String tenantId, Pageable pageable);
 
     @Query("SELECT pr FROM PurchaseRequest pr WHERE pr.tenantId = :tenantId " +
            "AND pr.status = 'PENDING_APPROVAL' AND pr.priority = :priority")
-    List<PurchaseRequest> findPendingByPriorityForTenant(@Param("tenantId") String tenantId,
-                                                          @Param("priority") Priority priority);
+    Page<PurchaseRequest> findPendingByPriorityForTenant(@Param("tenantId") String tenantId,
+                                                          @Param("priority") Priority priority,
+                                                          Pageable pageable);
 
     @Query("SELECT pr FROM PurchaseRequest pr WHERE pr.tenantId = :tenantId " +
            "AND pr.requestDate BETWEEN :startDate AND :endDate ORDER BY pr.requestDate DESC")
-    List<PurchaseRequest> findByTenantIdAndDateRange(
+    Page<PurchaseRequest> findByTenantIdAndDateRange(
         @Param("tenantId") String tenantId,
         @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
+        @Param("endDate") LocalDate endDate,
+        Pageable pageable
     );
 
     boolean existsByPrNumberAndTenantId(String prNumber, String tenantId);

@@ -2,6 +2,8 @@ package com.werkflow.business.procurement.repository;
 
 import com.werkflow.business.procurement.entity.PurchaseOrder;
 import com.werkflow.business.procurement.entity.PurchaseOrder.PoStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -15,47 +17,50 @@ import java.util.Optional;
 public interface PurchaseOrderRepository extends JpaRepository<PurchaseOrder, Long> {
 
     // Tenant-scoped methods
-    List<PurchaseOrder> findByTenantId(String tenantId);
+    Page<PurchaseOrder> findByTenantId(String tenantId, Pageable pageable);
 
     Optional<PurchaseOrder> findByPoNumberAndTenantId(String poNumber, String tenantId);
 
-    List<PurchaseOrder> findByTenantIdAndVendorId(String tenantId, Long vendorId);
+    Page<PurchaseOrder> findByTenantIdAndVendorId(String tenantId, Long vendorId, Pageable pageable);
 
-    List<PurchaseOrder> findByTenantIdAndStatus(String tenantId, PoStatus status);
+    Page<PurchaseOrder> findByTenantIdAndStatus(String tenantId, PoStatus status, Pageable pageable);
 
-    List<PurchaseOrder> findByTenantIdAndStatusIn(String tenantId, List<PoStatus> statuses);
+    Page<PurchaseOrder> findByTenantIdAndStatusIn(String tenantId, List<PoStatus> statuses, Pageable pageable);
 
     Optional<PurchaseOrder> findByPurchaseRequestIdAndTenantId(Long purchaseRequestId, String tenantId);
 
     @Query("SELECT po FROM PurchaseOrder po WHERE po.tenantId = :tenantId " +
            "AND po.vendor.id = :vendorId AND po.status = :status ORDER BY po.orderDate DESC")
-    List<PurchaseOrder> findByTenantIdAndVendorAndStatus(
+    Page<PurchaseOrder> findByTenantIdAndVendorAndStatus(
         @Param("tenantId") String tenantId,
         @Param("vendorId") Long vendorId,
-        @Param("status") PoStatus status
+        @Param("status") PoStatus status,
+        Pageable pageable
     );
 
     @Query("SELECT po FROM PurchaseOrder po WHERE po.tenantId = :tenantId " +
            "AND po.status IN ('SENT', 'ACKNOWLEDGED', 'PARTIALLY_RECEIVED') ORDER BY po.orderDate ASC")
-    List<PurchaseOrder> findActivePurchaseOrdersForTenant(@Param("tenantId") String tenantId);
+    Page<PurchaseOrder> findActivePurchaseOrdersForTenant(@Param("tenantId") String tenantId, Pageable pageable);
 
     @Query("SELECT po FROM PurchaseOrder po WHERE po.tenantId = :tenantId " +
            "AND po.status = 'PARTIALLY_RECEIVED'")
-    List<PurchaseOrder> findPartiallyReceivedOrdersForTenant(@Param("tenantId") String tenantId);
+    Page<PurchaseOrder> findPartiallyReceivedOrdersForTenant(@Param("tenantId") String tenantId, Pageable pageable);
 
     @Query("SELECT po FROM PurchaseOrder po WHERE po.tenantId = :tenantId " +
            "AND po.orderDate BETWEEN :startDate AND :endDate ORDER BY po.orderDate DESC")
-    List<PurchaseOrder> findByTenantIdAndOrderDateRange(
+    Page<PurchaseOrder> findByTenantIdAndOrderDateRange(
         @Param("tenantId") String tenantId,
         @Param("startDate") LocalDate startDate,
-        @Param("endDate") LocalDate endDate
+        @Param("endDate") LocalDate endDate,
+        Pageable pageable
     );
 
     @Query("SELECT po FROM PurchaseOrder po WHERE po.tenantId = :tenantId " +
            "AND po.expectedDeliveryDate < :date " +
            "AND po.status NOT IN ('FULLY_RECEIVED', 'CLOSED', 'CANCELLED')")
-    List<PurchaseOrder> findOverdueDeliveriesForTenant(@Param("tenantId") String tenantId,
-                                                        @Param("date") LocalDate date);
+    Page<PurchaseOrder> findOverdueDeliveriesForTenant(@Param("tenantId") String tenantId,
+                                                        @Param("date") LocalDate date,
+                                                        Pageable pageable);
 
     boolean existsByPoNumberAndTenantId(String poNumber, String tenantId);
 
