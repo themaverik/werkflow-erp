@@ -1,5 +1,6 @@
 package com.werkflow.business.common.idempotency.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.werkflow.business.common.idempotency.dto.CachedResponse;
 import com.werkflow.business.common.idempotency.entity.IdempotencyRecord;
 import com.werkflow.business.common.idempotency.exception.IdempotencyException;
@@ -41,7 +42,7 @@ class IdempotencyServiceTest {
         SimpleCacheManager cacheManager = new SimpleCacheManager();
         cacheManager.setCaches(List.of(cache));
         cacheManager.afterPropertiesSet();
-        service = new IdempotencyService(repository, cacheManager);
+        service = new IdempotencyService(repository, cacheManager, new ObjectMapper());
     }
 
     @Test
@@ -57,6 +58,11 @@ class IdempotencyServiceTest {
         verifyNoInteractions(repository);
     }
 
+    /**
+     * Idempotency-Key reused with different payload returns 409 Conflict.
+     * The IdempotencyException thrown is caught by a @ExceptionHandler
+     * in the IdempotencyFilter that maps it to a 409 response.
+     */
     @Test
     void testGetIfPresent_CacheHit_PayloadMismatch_ThrowsException() {
         IdempotencyRecord record = buildRecord(TENANT_ID, KEY, PAYLOAD, 200,
@@ -113,6 +119,27 @@ class IdempotencyServiceTest {
 
         verify(repository).save(any(IdempotencyRecord.class));
         assertNotNull(cache.get(TENANT_ID + ":" + KEY));
+    }
+
+    @Test
+    void testGetIfPresent_CacheMiss_ExpiredRecord_Deleted() {
+        // Arrange
+        String key = "key-db-expired";
+        String payload = "{\"vendorId\":\"v1\"}";
+
+        IdempotencyRecord expiredRecord = buildRecord(TENANT_ID, key, payload, 200,
+                LocalDateTime.now(ZoneOffset.UTC).minusHours(25));
+        expiredRecord.setId(3L);
+
+        when(repository.findByTenantIdAndIdempotencyKey(TENANT_ID, key))
+                .thenReturn(Optional.of(expiredRecord));
+
+        // Act
+        Optional<CachedResponse> result = service.getIfPresent(TENANT_ID, key, payload);
+
+        // Assert
+        assertTrue(result.isEmpty());
+        verify(repository).delete(expiredRecord);
     }
 
     // --- helpers ---

@@ -1,5 +1,6 @@
 package com.werkflow.business.common.idempotency.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.werkflow.business.common.idempotency.dto.CachedResponse;
 import com.werkflow.business.common.idempotency.entity.IdempotencyRecord;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,10 +30,10 @@ public class IdempotencyService {
     private final CacheManager cacheManager;
     private final ObjectMapper objectMapper;
 
-    public IdempotencyService(IdempotencyRepository repository, CacheManager cacheManager) {
+    public IdempotencyService(IdempotencyRepository repository, CacheManager cacheManager, ObjectMapper objectMapper) {
         this.repository = repository;
         this.cacheManager = cacheManager;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     public Optional<CachedResponse> getIfPresent(String tenantId, String key, String currentPayload) {
@@ -82,14 +84,20 @@ public class IdempotencyService {
         record.setStatusCode(response.getStatusCode());
 
         // Write-through: save to DB, then cache
+        IdempotencyRecord saved;
         try {
-            IdempotencyRecord saved = repository.save(record);
-            Cache cache = cacheManager.getCache(CACHE_NAME);
-            String cacheKey = buildCacheKey(tenantId, key);
+            saved = repository.save(record);
+        } catch (DataAccessException e) {
+            logger.error("Failed to persist idempotency record for key: {}", key, e);
+            throw e;
+        }
+
+        Cache cache = cacheManager.getCache(CACHE_NAME);
+        String cacheKey = buildCacheKey(tenantId, key);
+        try {
             cache.put(cacheKey, saved);
         } catch (Exception e) {
-            logger.warn("Failed to store idempotency record for key: {}", key, e);
-            // Don't fail the request if cache store fails
+            logger.warn("Failed to cache idempotency record for key: {}", key, e);
         }
     }
 
@@ -135,7 +143,7 @@ public class IdempotencyService {
             return new HashMap<>();
         }
         try {
-            return objectMapper.readValue(headersJson, Map.class);
+            return objectMapper.readValue(headersJson, new TypeReference<Map<String, String>>() {});
         } catch (Exception e) {
             logger.warn("Failed to deserialize headers", e);
             return new HashMap<>();
