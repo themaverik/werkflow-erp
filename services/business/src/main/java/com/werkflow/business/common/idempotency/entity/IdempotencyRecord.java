@@ -2,28 +2,39 @@ package com.werkflow.business.common.idempotency.entity;
 
 import com.werkflow.business.hr.entity.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.*;
 
+/**
+ * Persisted record for idempotent request deduplication.
+ *
+ * <p>Each row represents a completed or in-flight request identified by the
+ * (tenantId, idempotencyKey) pair. Fields {@code tenantId}, {@code idempotencyKey},
+ * and {@code statusCode} are non-nullable at both the JPA and database level.
+ * {@code requestPayload}, {@code responseBody}, and {@code responseHeaders} are
+ * optional TEXT columns and may be {@code null}.
+ */
 @Entity
 @Table(
     name = "idempotency_record",
     uniqueConstraints = @UniqueConstraint(columnNames = {"tenant_id", "idempotency_key"}),
     indexes = {
-        @Index(name = "idx_tenant_created", columnList = "tenant_id, created_at")
+        @Index(name = "idx_idempotency_tenant_created", columnList = "tenant_id, created_at")
     }
 )
 @Getter
 @Setter
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class IdempotencyRecord extends BaseEntity {
 
+    @NotNull
     @Column(name = "tenant_id", nullable = false, length = 255)
     private String tenantId;
 
+    @NotBlank
     @Column(name = "idempotency_key", nullable = false, length = 255)
     private String idempotencyKey;
 
@@ -37,5 +48,5 @@ public class IdempotencyRecord extends BaseEntity {
     private String responseHeaders;
 
     @Column(name = "status_code", nullable = false)
-    private Integer statusCode;
+    private int statusCode;
 }
