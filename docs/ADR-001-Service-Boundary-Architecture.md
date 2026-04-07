@@ -404,6 +404,43 @@ Direct repository call is correct here.
 
 ---
 
+## Decision: Cross-Domain FK Validation Pattern
+
+**Status**: Accepted (P0.4)
+
+**Context**: Services have foreign key references to entities in other domains (e.g.,
+PurchaseRequest.requestingDeptId → HR.Department). Without validation, callers can
+provide invalid or non-existent IDs, causing silent failures and downstream errors
+in the workflow orchestration layer.
+
+**Decision**: Implement a centralized `CrossDomainValidator` service that validates
+FK existence and tenant isolation at the service layer, before entity creation/update.
+Validators throw `EntityNotFoundException` which bubble to controllers and are mapped
+to HTTP 404 (or 400 in future with standardized error responses in P1.1).
+
+**Rationale**:
+- Service layer is responsible for business rules validation
+- Centralizes validators for reuse across multiple services
+- Tenant isolation enforced at validation time (not after the fact)
+- Follows existing error handling patterns (`EntityNotFoundException`)
+- Extensible: new validators added to one service as features need them
+
+**Consequences**:
+- Service layer adds validator injection dependency
+- Each create/update method must call relevant validators
+- Improved data integrity: invalid FKs caught at write time
+- Controller error responses may improve in P1.1 (currently 404, future 400 + error code)
+
+**Implementation**:
+- `CrossDomainValidator` in `common/validator/` package
+- Injected into services that have cross-domain FKs
+- Two initial validators: `validateDepartmentExists()`, `validateBudgetCategoryExists()`
+- Additional validators added as TODO for future phases (Vendor, Employee, Asset*, Budget*)
+
+**Related Components**: TenantContext (P0.1), all domain services (PurchaseRequest, CustodyRecord, etc.)
+
+---
+
 ## Decision: User ID Handling (Opaque, External)
 
 ### Pattern: Trust the Caller, Never Validate Externally
