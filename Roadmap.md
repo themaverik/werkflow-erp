@@ -30,10 +30,10 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P0.1-P0.4 COMPLETE ✓ — Multi-tenancy, idempotency, processInstanceId, and cross-domain FK validation ready
+**Status**: P0.1-P0.4 COMPLETE ✓ — P0.5 Design & Plan READY ✓
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
-**Next Phase**: P0.5 — API Versioning (/api/v1)
-**Last Commit**: P0.4 implementation complete with comprehensive test coverage (1dcb091)
+**Current Task**: P0.5 implementation (API versioning context-path change)
+**Last Commit**: P0.5 design and implementation plan created and committed (awaiting execution)
 **Branch**: feature/p0-multi-tenancy
 
 **P0.1.2 Completion Summary**:
@@ -53,11 +53,12 @@ Single source of truth for task tracking and session continuity.
 
 ## Project Health
 
-**Current State**: werkflow-erp extracted as standalone service, all CRUD APIs implemented with P0.1-P0.4 complete:
+**Current State**: werkflow-erp extracted as standalone service, all CRUD APIs implemented with P0.1-P0.4 complete, P0.5 design ready:
 - ✅ Multi-tenant scoping (COMPLETE — P0.1)
 - ✅ Idempotency for safe retries (COMPLETE — P0.2)
 - ✅ Cross-domain FK validation (COMPLETE — P0.4)
-- Remaining for MVP: API versioning, Pagination on list endpoints
+- 🎯 API versioning (/api/v1) (DESIGN & PLAN READY — P0.5)
+- Remaining for MVP: P0.5 implementation, Pagination on list endpoints
 
 **Completed Phases**:
 - P0.1: Multi-Tenant Isolation (TenantContext, TenantContextFilter, all 23 entities scoped)
@@ -161,17 +162,27 @@ Must complete before any production deployment.
   - [x] Completed: 3+ hours with subagent-driven development (spec design, implementation, comprehensive testing, code review cycles)
 
 #### P0.5 — API Versioning (/api/v1)
-- [ ] **P0.5.1** Update application.yml context-path to include version
-  - [ ] Change: `server.servlet.context-path: /api` → `/api/v1`
-  - [ ] Verify all controller `@RequestMapping` paths are compatible
-  - [ ] Update Swagger `api-docs.path: /api-docs` → `/api/v1/api-docs`
-  - [ ] Estimated: 1 hour
 
-- [ ] **P0.5.2** Update all integration points to use /api/v1
-  - [ ] Update `docker-compose.yml` service URLs
-  - [ ] Update application.yml service endpoint references
-  - [ ] Update werkflow integration docs
-  - [ ] Estimated: 1 hour
+**Design**: `docs/superpowers/specs/2026-04-07-p0.5-api-versioning-design.md` (APPROVED)
+**Implementation Plan**: `docs/superpowers/plans/2026-04-07-p0.5-api-versioning.md` (READY)
+
+- [~] **P0.5.1** Update application.yml context-path and Swagger config
+  - [ ] Change: `server.servlet.context-path: /api` → `/api/v1`
+  - [ ] Update: `oauth2-redirect-url: http://localhost:8084/api/v1/swagger-ui/oauth2-redirect.html`
+  - [ ] Verify with compilation and grep
+  - [ ] Status: Ready for subagent-driven execution
+
+- [ ] **P0.5.2** Update all documentation files to use /api/v1 endpoints
+  - [ ] Update: `docs/WERKFLOW_INTEGRATION.md`
+  - [ ] Update: `docs/Independence-Checklist.md`
+  - [ ] Update: `Implementation-Summary.md`
+  - [ ] Status: Ready for subagent-driven execution
+
+- [ ] **P0.5.3** Verify full test suite and update ROADMAP
+  - [ ] Run `mvn clean test` and `mvn verify`
+  - [ ] Verify no regressions
+  - [ ] Update ROADMAP.md to mark P0.5 complete
+  - [ ] Status: Ready for subagent-driven execution
 
 #### P0.6 — Pagination on List Endpoints
 - [ ] **P0.6.1** Add pagination to all GET list endpoints
