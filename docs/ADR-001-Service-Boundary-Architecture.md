@@ -695,6 +695,69 @@ werkflow-erp doesn't know or care about Zapier
 
 ---
 
+## Decision: List Endpoint Pagination
+
+**Status**: Accepted (P0.6)
+
+**Pattern**: Spring Data `Page<T>` with `Pageable` query parameters.
+
+**All GET list endpoints return `Page<Dto>` instead of `List<Dto>`.**
+
+```java
+// Before
+@GetMapping
+public ResponseEntity<List<EmployeeResponse>> getAllEmployees() {
+    return ResponseEntity.ok(employeeService.getAllEmployees());
+}
+
+// After
+@GetMapping
+public ResponseEntity<Page<EmployeeResponse>> getAllEmployees(
+    @ParameterObject Pageable pageable) {
+    return ResponseEntity.ok(employeeService.getAllEmployees(pageable));
+}
+```
+
+**Query parameters** (handled by Spring Data):
+```
+GET /api/v1/hr/employees?page=0&size=20&sort=createdAt,desc
+```
+
+**Response metadata**:
+```json
+{
+  "content": [...],
+  "totalElements": 245,
+  "totalPages": 13,
+  "number": 0,
+  "size": 20
+}
+```
+
+**Configuration** (`application.yml`):
+```yaml
+spring:
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 1000
+        one-indexed-parameters: false
+```
+
+**Rationale**:
+- Standard Spring Data pattern, widely understood
+- Springdoc auto-documents `Page` and `Pageable` in Swagger
+- Supports sorting, filtering large datasets efficiently
+- Zero custom serialization needed
+- Matches industry conventions
+
+**Scope**: ~18-20 list endpoints across all 4 domains (HR, Finance, Procurement, Inventory)
+
+**Breaking change**: Clients must unpack `response.content` instead of treating response as array. This is acceptable within `/api/v1`.
+
+---
+
 ## Decision: API Versioning
 
 ### Pattern: /api/v1/resource Paths
@@ -711,6 +774,7 @@ werkflow-erp doesn't know or care about Zapier
 1. **Multi-tenancy**: v2 may add `X-Tenant-ID` header validation
 2. **API evolution**: Binary protocol changes can happen (breaking changes)
 3. **Connector Registry**: Registered connectors are versioned
+4. **Pagination**: `/api/v1` allows breaking changes like List→Page return types within same major version
 
 ---
 
