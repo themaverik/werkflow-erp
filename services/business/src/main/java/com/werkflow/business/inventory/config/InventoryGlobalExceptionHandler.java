@@ -15,10 +15,11 @@ import java.util.Map;
 
 /**
  * Global exception handler for REST controllers
+ * @deprecated Use com.werkflow.business.common.exception.GlobalExceptionHandler instead
  */
 @RestControllerAdvice
 @Slf4j
-public class GlobalExceptionHandler {
+public class InventoryGlobalExceptionHandler {
 
     /**
      * Handle entity not found exceptions
