@@ -10,6 +10,7 @@ import com.werkflow.business.hr.repository.DepartmentRepository;
 import com.werkflow.business.hr.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -156,6 +157,41 @@ public class EmployeeService {
             .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
         employeeRepository.delete(employee);
         log.info("Employee deleted successfully: {}", id);
+    }
+
+    /**
+     * Link a Keycloak user ID to an employee.
+     * Called by Admin Service after user provisioning in Keycloak.
+     * Idempotent: calling with same keycloakUserId multiple times is safe.
+     *
+     * @param employeeId Employee ID
+     * @param keycloakUserId Keycloak user UUID from Keycloak
+     * @return Updated EmployeeResponse with keycloakUserId
+     * @throws EntityNotFoundException if employee not found or tenant mismatch
+     * @throws DataIntegrityViolationException if already linked to different keycloak user
+     */
+    @Transactional
+    public EmployeeResponse linkKeycloakUser(Long employeeId, String keycloakUserId) {
+        Employee employee = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new EntityNotFoundException("Employee with ID " + employeeId + " not found"));
+
+        String currentTenant = getTenantId();
+        if (!employee.getTenantId().equals(currentTenant)) {
+            throw new EntityNotFoundException("Employee not found"); // Don't leak tenant info
+        }
+
+        if (employee.getKeycloakUserId() != null &&
+            !employee.getKeycloakUserId().equals(keycloakUserId)) {
+            throw new DataIntegrityViolationException(
+                "Employee already linked to different Keycloak user. " +
+                "Current: " + employee.getKeycloakUserId() + ", attempted: " + keycloakUserId
+            );
+        }
+
+        employee.setKeycloakUserId(keycloakUserId);
+        employee = employeeRepository.save(employee);
+        log.info("Linked keycloakUserId {} to employee {}", keycloakUserId, employeeId);
+        return convertToResponse(employee);
     }
 
     private Employee convertToEntity(EmployeeRequest request, String tenantId) {
