@@ -28,6 +28,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public ResponseEntity<ErrorResponse> handleValidationException(Exception ex) {
+        String timestamp = ISO_FORMATTER.format(Instant.now());
+
+        ErrorResponse response = ErrorResponse.builder()
+            .code("VALIDATION_FAILED")
+            .message(ex.getMessage())
+            .timestamp(timestamp)
+            .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
         String timestamp = ISO_FORMATTER.format(Instant.now());

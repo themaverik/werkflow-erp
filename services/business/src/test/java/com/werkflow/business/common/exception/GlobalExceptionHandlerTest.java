@@ -45,4 +45,24 @@ public class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertEquals("INTERNAL_SERVER_ERROR", response.getBody().getCode());
     }
+
+    @Test
+    void testHandleConstraintViolationException() {
+        String violationMessage = "Department not found";
+        IllegalArgumentException ex = new IllegalArgumentException(violationMessage);
+        ResponseEntity<ErrorResponse> response = handler.handleValidationException(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals("VALIDATION_FAILED", response.getBody().getCode());
+        assertEquals(violationMessage, response.getBody().getMessage());
+    }
+
+    @Test
+    void testValidationExceptionWithFieldDetails() {
+        IllegalArgumentException ex = new IllegalArgumentException("Validation failed: invalid department ID");
+        ResponseEntity<ErrorResponse> response = handler.handleValidationException(ex);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody().getTimestamp());
+    }
 }
