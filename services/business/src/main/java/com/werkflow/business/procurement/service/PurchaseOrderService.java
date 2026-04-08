@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.sequence.NumberGenerationService;
 import com.werkflow.business.procurement.dto.PoLineItemRequest;
 import com.werkflow.business.procurement.dto.PoLineItemResponse;
 import com.werkflow.business.procurement.dto.PurchaseOrderRequest;
@@ -43,6 +44,7 @@ public class PurchaseOrderService {
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final PoLineItemRepository lineItemRepository;
     private final TenantContext tenantContext;
+    private final NumberGenerationService numberGenerationService;
 
     private String getTenantId() {
         return tenantContext.getTenantId();
@@ -91,7 +93,7 @@ public class PurchaseOrderService {
 
         PurchaseOrder po = PurchaseOrder.builder()
             .tenantId(tenantId)
-            .poNumber("PO-" + System.currentTimeMillis())
+            .poNumber(numberGenerationService.generatePoNumber(tenantId))
             .vendor(vendor)
             .purchaseRequest(purchaseRequest)
             .orderDate(request.getOrderDate())
