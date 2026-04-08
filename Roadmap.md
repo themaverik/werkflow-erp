@@ -30,24 +30,21 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P0 COMPLETE ✓ — All critical path tasks done, starting P1
-**Active Phase**: P1 — Quality & Integration (Week 3)
-**Resuming**: P1.1.1 (API Contract: Enum metadata endpoint)
-**Last Commit**: docs(P0.6): add implementation plan documentation
+**Status**: P1.4 COMPLETE ✓ — Number generation with collision prevention implemented and tested
+**Active Phase**: P1 — Quality & Integration
+**Next Task**: P1.1.1 (API Contract: Enum metadata endpoint)
+**Last Commit**: feat(P1.4): add Flyway V23 migration for sequence-based numbering
 **Branch**: feature/p1-quality-integration
 
-**P0.1.2 Completion Summary**:
-- Task 1 COMPLETE: TenantContext utility (ThreadLocal + JWT extraction) — 8 unit tests passing
-- Task 2 COMPLETE: TenantContextFilter (request-scoped context extraction) — 7 unit tests passing
-- Task 3 COMPLETE: SecurityConfig integration (BearerTokenAuthenticationFilter anchor, filter ordering)
-- Task 4 COMPLETE: HR repositories and services (6 entities, 12 entities/service pairs, N+1 query fix)
-- Task 5 COMPLETE: Finance repositories and services (5 entities with cross-domain FK validation)
-- Task 6 COMPLETE: Procurement repositories and services (7 entities with line-item scoping)
-- Task 7 COMPLETE: Inventory repositories and services (6 entities with asset-instance validation)
-- Task 8 COMPLETE: BudgetCheckService tenant isolation (cross-domain budget checks now scoped)
-- Task 9 COMPLETE: Full test suite build and verify (192 files compile, 15/15 unit tests passing)
-- All 23 entities now have tenant isolation at the repository query level
-- All 12 domain services enforce tenant boundary on read/write operations
+**P1.4 Completion Summary**:
+- ✅ SequenceService created (lazy sequence management with PostgreSQL)
+- ✅ NumberGenerationService created (document number formatting)
+- ✅ All 3 procurement services updated (PR, PO, Receipt)
+- ✅ 11 integration tests passing (format validation, uniqueness, tenant isolation)
+- ✅ Flyway V23 migration with backfill for existing data
+- ✅ 85 tests total, 100% pass rate
+- ✅ Zero SQL injection vulnerabilities (proper identifier quoting)
+- ✅ Multi-tenant isolation verified
 
 ---
 
@@ -256,16 +253,14 @@ Must complete before any production deployment.
   - [ ] Estimated: 1 hour
 
 #### P1.4 — Number Generation & Collision Prevention
-- [ ] **P1.4.1** Fix PR number generation (currently uses System.currentTimeMillis)
-  - [ ] Change: `PR-{tenantId}-{year}-{seq:05d}` (e.g., `PR-ACME-2026-00042`)
-  - [ ] Use database sequence: `pr_number_seq`
-  - [ ] V23 Flyway migration
-  - [ ] Estimated: 2 hours
+- [x] **P1.4.1** Fix PR number generation (currently uses System.currentTimeMillis) *(commit: 728bc28)*
+  - [x] Change: `PR-{tenantId}-{year}-{seq:05d}` (e.g., `PR-ACME-2026-00042`)
+  - [x] Use database sequence: `pr_seq_{TENANT_ID}`
+  - [x] V23 Flyway migration *(commit: 57f5b7e)*
 
-- [ ] **P1.4.2** Apply same pattern to PO numbers and Receipt numbers
-  - [ ] PO: `PO-{tenantId}-{year}-{seq:05d}`
-  - [ ] GRN: `GRN-{tenantId}-{year}-{seq:05d}`
-  - [ ] Estimated: 1 hour
+- [x] **P1.4.2** Apply same pattern to PO numbers and Receipt numbers *(commit: 8f97486)*
+  - [x] PO: `PO-{tenantId}-{year}-{seq:05d}`
+  - [x] GRN: `GRN-{tenantId}-{year}-{seq:05d}`
 
 #### P1.5 — Test Suite
 - [ ] **P1.5.1** Write contract tests for all domain services
