@@ -30,11 +30,17 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P1.2 COMPLETE ✓ — Keycloak linking endpoint implemented and tested
+**Status**: P1.2 COMPLETE ✓ | ADR-002 DOCUMENTED ✓ | Ready for P1.2.5 Implementation
 **Active Phase**: P1 — Quality & Integration
-**Next Task**: P1.3 (Optional: User Enrichment Service) or P1.5 (Test Suite)
-**Last Commit**: refactor(P1.2): fix error code in EntityNotFoundException handler
+**Next Task**: P1.2.5 — User Identity Architecture (6 phases, 12-17 hours)
+**Last Commit**: docs(P1.2): mark Keycloak linking complete in ROADMAP
 **Branch**: feature/p1-quality-integration
+
+**What's Next (Session 2)**:
+- Implement P1.2.5 User Identity Architecture
+- 6 phases: Infrastructure → Security → DTOs → Testing → Documentation → Validation
+- All tests must pass (target: 160+ total tests)
+- Then proceed to P1.5 (Test Suite)
 
 **P1.2 Completion Summary** (2026-04-08):
 - ✅ KeycloakLinkRequest DTO with validation (@NotBlank, @Size)
@@ -264,17 +270,137 @@ Must complete before any production deployment.
   - [x] Design spec: docs/superpowers/specs/2026-04-08-p1.2-keycloak-linking-design.md
   - [x] Implementation plan: docs/superpowers/plans/2026-04-08-p1.2-keycloak-linking.md
 
-#### P1.3 — Admin Service User Enrichment (Optional)
-- [ ] **P1.3.1** Create `UserEnrichmentService` with Caffeine cache
-  - [ ] Optional call to Admin Service for user display names
-  - [ ] Cache TTL: 5 minutes
-  - [ ] Graceful degradation if Admin Service unavailable
-  - [ ] Estimated: 2 hours
+#### P1.2.5 — User Identity Architecture (OIDC-Compliant)
+**Status**: Designed, Ready for Implementation
+**ADR**: docs/ADR-002-User-Identity-And-JWT-Claims.md
+**Rationale**:
+- Minimal JWT claims (only sub, tenant_id, roles) — no PII in logs
+- OIDC-compliant UserInfo endpoint pattern — works with any auth provider
+- Local User table + Caffeine cache — no N+1 lookups
+- Display names in all responses — UI never needs extra calls
+- Loose coupling — werkflow-erp works standalone or integrated
 
-- [ ] **P1.3.2** Update response DTOs to include enriched user names
-  - [ ] CustodyRecord responses: include `custodianUserName`
-  - [ ] PurchaseRequest responses: include `requesterUserName`
-  - [ ] Estimated: 1 hour
+**Phase 1: Core Infrastructure (3-4 hours)**
+
+- [ ] **1.1 User Entity and Database Migrations**
+  - [ ] Create `users` table: keycloak_id (PK), display_name, email, updated_at
+  - [ ] Create User entity and UserRepository with upsert capability
+  - [ ] Add `created_by_display_name`, `updated_by_display_name` columns to audit-relevant entities
+  - [ ] Flyway migration V24: users table and audit columns
+  - [ ] All tests passing (2-3 hours)
+
+- [ ] **1.2 UserInfoResolver Service with Caching**
+  - [ ] Implement UserInfoResolver: call OIDC /userinfo endpoint dynamically
+  - [ ] Discover userinfo_endpoint from JWT issuer via .well-known
+  - [ ] Cache with Caffeine (TTL 5-15 minutes)
+  - [ ] Graceful degradation if auth server unavailable
+  - [ ] Upsert user into local User table on successful fetch
+  - [ ] 8+ unit tests: cache hit/miss, timeout, invalid token, issuer discovery, concurrent requests
+  - [ ] Add Caffeine dependency to pom.xml (1-2 hours)
+
+- [ ] **1.3 UserContext Component**
+  - [ ] Create UserContext (parallel to TenantContext): extract sub from JWT
+  - [ ] Call UserInfoResolver to get cached user profile
+  - [ ] Store in ThreadLocal for request scope, clear on exit
+  - [ ] Create UserContextFilter: register after BearerTokenAuthenticationFilter
+  - [ ] 5+ unit tests: extract, cache, ThreadLocal lifecycle (1 hour)
+
+**Phase 2: Security Updates (1-2 hours)**
+
+- [ ] **2.1 Update SecurityConfig for OIDC Compliance**
+  - [ ] Remove hardcoded KeycloakRoleConverter (Keycloak-specific)
+  - [ ] Create generic OidcRoleConverter: read from configurable claim
+  - [ ] Add property: werkflow.security.roles-claim (default: "roles")
+  - [ ] Update JwtAuthenticationConverter to use new converter
+  - [ ] 4+ unit tests for role extraction from different claim names
+  - [ ] Verified with Keycloak and Auth0 OIDC specs (1-2 hours)
+
+**Phase 3: Response DTO Updates (2-3 hours)**
+
+- [ ] **3.1 Update All Audit-Relevant Response DTOs**
+  - [ ] Add createdByDisplayName, updatedByDisplayName to: EmployeeResponse, DepartmentResponse, LeaveRequestResponse, BudgetPlanResponse, BudgetLineItemResponse, ExpenseResponse, PurchaseRequestResponse, PurchaseOrderResponse, ReceiptResponse, CustodyRecordResponse, AssetRequestResponse, AssetTransferResponse
+  - [ ] Add @Schema(example = "Jane Smith") for Swagger documentation
+  - [ ] Service layer populates display names from UserContext cache
+  - [ ] Update all existing tests to verify display names in responses
+  - [ ] 15+ DTO updates (2-3 hours)
+
+**Phase 4: Testing (4-5 hours)**
+
+- [ ] **4.1 Unit Tests: UserInfoResolver**
+  - [ ] Cache hit scenario
+  - [ ] Cache miss → call /userinfo → cache result → verify upsert
+  - [ ] Issuer discovery via .well-known/openid-configuration
+  - [ ] Timeout and error handling
+  - [ ] Invalid token handling
+  - [ ] Concurrent requests (same user, different users)
+  - [ ] 8+ tests, all passing (1 hour)
+
+- [ ] **4.2 Unit Tests: UserContext**
+  - [ ] Extract sub from JWT
+  - [ ] Resolve user profile via UserInfoResolver
+  - [ ] ThreadLocal storage and retrieval
+  - [ ] Clear on request exit
+  - [ ] Multiple users in sequence
+  - [ ] 5+ tests, all passing (0.5 hours)
+
+- [ ] **4.3 Integration Tests: werkflow → werkflow-erp with Display Names**
+  - [ ] Simulate werkflow calling werkflow-erp endpoints
+  - [ ] Verify responses include createdByDisplayName, updatedByDisplayName
+  - [ ] Test multi-user scenarios (different users creating records)
+  - [ ] Verify cache behavior (second call is faster, no /userinfo call)
+  - [ ] Test cross-tenant isolation (users from different tenants)
+  - [ ] Verify display names persist in responses across requests
+  - [ ] 6+ integration tests, all passing (2 hours)
+
+- [ ] **4.4 Security Tests: Verify JWT Claims and Logs**
+  - [ ] Verify JWT contains ONLY: sub, tenant_id, roles, exp, iat, iss, aud, scope
+  - [ ] Verify JWT does NOT contain: given_name, family_name, email, department, hire_date
+  - [ ] Verify application logs do not leak JWT with PII (check logback/SLF4J)
+  - [ ] Test configurable roles claim name works for different OIDC providers
+  - [ ] GDPR/CCPA compliance verification
+  - [ ] 5+ security tests, all passing (1.5 hours)
+
+**Phase 5: Documentation Updates (1-2 hours)**
+
+- [ ] **5.1 Update ROADMAP.md**
+  - [ ] Mark P1.2.5 complete with all subtasks checked
+  - [ ] Update Current Session State section
+  - [ ] Document actual hours spent vs. estimated
+
+- [ ] **5.2 Update README.md**
+  - [ ] Add "User Identity Architecture" section
+  - [ ] Document OIDC compliance and claims contract
+  - [ ] Add configuration examples for Keycloak, Auth0, Azure AD
+  - [ ] Explain display names in API responses
+
+- [ ] **5.3 Update Integration Docs**
+  - [ ] File: docs/WERKFLOW_INTEGRATION.md
+  - [ ] Add: "API responses include display names; no additional user lookup needed"
+  - [ ] Add: "werkflow can pass JWT bearer token to werkflow-erp; both systems resolve names independently"
+  - [ ] Add example responses showing createdByDisplayName fields
+
+**Phase 6: Final Validation (1 hour)**
+
+- [ ] **6.1 Full Test Suite Run**
+  - [ ] mvn clean test — all tests pass (target: 160+ tests)
+  - [ ] Verify no regressions from P1.1, P1.2, P1.4 tests
+  - [ ] Verify no integration test failures
+
+- [ ] **6.2 Manual Verification**
+  - [ ] Start application with Keycloak
+  - [ ] Call an endpoint (e.g., GET /api/v1/hr/employees)
+  - [ ] Verify response includes createdByDisplayName
+  - [ ] Check application logs — no JWT claims visible
+  - [ ] Stop and restart application
+  - [ ] Verify cache is local (no extra /userinfo call on startup)
+  - [ ] Test with Auth0 or Azure AD configuration (optional, validates portability)
+
+**Total Estimated**: 12-17 hours across 1-2 sessions
+
+#### P1.3 — User Name Enrichment (DEFERRED — Superseded by P1.2.5)
+**Status**: DEFERRED — Architecture replaced by P1.2.5 (OIDC UserInfo pattern)
+**Reason**: P1.3 was designed to call Admin Service for names, but this violates werkflow-erp decoupling principle. P1.2.5 provides a better solution: OIDC UserInfo endpoint pattern works for standalone and integrated deployments without calling external services.
+**Post-MVP Opportunity**: After P1.2.5 is complete and user names are properly managed, consider adding name change sync strategy (e.g., event-driven updates when Keycloak user is modified).
 
 #### P1.4 — Number Generation & Collision Prevention
 - [x] **P1.4.1** Fix PR number generation (currently uses System.currentTimeMillis) *(commit: 728bc28)*
