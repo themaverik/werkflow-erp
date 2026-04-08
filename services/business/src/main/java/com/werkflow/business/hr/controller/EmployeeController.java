@@ -2,6 +2,7 @@ package com.werkflow.business.hr.controller;
 
 import com.werkflow.business.hr.dto.EmployeeRequest;
 import com.werkflow.business.hr.dto.EmployeeResponse;
+import com.werkflow.business.hr.dto.KeycloakLinkRequest;
 import com.werkflow.business.hr.entity.EmploymentStatus;
 import com.werkflow.business.hr.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -124,6 +125,18 @@ public class EmployeeController {
     public ResponseEntity<Void> deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{employeeId}/keycloak-link")
+    @Operation(
+        summary = "Link Keycloak user to employee",
+        description = "Associate a provisioned Keycloak user with an employee record. Called by Admin Service after user provisioning in Keycloak. Idempotent: safe to retry with same keycloakUserId."
+    )
+    public ResponseEntity<EmployeeResponse> linkKeycloakUser(
+        @PathVariable Long employeeId,
+        @Valid @RequestBody KeycloakLinkRequest request
+    ) {
+        return ResponseEntity.ok(employeeService.linkKeycloakUser(employeeId, request.getKeycloakUserId()));
     }
 
     @GetMapping("/{id}/role-display")
