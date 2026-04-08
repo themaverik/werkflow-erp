@@ -65,4 +65,24 @@ public class GlobalExceptionHandlerTest {
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertNotNull(response.getBody().getTimestamp());
     }
+
+    @Test
+    void testHandleDataAccessException() {
+        org.springframework.dao.DataAccessException ex =
+            new org.springframework.dao.DataIntegrityViolationException("Duplicate key");
+        ResponseEntity<ErrorResponse> response = handler.handleDataAccessException(ex);
+
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertEquals("DATA_INTEGRITY_VIOLATION", response.getBody().getCode());
+    }
+
+    @Test
+    void testHandleGenericDatabaseException() {
+        org.springframework.dao.DataAccessException ex =
+            new org.springframework.dao.DataAccessResourceFailureException("Database unavailable");
+        ResponseEntity<ErrorResponse> response = handler.handleDataAccessException(ex);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals("DATABASE_ERROR", response.getBody().getCode());
+    }
 }

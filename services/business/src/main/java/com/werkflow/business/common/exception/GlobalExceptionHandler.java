@@ -4,6 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
 import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -39,6 +41,38 @@ public class GlobalExceptionHandler {
             .build();
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
+        String timestamp = ISO_FORMATTER.format(Instant.now());
+
+        ErrorResponse response = ErrorResponse.builder()
+            .code("DATA_INTEGRITY_VIOLATION")
+            .message("Data integrity constraint violated: " + ex.getMessage())
+            .timestamp(timestamp)
+            .build();
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException ex) {
+        String timestamp = ISO_FORMATTER.format(Instant.now());
+
+        String code = ex instanceof DataIntegrityViolationException ?
+            "DATA_INTEGRITY_VIOLATION" : "DATABASE_ERROR";
+
+        ErrorResponse response = ErrorResponse.builder()
+            .code(code)
+            .message("Database error: " + ex.getMessage())
+            .timestamp(timestamp)
+            .build();
+
+        HttpStatus status = ex instanceof DataIntegrityViolationException ?
+            HttpStatus.CONFLICT : HttpStatus.INTERNAL_SERVER_ERROR;
+
+        return ResponseEntity.status(status).body(response);
     }
 
     @ExceptionHandler(Exception.class)
