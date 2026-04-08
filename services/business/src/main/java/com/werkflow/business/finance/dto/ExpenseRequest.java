@@ -1,5 +1,6 @@
 package com.werkflow.business.finance.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
@@ -17,6 +18,10 @@ import java.util.Map;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(
+    description = "Expense request for submitting a new expense claim",
+    example = "{\"budgetLineItemId\": 100, \"departmentId\": 5, \"expenseDate\": \"2026-04-01\", \"amount\": 150.00, \"categoryId\": 10, \"vendorName\": \"Acme Corp\", \"description\": \"Client meeting expenses\", \"submittedByUserId\": 20}"
+)
 public class ExpenseRequest {
     private Long budgetLineItemId;
 

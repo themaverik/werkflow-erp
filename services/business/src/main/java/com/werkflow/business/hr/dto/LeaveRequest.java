@@ -1,6 +1,7 @@
 package com.werkflow.business.hr.dto;
 
 import com.werkflow.business.hr.entity.LeaveType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -18,6 +19,10 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(
+    description = "Leave request for creating or updating employee leave",
+    example = "{\"employeeId\": 1, \"leaveType\": \"ANNUAL\", \"startDate\": \"2026-04-15\", \"endDate\": \"2026-04-20\", \"numberOfDays\": 5, \"reason\": \"Planned vacation\"}"
+)
 public class LeaveRequest {
 
     @NotNull(message = "Employee ID is required")
