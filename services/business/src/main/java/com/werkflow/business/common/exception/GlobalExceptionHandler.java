@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
         String timestamp = ISO_FORMATTER.format(Instant.now());
 
         ErrorResponse response = ErrorResponse.builder()
-            .code("DEPARTMENT_NOT_FOUND")
+            .code("ENTITY_NOT_FOUND")
             .message(ex.getMessage())
             .timestamp(timestamp)
             .build();
