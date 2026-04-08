@@ -39,6 +39,7 @@ public class KeycloakLinkRequestTest {
         KeycloakLinkRequest request = new KeycloakLinkRequest(null);
         Set<ConstraintViolation<KeycloakLinkRequest>> violations = validator.validate(request);
         assertFalse(violations.isEmpty());
+        assertTrue(violations.stream().anyMatch(v -> v.getMessage().contains("required")));
     }
 
     @Test
