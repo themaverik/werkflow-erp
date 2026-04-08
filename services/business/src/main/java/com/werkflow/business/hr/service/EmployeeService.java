@@ -172,10 +172,14 @@ public class EmployeeService {
      */
     @Transactional
     public EmployeeResponse linkKeycloakUser(Long employeeId, String keycloakUserId) {
+        // 1. Get tenant context first (consistent with other methods)
+        String currentTenant = getTenantId();
+
+        // 2. Fetch employee
         Employee employee = employeeRepository.findById(employeeId)
             .orElseThrow(() -> new EntityNotFoundException("Employee with ID " + employeeId + " not found"));
 
-        String currentTenant = getTenantId();
+        // 3. Validate tenant ownership (multi-tenant isolation)
         if (!employee.getTenantId().equals(currentTenant)) {
             throw new EntityNotFoundException("Employee not found"); // Don't leak tenant info
         }
@@ -183,8 +187,7 @@ public class EmployeeService {
         if (employee.getKeycloakUserId() != null &&
             !employee.getKeycloakUserId().equals(keycloakUserId)) {
             throw new DataIntegrityViolationException(
-                "Employee already linked to different Keycloak user. " +
-                "Current: " + employee.getKeycloakUserId() + ", attempted: " + keycloakUserId
+                "Employee already linked to a different Keycloak user"
             );
         }
 

@@ -87,9 +87,15 @@ public class EmployeeServiceKeycloakTest {
         when(tenantContext.getTenantId()).thenReturn("ACME");
         when(employeeRepository.findById(1L)).thenReturn(Optional.of(testEmployee));
 
-        assertThrows(DataIntegrityViolationException.class, () ->
+        // Execute & Verify: throws DataIntegrityViolationException with generic message (no UUID leak)
+        DataIntegrityViolationException ex = assertThrows(DataIntegrityViolationException.class, () ->
             employeeService.linkKeycloakUser(1L, "keycloak-uuid-new")
         );
+
+        // Verify message does not leak UUID values
+        assertTrue(ex.getMessage().contains("different Keycloak user"));
+        assertFalse(ex.getMessage().contains("keycloak-uuid-old"));
+        assertFalse(ex.getMessage().contains("keycloak-uuid-new"));
     }
 
     @Test
