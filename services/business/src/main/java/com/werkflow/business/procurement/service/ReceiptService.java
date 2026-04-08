@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.sequence.NumberGenerationService;
 import com.werkflow.business.procurement.dto.ReceiptLineItemRequest;
 import com.werkflow.business.procurement.dto.ReceiptLineItemResponse;
 import com.werkflow.business.procurement.dto.ReceiptRequest;
@@ -42,6 +43,7 @@ public class ReceiptService {
     private final PoLineItemRepository poLineItemRepository;
     private final ReceiptLineItemRepository lineItemRepository;
     private final TenantContext tenantContext;
+    private final NumberGenerationService numberGenerationService;
 
     private String getTenantId() {
         return tenantContext.getTenantId();
@@ -80,7 +82,7 @@ public class ReceiptService {
 
         Receipt receipt = Receipt.builder()
             .tenantId(tenantId)
-            .receiptNumber("GR-" + System.currentTimeMillis())
+            .receiptNumber(numberGenerationService.generateGrnNumber(tenantId))
             .purchaseOrder(po)
             .receiptDate(request.getReceiptDate())
             .receivedByUserId(request.getReceivedByUserId())
