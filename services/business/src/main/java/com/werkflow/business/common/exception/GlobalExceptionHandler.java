@@ -43,29 +43,19 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ErrorResponse> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        String timestamp = ISO_FORMATTER.format(Instant.now());
-
-        ErrorResponse response = ErrorResponse.builder()
-            .code("DATA_INTEGRITY_VIOLATION")
-            .message("Data integrity constraint violated: " + ex.getMessage())
-            .timestamp(timestamp)
-            .build();
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
-    }
-
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ErrorResponse> handleDataAccessException(DataAccessException ex) {
         String timestamp = ISO_FORMATTER.format(Instant.now());
 
         String code = ex instanceof DataIntegrityViolationException ?
             "DATA_INTEGRITY_VIOLATION" : "DATABASE_ERROR";
+        String message = ex instanceof DataIntegrityViolationException ?
+            "Data integrity constraint violated: " + ex.getMessage() :
+            "Database error: " + ex.getMessage();
 
         ErrorResponse response = ErrorResponse.builder()
             .code(code)
-            .message("Database error: " + ex.getMessage())
+            .message(message)
             .timestamp(timestamp)
             .build();
 
