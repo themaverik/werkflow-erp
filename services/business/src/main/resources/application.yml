@@ -115,3 +115,12 @@ keycloak:
   resource: werkflow-api
   use-resource-role-mappings: true
   bearer-only: true
+
+werkflow:
+  security:
+    # JWT claim name used to extract roles. Configurable per OIDC provider:
+    # - Keycloak: "roles"  (flat list at token root)
+    # - Auth0:    "scope"  (or a custom namespace claim)
+    # - Azure AD: "roles"
+    # - Cognito:  "cognito:groups"
+    roles-claim: ${WERKFLOW_SECURITY_ROLES_CLAIM:roles}
