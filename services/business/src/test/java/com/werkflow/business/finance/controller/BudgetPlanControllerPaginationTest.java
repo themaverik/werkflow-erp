@@ -2,6 +2,7 @@ package com.werkflow.business.finance.controller;
 
 import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.common.filter.TenantContextFilter;
+import com.werkflow.business.common.filter.UserContextFilter;
 import com.werkflow.business.common.idempotency.filter.IdempotencyFilter;
 import com.werkflow.business.common.idempotency.service.IdempotencyService;
 import com.werkflow.business.config.SecurityConfig;
@@ -47,7 +48,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
     },
     excludeFilters = @ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE,
-        classes = { SecurityConfig.class, TenantContextFilter.class, IdempotencyFilter.class }
+        classes = { SecurityConfig.class, TenantContextFilter.class, UserContextFilter.class, IdempotencyFilter.class }
     )
 )
 @MockBean(JpaMetamodelMappingContext.class)
