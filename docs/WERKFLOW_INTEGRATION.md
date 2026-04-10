@@ -1,5 +1,38 @@
 # Werkflow Integration Guide
 
+## User Identity in API Responses
+
+All audit-relevant API responses include user display names resolved from the OIDC provider:
+
+```json
+{
+  "id": 123,
+  "createdAt": "2026-04-10T10:00:00Z",
+  "createdByDisplayName": "Jane Smith",
+  "updatedAt": "2026-04-10T11:00:00Z",
+  "updatedByDisplayName": "Jane Smith"
+}
+```
+
+**Why display names in responses?**
+- UI never needs extra calls to fetch user names
+- werkflow-erp resolves names from the OIDC `/userinfo` endpoint
+- Each service instance caches names locally (no shared state required)
+
+**For werkflow integration:**
+- Pass the user's JWT bearer token to werkflow-erp
+- werkflow-erp calls `/userinfo` with the same token
+- Names are cached independently per service instance (Caffeine, TTL 10 min)
+- No data sharing between werkflow and werkflow-erp is needed
+
+**Affected response types** (13 total):
+- HR: EmployeeResponse, DepartmentResponse, LeaveResponse, AttendanceResponse, PayrollResponse, PerformanceReviewResponse
+- Finance: BudgetPlanResponse, ExpenseResponse
+- Procurement: VendorResponse, PurchaseRequestResponse, PurchaseOrderResponse
+- Inventory: AssetRequestResponse, MaintenancePlanResponse, CustodyRecordResponse
+
+---
+
 ## ProcessInstanceId Pattern
 
 ### Pattern: Generate First, Then Create

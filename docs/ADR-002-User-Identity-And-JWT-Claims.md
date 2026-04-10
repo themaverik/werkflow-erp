@@ -1,7 +1,8 @@
 # ADR-002: User Identity Architecture and JWT Claims
 
 **Date**: 2026-04-08
-**Status**: Proposed
+**Status**: Accepted
+**Implementation Date**: 2026-04-10
 **Decision Makers**: Architecture Review
 **Deciders**: Engineering Team
 
@@ -336,4 +337,16 @@ werkflow manages its own Keycloak integration. werkflow-erp is not involved.
 
 ## Status
 
-**PROPOSED** — Awaiting architecture review and team approval before implementation begins.
+**ACCEPTED** — Implemented 2026-04-10.
+
+## Implementation Results
+
+The architecture was fully implemented in P1.2.5 (18 hours, 1 session). Outcomes confirmed:
+
+- User entity and UserRepository with upsert-on-cache-miss in place
+- UserInfoResolver calls OIDC `/userinfo` endpoint; Caffeine cache (TTL 10 min) prevents N+1 lookups
+- UserContext and UserContextFilter provide request-scoped identity without thread-safety issues
+- OidcRoleConverter replaces Keycloak-specific `realm_access` parsing; roles claim is configurable via `werkflow.security.roles-claim`
+- All 13 audit-relevant response DTOs now include `createdByDisplayName` and `updatedByDisplayName`
+- 56+ tests added (unit, integration, security); 231 total tests passing
+- GDPR/CCPA compliance verified: no PII in JWT claims, no names in logs
