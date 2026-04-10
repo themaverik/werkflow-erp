@@ -1,11 +1,14 @@
 package com.werkflow.business.hr.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
+import com.werkflow.business.common.identity.dto.UserInfo;
 import com.werkflow.business.hr.dto.EmployeeResponse;
 import com.werkflow.business.hr.entity.Employee;
 import com.werkflow.business.hr.repository.DepartmentRepository;
 import com.werkflow.business.hr.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,6 +54,11 @@ public class EmployeeServiceKeycloakTest {
             .keycloakUserId(null)
             .build();
         testEmployee.setId(1L);
+    }
+
+    @AfterEach
+    void tearDown() {
+        UserContext.clear();
     }
 
     @Test
@@ -115,5 +123,23 @@ public class EmployeeServiceKeycloakTest {
         assertThrows(EntityNotFoundException.class, () ->
             employeeService.linkKeycloakUser(1L, "keycloak-uuid-123")
         );
+    }
+
+    @Test
+    void getEmployeeById_populatesCreatedByDisplayName_andUpdatedByDisplayName() {
+        UserContext.setUserInfo(UserInfo.builder()
+            .keycloakId("user-123")
+            .displayName("Jane Smith")
+            .email("jane@example.com")
+            .build());
+
+        when(tenantContext.getTenantId()).thenReturn("ACME");
+        when(employeeRepository.findById(1L)).thenReturn(Optional.of(testEmployee));
+
+        EmployeeResponse response = employeeService.getEmployeeById(1L);
+
+        assertNotNull(response);
+        assertEquals("Jane Smith", response.getCreatedByDisplayName());
+        assertEquals("Jane Smith", response.getUpdatedByDisplayName());
     }
 }

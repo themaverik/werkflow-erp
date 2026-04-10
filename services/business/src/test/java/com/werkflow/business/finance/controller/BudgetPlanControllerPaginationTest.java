@@ -34,6 +34,7 @@ import java.util.stream.IntStream;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -166,6 +167,32 @@ class BudgetPlanControllerPaginationTest {
     // -----------------------------------------------------------------------
     // 5. Custom sort: sort=fiscalYear,asc
     // -----------------------------------------------------------------------
+    @Test
+    @WithMockUser
+    void getBudgetPlanById_populatesDisplayNamesInResponse() throws Exception {
+        BudgetPlanResponse response = BudgetPlanResponse.builder()
+            .id(1L)
+            .departmentId(1L)
+            .fiscalYear(2026)
+            .periodStart(LocalDate.of(2026, 1, 1))
+            .periodEnd(LocalDate.of(2026, 12, 31))
+            .totalAmount(BigDecimal.valueOf(100000))
+            .allocatedAmount(BigDecimal.ZERO)
+            .spentAmount(BigDecimal.ZERO)
+            .status(BudgetStatus.DRAFT)
+            .createdByUserId(1L)
+            .createdByDisplayName("Jane Smith")
+            .updatedByDisplayName("Jane Smith")
+            .build();
+
+        when(budgetPlanService.getBudgetPlanById(anyLong())).thenReturn(response);
+
+        mvc.perform(get("/budgets/1"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.createdByDisplayName", is("Jane Smith")))
+            .andExpect(jsonPath("$.updatedByDisplayName", is("Jane Smith")));
+    }
+
     @Test
     @WithMockUser
     void testCustomSort() throws Exception {

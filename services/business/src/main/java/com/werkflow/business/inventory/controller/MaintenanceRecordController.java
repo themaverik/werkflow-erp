@@ -175,6 +175,7 @@ public class MaintenanceRecordController {
 
         try {
             response.setCreatedByDisplayName(UserContext.getDisplayName());
+            response.setUpdatedByDisplayName(UserContext.getDisplayName());
         } catch (IllegalStateException e) {
             // UserContext not available — leave as null
         }

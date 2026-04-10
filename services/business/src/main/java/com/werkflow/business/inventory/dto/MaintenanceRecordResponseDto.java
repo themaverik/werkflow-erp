@@ -43,4 +43,7 @@ public class MaintenanceRecordResponseDto {
 
     @Schema(example = "Jane Smith")
     private String createdByDisplayName;
+
+    @Schema(example = "John Doe")
+    private String updatedByDisplayName;
 }
