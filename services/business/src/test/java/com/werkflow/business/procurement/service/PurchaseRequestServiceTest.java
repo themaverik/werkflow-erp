@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -174,5 +175,35 @@ class PurchaseRequestServiceTest {
         assertNotNull(response);
         assertEquals("Bob Builder", response.getCreatedByDisplayName());
         assertEquals("Bob Builder", response.getUpdatedByDisplayName());
+    }
+
+    @Test
+    void getPurchaseRequestById_populatesDisplayNamesInResponse() {
+        UserContext.setUserInfo(UserInfo.builder()
+            .keycloakId("user-789")
+            .displayName("John Smith")
+            .email("john@example.com")
+            .build());
+
+        PurchaseRequest pr = PurchaseRequest.builder()
+            .id(1L)
+            .prNumber("PR-ACME-2026-00001")
+            .tenantId(TENANT_ID)
+            .requestingDeptId(1L)
+            .status(PurchaseRequest.PrStatus.DRAFT)
+            .priority(PurchaseRequest.Priority.MEDIUM)
+            .totalAmount(BigDecimal.ZERO)
+            .build();
+
+        when(tenantContext.getTenantId()).thenReturn(TENANT_ID);
+        when(prRepository.findById(1L)).thenReturn(Optional.of(pr));
+        when(lineItemRepository.findByPurchaseRequestIdAndTenantId(anyLong(), anyString()))
+            .thenReturn(Collections.emptyList());
+
+        PurchaseRequestResponse response = prService.getPurchaseRequestById(1L);
+
+        assertNotNull(response);
+        assertEquals("John Smith", response.getCreatedByDisplayName());
+        assertEquals("John Smith", response.getUpdatedByDisplayName());
     }
 }
