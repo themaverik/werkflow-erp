@@ -1,7 +1,7 @@
-# werkflow-erp Implementation Roadmap
+# Werkflow-ERP Implementation Roadmap
 
 **Project**: Standalone ERP Data Service for HR, Finance, Procurement, Inventory
-**Status**: Pre-MVP — Extracted from main werkflow platform
+**Status**: Pre-MVP — Extracted from main Werkflow platform
 **Last Updated**: 2026-04-10
 **Architecture**: See `docs/ADR-001-Service-Boundary-Architecture.md`
 
@@ -30,13 +30,13 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P1.5.1 COMPLETE ✓ | P1.5.2 DEFERRED ⏳ — Architectural issue documented
-**Active Phase**: P1 — Quality & Integration
-**Current Task**: P1.5.2 — Integration tests (deferred due to TenantContext mocking limitation)
-**Last Commit**: 4f1c2ee test(P1.5.1): implement 24 contract tests for 4 domain services
-**Branch**: feature/p1.5-test-suite
-**Test Status**: 255 tests passing, 0 failures (+24 contract tests from 231 baseline)
-**Note**: P1.5.2 architectural issue documented in `docs/P1.5.2-INTEGRATION-TESTS-IMPLEMENTATION-NOTES.md` — next session to use @WebMvcTest approach
+**Status**: P1 COMPLETE ✓ | P2 IN PROGRESS 🔄
+**Active Phase**: P2 — Documentation & Release
+**Current Tasks**: P2.1.1, P2.1.2, P2.1.3 (completed, pending commit)
+**Branch**: feature/p2-documentation
+**Test Status**: 255 tests passing (P1.5.1 complete, P1.5.2 deferred for next session)
+**Documentation**: README updated with logo, API Usage Guide created (12 workflows), Integration Guide created (BPMN + connector setup)
+**Note**: P1.5.2 architectural solution documented — next session will implement with @WebMvcTest approach
 
 ---
 
@@ -184,13 +184,13 @@ All foundation work complete. Summary:
 
 ---
 
-### ⏳ P2 — Documentation & Release (PENDING — After P1.5)
+### 🔄 P2 — Documentation & Release (IN PROGRESS — After P1.5)
 
-**Estimated**: 6 hours
+**Estimated**: 6 hours | **Actual (P2.1.1-P2.1.3)**: 1.5 hours
 
-- [ ] **P2.1.1** Update README.md (quick start, multi-tenancy setup, JWT auth, 2 hours)
-- [ ] **P2.1.2** Create API usage guide (step-by-step workflow examples, 2 hours)
-- [ ] **P2.1.3** Create integration guide for werkflow (connector registration, config, 2 hours)
+- [x] **P2.1.1** Update README.md with logo and focus (clean, focused reference) *(commit: pending)*
+- [x] **P2.1.2** Create API usage guide (step-by-step examples for all 4 domains, 12 workflows) *(docs/API-USAGE-GUIDE.md)*
+- [x] **P2.1.3** Create integration guide for werkflow (BPMN examples, connector setup, error handling) *(docs/WERKFLOW-INTEGRATION-GUIDE.md)*
 
 **Optional** (can defer to post-MVP):
 - [ ] **P2.2.1** Load test: 1000 concurrent requests
