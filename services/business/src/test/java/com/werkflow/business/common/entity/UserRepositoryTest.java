@@ -34,17 +34,18 @@ class UserRepositoryTest {
                 .keycloakId("550e8400-e29b-41d4-a716-446655440000")
                 .displayName("Jane Smith")
                 .email("jane.smith@example.com")
-                .updatedAt(LocalDateTime.now())
                 .build();
 
-        User saved = userRepository.save(user);
+        userRepository.save(user);
         entityManager.flush();
         entityManager.clear();
 
-        assertThat(saved.getKeycloakId()).isEqualTo("550e8400-e29b-41d4-a716-446655440000");
-        assertThat(saved.getDisplayName()).isEqualTo("Jane Smith");
-        assertThat(saved.getEmail()).isEqualTo("jane.smith@example.com");
-        assertThat(saved.getUpdatedAt()).isNotNull();
+        User persisted = userRepository.findById("550e8400-e29b-41d4-a716-446655440000").orElseThrow();
+        assertThat(persisted.getKeycloakId()).isEqualTo("550e8400-e29b-41d4-a716-446655440000");
+        assertThat(persisted.getDisplayName()).isEqualTo("Jane Smith");
+        assertThat(persisted.getEmail()).isEqualTo("jane.smith@example.com");
+        assertThat(persisted.getUpdatedAt()).isNotNull();
+        assertThat(persisted.getCreatedAt()).isNotNull();
     }
 
     @Test

@@ -3,18 +3,20 @@
 -- Adds created_by_display_name and updated_by_display_name to audit-relevant entities
 
 -- =============================================================================
--- 1. Create users table (shared cross-domain entity)
+-- 1. Create users table (identity domain — not scoped to HR/Finance/Procurement/Inventory)
 -- =============================================================================
-CREATE TABLE IF NOT EXISTS users (
+-- users table lives in identity_service schema to align with domain-per-schema
+-- convention used throughout this codebase (hr_service, finance_service, etc.)
+CREATE SCHEMA IF NOT EXISTS identity_service;
+
+CREATE TABLE IF NOT EXISTS identity_service.users (
     keycloak_id  VARCHAR(255) NOT NULL,
     display_name VARCHAR(255) NOT NULL,
     email        VARCHAR(255),
-    updated_at   TIMESTAMP    NOT NULL,
+    created_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_users PRIMARY KEY (keycloak_id)
 );
-
--- Index on keycloak_id for fast lookups (also the PK, but explicit for clarity)
-CREATE INDEX IF NOT EXISTS idx_users_keycloak_id ON users(keycloak_id);
 
 -- =============================================================================
 -- 2. HR Service — audit display name columns
