@@ -22,7 +22,7 @@ public class GlobalExceptionHandlerTest {
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNotNull(response.getBody());
-        assertEquals("DEPARTMENT_NOT_FOUND", response.getBody().getCode());
+        assertEquals("ENTITY_NOT_FOUND", response.getBody().getCode());
         assertTrue(response.getBody().getMessage().contains("not found"));
         assertNotNull(response.getBody().getTimestamp());
     }

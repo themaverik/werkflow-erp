@@ -1,6 +1,7 @@
 package com.werkflow.business.hr.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.hr.dto.EmployeeRequest;
 import com.werkflow.business.hr.dto.EmployeeResponse;
 import com.werkflow.business.hr.entity.Department;
@@ -10,6 +11,7 @@ import com.werkflow.business.hr.repository.DepartmentRepository;
 import com.werkflow.business.hr.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -158,6 +160,44 @@ public class EmployeeService {
         log.info("Employee deleted successfully: {}", id);
     }
 
+    /**
+     * Link a Keycloak user ID to an employee.
+     * Called by Admin Service after user provisioning in Keycloak.
+     * Idempotent: calling with same keycloakUserId multiple times is safe.
+     *
+     * @param employeeId Employee ID
+     * @param keycloakUserId Keycloak user UUID from Keycloak
+     * @return Updated EmployeeResponse with keycloakUserId
+     * @throws EntityNotFoundException if employee not found or tenant mismatch
+     * @throws DataIntegrityViolationException if already linked to different keycloak user
+     */
+    @Transactional
+    public EmployeeResponse linkKeycloakUser(Long employeeId, String keycloakUserId) {
+        // 1. Get tenant context first (consistent with other methods)
+        String currentTenant = getTenantId();
+
+        // 2. Fetch employee
+        Employee employee = employeeRepository.findById(employeeId)
+            .orElseThrow(() -> new EntityNotFoundException("Employee with ID " + employeeId + " not found"));
+
+        // 3. Validate tenant ownership (multi-tenant isolation)
+        if (!employee.getTenantId().equals(currentTenant)) {
+            throw new EntityNotFoundException("Employee not found"); // Don't leak tenant info
+        }
+
+        if (employee.getKeycloakUserId() != null &&
+            !employee.getKeycloakUserId().equals(keycloakUserId)) {
+            throw new DataIntegrityViolationException(
+                "Employee already linked to a different Keycloak user"
+            );
+        }
+
+        employee.setKeycloakUserId(keycloakUserId);
+        employee = employeeRepository.save(employee);
+        log.info("Linked keycloakUserId {} to employee {}", keycloakUserId, employeeId);
+        return convertToResponse(employee);
+    }
+
     private Employee convertToEntity(EmployeeRequest request, String tenantId) {
         Department department = null;
         if (request.getDepartmentId() != null) {
@@ -258,7 +298,7 @@ public class EmployeeService {
             ? employee.getDepartment().getName()
             : null;
 
-        return EmployeeResponse.builder()
+        EmployeeResponse response = EmployeeResponse.builder()
             .id(employee.getId())
             .organizationId(employee.getOrganizationId())
             .keycloakUserId(employee.getKeycloakUserId())
@@ -282,5 +322,15 @@ public class EmployeeService {
             .createdAt(employee.getCreatedAt())
             .updatedAt(employee.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available (e.g., batch or async context) — leave as null
+        }
+
+        return response;
     }
 }

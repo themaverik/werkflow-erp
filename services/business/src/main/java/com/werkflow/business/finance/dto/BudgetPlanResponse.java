@@ -1,6 +1,7 @@
 package com.werkflow.business.finance.dto;
 
 import com.werkflow.business.finance.entity.BudgetPlan.BudgetStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -30,4 +31,10 @@ public class BudgetPlanResponse {
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Schema(example = "Jane Smith")
+    private String createdByDisplayName;
+
+    @Schema(example = "John Doe")
+    private String updatedByDisplayName;
 }

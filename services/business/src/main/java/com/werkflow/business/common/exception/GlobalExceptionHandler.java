@@ -2,6 +2,7 @@ package com.werkflow.business.common.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.dao.DataAccessException;
@@ -10,6 +11,7 @@ import jakarta.persistence.EntityNotFoundException;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -22,12 +24,29 @@ public class GlobalExceptionHandler {
         String timestamp = ISO_FORMATTER.format(Instant.now());
 
         ErrorResponse response = ErrorResponse.builder()
-            .code("DEPARTMENT_NOT_FOUND")
+            .code("ENTITY_NOT_FOUND")
             .message(ex.getMessage())
             .timestamp(timestamp)
             .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex) {
+        String timestamp = ISO_FORMATTER.format(Instant.now());
+
+        String message = ex.getBindingResult().getFieldErrors().stream()
+            .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+            .collect(Collectors.joining(", "));
+
+        ErrorResponse response = ErrorResponse.builder()
+            .code("VALIDATION_FAILED")
+            .message(message)
+            .timestamp(timestamp)
+            .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})

@@ -1,5 +1,38 @@
 # Werkflow Integration Guide
 
+## User Identity in API Responses
+
+All audit-relevant API responses include user display names resolved from the OIDC provider:
+
+```json
+{
+  "id": 123,
+  "createdAt": "2026-04-10T10:00:00Z",
+  "createdByDisplayName": "Jane Smith",
+  "updatedAt": "2026-04-10T11:00:00Z",
+  "updatedByDisplayName": "Jane Smith"
+}
+```
+
+**Why display names in responses?**
+- UI never needs extra calls to fetch user names
+- werkflow-erp resolves names from the OIDC `/userinfo` endpoint
+- Each service instance caches names locally (no shared state required)
+
+**For werkflow integration:**
+- Pass the user's JWT bearer token to werkflow-erp
+- werkflow-erp calls `/userinfo` with the same token
+- Names are cached independently per service instance (Caffeine, TTL 10 min)
+- No data sharing between werkflow and werkflow-erp is needed
+
+**Affected response types** (13 total):
+- HR: EmployeeResponse, DepartmentResponse, LeaveResponse (3)
+- Finance: BudgetPlanResponse, BudgetLineItemResponse, ExpenseResponse (3)
+- Procurement: PurchaseRequestResponse, PurchaseOrderResponse, ReceiptResponse (3)
+- Inventory: AssetRequestResponse, CustodyRecordResponse, MaintenanceRecordResponse, TransferRequestResponse (4)
+
+---
+
 ## ProcessInstanceId Pattern
 
 ### Pattern: Generate First, Then Create
@@ -21,7 +54,7 @@ PROCESS_ID="arn:aws:bpm:us-east-1:123456789:process/asset-approval/2026-04-07-12
 curl -X POST http://localhost:8084/api/v1/inventory/asset-requests \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
-  -H "Idempotency-Key: $(uuidgen)" \
+  -H "X-Idempotency-Key: $(uuidgen)" \
   -d '{
     "requesterUserId": "user123",
     "requesterName": "John Doe",
@@ -46,7 +79,7 @@ PROCESS_ID="arn:aws:bpm:us-east-1:123456789:process/pr-approval/2026-04-07-54321
 curl -X POST http://localhost:8084/api/v1/purchase-requests \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
-  -H "Idempotency-Key: $(uuidgen)" \
+  -H "X-Idempotency-Key: $(uuidgen)" \
   -d '{
     "requesterUserId": "user123",
     "vendorId": 100,
@@ -77,7 +110,7 @@ If the workflow engine cannot generate `processInstanceId` before API creation, 
 RESPONSE=$(curl -X POST http://localhost:8084/api/v1/inventory/asset-requests \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $JWT_TOKEN" \
-  -H "Idempotency-Key: $(uuidgen)" \
+  -H "X-Idempotency-Key: $(uuidgen)" \
   -d '{
     "requesterUserId": "user123",
     "requesterName": "John Doe",
@@ -134,17 +167,17 @@ Example JWT claim:
 
 ## Idempotency
 
-Use the `Idempotency-Key` header for all POST/PUT requests. If the same key is used twice, the cached response is returned without re-executing the operation.
+Use the `X-Idempotency-Key` header for all POST/PUT requests. If the same key is used twice, the cached response is returned without re-executing the operation.
 
 Example:
 ```bash
 curl -X POST http://localhost:8084/api/v1/inventory/asset-requests \
-  -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \
   -d '{...}'
 
 # Second call with same key returns the same response (200 OK)
 curl -X POST http://localhost:8084/api/v1/inventory/asset-requests \
-  -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \
+  -H "X-Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \
   -d '{...}'
 ```
 
@@ -164,7 +197,7 @@ Test asset request creation with processInstanceId:
 curl -X POST http://localhost:8084/api/v1/inventory/asset-requests \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer eyJhbGc..." \
-  -H "Idempotency-Key: test-key-1" \
+  -H "X-Idempotency-Key: test-key-1" \
   -d '{
     "requesterUserId": "test-user",
     "requesterName": "Test User",

@@ -14,7 +14,7 @@ A pure **CRUD data service** for HR, Finance, Procurement, and Inventory domains
 | **Port** | 8084 |
 | **Context Path** | `/api/v1` |
 | **Database** | PostgreSQL 5433 (4 schemas: hr_service, finance_service, procurement_service, inventory_service) |
-| **Authentication** | Keycloak JWT (realm: werkflow) |
+| **Authentication** | OIDC JWT (Keycloak, Auth0, Azure AD, AWS Cognito) |
 | **Multi-Tenancy** | Yes (required from Day 1) |
 | **Optional Deployment** | Can run standalone or as part of werkflow stack |
 
@@ -325,6 +325,57 @@ GET     /api/v1/meta/enums
 
 ---
 
+## User Identity Architecture
+
+werkflow-erp implements OIDC-compliant user identity management per ADR-002.
+
+### Design Principles
+
+- **JWT Minimization**: Tokens contain only authorization claims (`sub`, `roles`, `tenant_id`)
+- **PII Protection**: Names and email never in JWT or logs (GDPR/CCPA compliant)
+- **Scalable Caching**: User profiles cached locally with Caffeine (TTL 5-15 min)
+- **Provider Agnostic**: Works with Keycloak, Auth0, Azure AD, or any OIDC provider
+
+### User Profile Resolution
+
+1. User authenticates with OIDC provider — JWT issued
+2. werkflow-erp validates JWT, extracts `sub` claim
+3. UserInfoResolver calls provider's `/userinfo` endpoint
+4. Profile (name, email) cached locally in `users` table
+5. All API responses include `createdByDisplayName` / `updatedByDisplayName`
+
+### Configuration
+
+Add to `application.yml`:
+
+```yaml
+werkflow:
+  security:
+    roles-claim: roles  # Keycloak, Azure AD (default)
+    # roles-claim: scope        # Auth0
+    # roles-claim: permissions  # Custom providers
+```
+
+Or via environment variable: `WERKFLOW_SECURITY_ROLES_CLAIM`
+
+### Supported Auth Providers
+
+| Provider | JWT Issuer URL | Roles Claim | Tested |
+|---|---|---|---|
+| Keycloak | `https://keycloak.../realms/werkflow` | `roles` | Yes |
+| Auth0 | `https://tenant.auth0.com/` | `scope` | Yes |
+| Azure AD | `https://login.microsoftonline.com/.../oauth2/v2.0` | `roles` | Yes |
+| AWS Cognito | `https://cognito-idp.../.../ ` | `roles` | Yes |
+
+### Security and Compliance
+
+- **No PII in JWT**: `sub`, `roles`, `tenant_id` only
+- **GDPR compliant**: Names cached locally, no email in logs
+- **Cache TTL**: 5-15 minutes (default 10 min) for name refresh
+- **Graceful degradation**: If `/userinfo` unavailable, falls back to opaque `sub`
+
+---
+
 ## Key Features
 
 ### Multi-Tenancy
@@ -464,7 +515,7 @@ POSTGRES_DB=werkflow
 POSTGRES_USER=werkflow_admin
 POSTGRES_PASSWORD=secure_password_change_me
 
-# Keycloak
+# OIDC Provider (Keycloak default; swap for Auth0, Azure AD, etc.)
 KEYCLOAK_URL=http://localhost:8090
 KEYCLOAK_REALM=werkflow
 KEYCLOAK_REALM_PUBLIC_KEY=...

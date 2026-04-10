@@ -1,6 +1,7 @@
 package com.werkflow.business.hr.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.hr.dto.DepartmentRequest;
 import com.werkflow.business.hr.dto.DepartmentResponse;
 import com.werkflow.business.hr.entity.Department;
@@ -151,7 +152,7 @@ public class DepartmentService {
     }
 
     private DepartmentResponse convertToResponse(Department department) {
-        return DepartmentResponse.builder()
+        DepartmentResponse response = DepartmentResponse.builder()
             .id(department.getId())
             .name(department.getName())
             .code(department.getCode())
@@ -164,5 +165,15 @@ public class DepartmentService {
             .createdAt(department.getCreatedAt())
             .updatedAt(department.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 }

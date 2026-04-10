@@ -2,6 +2,7 @@ package com.werkflow.business.hr.dto;
 
 import com.werkflow.business.hr.entity.DepartmentType;
 import com.werkflow.business.hr.entity.OfficeLocation;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -29,4 +30,10 @@ public class DepartmentResponse {
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Schema(example = "Jane Smith")
+    private String createdByDisplayName;
+
+    @Schema(example = "John Doe")
+    private String updatedByDisplayName;
 }

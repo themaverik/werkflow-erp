@@ -1,18 +1,17 @@
 package com.werkflow.business.config;
 
 import com.werkflow.business.common.filter.TenantContextFilter;
+import com.werkflow.business.common.filter.UserContextFilter;
 import com.werkflow.business.common.idempotency.filter.IdempotencyFilter;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.converter.Converter;
+import org.springframework.util.Assert;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
@@ -22,10 +21,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
@@ -35,10 +31,20 @@ public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
     private String jwkSetUri;
 
+    @Value("${werkflow.security.roles-claim:roles}")
+    private String rolesClaim;
+
+    @PostConstruct
+    public void validateRolesClaim() {
+        Assert.hasText(rolesClaim, "werkflow.security.roles-claim must not be blank");
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    TenantContextFilter tenantContextFilter,
-                                                   IdempotencyFilter idempotencyFilter) throws Exception {
+                                                   UserContextFilter userContextFilter,
+                                                   IdempotencyFilter idempotencyFilter,
+                                                   JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -55,12 +61,14 @@ public class SecurityConfig {
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
-                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter)
                 )
             )
             // Add TenantContextFilter AFTER OAuth2 authentication filters
             .addFilterAfter(tenantContextFilter, BearerTokenAuthenticationFilter.class)
-            .addFilterAfter(idempotencyFilter, TenantContextFilter.class);
+            // Add UserContextFilter AFTER TenantContextFilter (JWT already validated upstream)
+            .addFilterAfter(userContextFilter, TenantContextFilter.class)
+            .addFilterAfter(idempotencyFilter, UserContextFilter.class);
 
         return http.build();
     }
@@ -71,9 +79,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    public OidcRoleConverter oidcRoleConverter() {
+        return new OidcRoleConverter(rolesClaim);
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter(OidcRoleConverter oidcRoleConverter) {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(new KeycloakRoleConverter());
+        converter.setJwtGrantedAuthoritiesConverter(oidcRoleConverter);
         return converter;
     }
 
@@ -94,21 +107,4 @@ public class SecurityConfig {
         return source;
     }
 
-    static class KeycloakRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
-        @Override
-        public Collection<GrantedAuthority> convert(Jwt jwt) {
-            Map<String, Object> realmAccess = jwt.getClaim("realm_access");
-
-            if (realmAccess == null || !realmAccess.containsKey("roles")) {
-                return List.of();
-            }
-
-            @SuppressWarnings("unchecked")
-            List<String> roles = (List<String>) realmAccess.get("roles");
-
-            return roles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
-                .collect(Collectors.toList());
-        }
-    }
 }

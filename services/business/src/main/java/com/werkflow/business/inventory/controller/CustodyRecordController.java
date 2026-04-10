@@ -1,5 +1,6 @@
 package com.werkflow.business.inventory.controller;
 
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.inventory.dto.CustodyRecordRequestDto;
 import com.werkflow.business.inventory.dto.CustodyRecordResponseDto;
 import com.werkflow.business.inventory.entity.AssetInstance;
@@ -153,7 +154,7 @@ public class CustodyRecordController {
     }
 
     private CustodyRecordResponseDto mapToResponse(CustodyRecord record) {
-        return CustodyRecordResponseDto.builder()
+        CustodyRecordResponseDto response = CustodyRecordResponseDto.builder()
             .id(record.getId())
             .assetInstanceId(record.getAssetInstance().getId())
             .assetTag(record.getAssetInstance().getAssetTag())
@@ -169,5 +170,14 @@ public class CustodyRecordController {
             .createdAt(record.getCreatedAt())
             .isActive(record.getEndDate() == null)
             .build();
+
+        try {
+            response.setCreatedByDisplayName(UserContext.getDisplayName());
+            response.setUpdatedByDisplayName(UserContext.getDisplayName());
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 }
