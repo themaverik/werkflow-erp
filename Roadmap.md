@@ -30,12 +30,12 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P1.2.5 COMPLETE ✓ — User Identity Architecture implemented
+**Status**: P1.5.1 IN PROGRESS — Contract tests specification defined
 **Active Phase**: P1 — Quality & Integration
-**Next Task**: P1.5 — Test Suite (contract + integration tests)
-**Last Commit**: 6c95edc test(P1.2.5): add security tests for JWT claims minimization and GDPR compliance
-**Branch**: feature/p1-quality-integration
-**Test Status**: 231 tests passing, 0 failures
+**Next Task**: Implement P1.5.1 contract tests (20+ mock-based unit tests)
+**Last Commit**: a49671c docs(P1.5.1): add comprehensive contract tests specification with patterns and examples
+**Branch**: feature/p1.5-test-suite
+**Test Status**: 231 tests passing, 0 failures (baseline from P1.2.5)
 
 ---
 
@@ -155,11 +155,21 @@ All foundation work complete. Summary:
 
 ---
 
-### ⏳ P1.5 — Test Suite (PENDING — After P1.2.5)
+### ⏳ P1.5 — Test Suite (IN PROGRESS — After P1.2.5)
 
-**Estimated**: 12 hours (can run in parallel with P1.2.5 or after completion)
+**Estimated**: 12 hours total
 
-- [ ] **P1.5.1** Contract tests for domain services (HR: Employee, Department; Finance: BudgetCheck, Expense; Procurement: PurchaseRequest; Inventory: AssetRequest; 3-5 tests each, 8 hours)
+**[~] P1.5.1** Contract tests for domain services
+- Goal: Unit tests for core domain services (non-HTTP)
+- Services to test:
+  - HR: EmployeeService (duplicate email, keycloak linking, dept head uniqueness, tenant isolation)
+  - Finance: BudgetCheckService (no budget, sufficient/insufficient funds, fiscal year default)
+  - Procurement: PurchaseRequestService (invalid dept, tenant isolation, line items, processInstanceId)
+  - Inventory: AssetRequestService (default status, approve/reject, processInstanceId)
+- Estimated: 8 hours (20+ tests across 4 service classes)
+- Status: Specification defined in `docs/P1.5.1-CONTRACT-TESTS-SPEC.md`, ready for implementation
+- Next: Mock-based unit tests (no entity construction, just service contracts)
+
 - [ ] **P1.5.2** Integration tests: werkflow → werkflow-erp API calls (Asset request lifecycle, Budget check, Cross-tenant isolation, 4 hours)
 
 **Target**: 160+ total tests after P1.2.5 + P1.5 complete
