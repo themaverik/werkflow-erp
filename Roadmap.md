@@ -30,12 +30,12 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P1.5.1 IN PROGRESS — Contract tests specification defined
+**Status**: P1.5.1 COMPLETE ✓ — Contract tests implemented
 **Active Phase**: P1 — Quality & Integration
-**Next Task**: Implement P1.5.1 contract tests (20+ mock-based unit tests)
-**Last Commit**: a49671c docs(P1.5.1): add comprehensive contract tests specification with patterns and examples
+**Next Task**: P1.5.2 — Integration tests (werkflow → werkflow-erp API calls)
+**Last Commit**: 4f1c2ee test(P1.5.1): implement 24 contract tests for 4 domain services
 **Branch**: feature/p1.5-test-suite
-**Test Status**: 231 tests passing, 0 failures (baseline from P1.2.5)
+**Test Status**: 255 tests passing, 0 failures (+24 contract tests from 231 baseline)
 
 ---
 
@@ -49,7 +49,7 @@ Single source of truth for task tracking and session continuity.
 | **P1.2.5 — User Identity (OIDC)** | ✅ COMPLETE | 6 phases, 231 tests passing (18 hours) |
 | **P1.3 — User Name Enrichment** | ⏸️ DEFERRED | Superseded by P1.2.5 (better architecture) |
 | **P1.4 — Number Generation** | ✅ COMPLETE | PR/PO/GRN sequence fix (database sequences) |
-| **P1.5 — Test Suite** | ⏳ PENDING | Contract + Integration tests (12 hours) |
+| **P1.5 — Test Suite** | 🔄 IN PROGRESS | P1.5.1 ✅ (24 contract tests, 255 total), P1.5.2 ⏳ (integration tests) |
 | **P2 — Documentation & Release** | ⏳ PENDING | README, API guide, integration guide (6 hours) |
 | **P3 — Future Enhancements** | 🔮 FUTURE | Audit logging, CapEx, filtering, webhooks, bulk ops, custom fields |
 
@@ -157,22 +157,22 @@ All foundation work complete. Summary:
 
 ### ⏳ P1.5 — Test Suite (IN PROGRESS — After P1.2.5)
 
-**Estimated**: 12 hours total
+**Estimated**: 12 hours total | **Actual (P1.5.1)**: 4 hours (faster than estimated)
 
-**[~] P1.5.1** Contract tests for domain services
+**[x] P1.5.1** Contract tests for domain services *(commit: 4f1c2ee)*
 - Goal: Unit tests for core domain services (non-HTTP)
-- Services to test:
-  - HR: EmployeeService (duplicate email, keycloak linking, dept head uniqueness, tenant isolation)
-  - Finance: BudgetCheckService (no budget, sufficient/insufficient funds, fiscal year default)
-  - Procurement: PurchaseRequestService (invalid dept, tenant isolation, line items, processInstanceId)
-  - Inventory: AssetRequestService (default status, approve/reject, processInstanceId)
-- Estimated: 8 hours (20+ tests across 4 service classes)
-- Status: Specification defined in `docs/P1.5.1-CONTRACT-TESTS-SPEC.md`, ready for implementation
-- Next: Mock-based unit tests (no entity construction, just service contracts)
+- Tests implemented (24 total, all passing):
+  - HR: EmployeeServiceContractTest (6 tests: duplicate email, keycloak linking idempotent, dept head uniqueness, tenant isolation)
+  - Finance: BudgetCheckServiceContractTest (6 tests: no plan, sufficient/insufficient, default fiscal year, zero allocated, exact match)
+  - Procurement: PurchaseRequestServiceContractTest (6 tests: invalid dept, tenant isolation, defaults, processInstanceId)
+  - Inventory: AssetRequestServiceContractTest (6 tests: default status, approve/reject, processInstanceId, non-existent)
+- Implementation: Mock-based unit tests with no entity construction, focus on service contracts
+- Test count: 231 → 255 tests (+24)
+- Status: COMPLETE ✅
 
 - [ ] **P1.5.2** Integration tests: werkflow → werkflow-erp API calls (Asset request lifecycle, Budget check, Cross-tenant isolation, 4 hours)
 
-**Target**: 160+ total tests after P1.2.5 + P1.5 complete
+**Target**: 260+ total tests after P1.5.2 complete (currently at 255)
 
 ---
 
