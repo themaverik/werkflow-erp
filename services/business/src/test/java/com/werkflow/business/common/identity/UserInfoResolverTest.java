@@ -374,4 +374,24 @@ class UserInfoResolverTest {
         assertThat(result.getDisplayName()).isEqualTo(DISPLAY_NAME);
         mockServer.verify();
     }
+
+    /**
+     * Test 15: Non-String claim values (e.g. Integer for "name") are handled without ClassCastException.
+     * Uses String.valueOf() instead of a direct cast.
+     */
+    @Test
+    void buildUserInfo_withNonStringClaim_handlesGracefully() {
+        Map<String, Object> claims = Map.of(
+                "sub", SUB,
+                "name", 12345,          // Integer instead of String
+                "email", 98765          // Integer instead of String
+        );
+
+        UserInfo result = resolver.buildUserInfo(SUB, claims);
+
+        // Should not throw; values are coerced via String.valueOf
+        assertThat(result.getKeycloakId()).isEqualTo(SUB);
+        assertThat(result.getDisplayName()).isEqualTo("12345");
+        assertThat(result.getEmail()).isEqualTo("98765");
+    }
 }

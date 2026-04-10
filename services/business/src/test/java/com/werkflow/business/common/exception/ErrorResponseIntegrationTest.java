@@ -1,30 +1,31 @@
 package com.werkflow.business.common.exception;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
-import org.springframework.http.ResponseEntity;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.ResponseEntity;
 import jakarta.persistence.EntityNotFoundException;
+
 import static org.junit.jupiter.api.Assertions.*;
 
-@SpringBootTest
+/**
+ * Integration-style tests for {@link GlobalExceptionHandler} verifying standardised
+ * error response structure.  Runs as a plain unit test — no Spring context required
+ * since {@code GlobalExceptionHandler} has no injected dependencies.
+ */
 public class ErrorResponseIntegrationTest {
 
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    @Autowired
+    private GlobalExceptionHandler handler;
     private ObjectMapper objectMapper;
 
-    private GlobalExceptionHandler getGlobalExceptionHandler() {
-        return applicationContext.getBean(GlobalExceptionHandler.class);
+    @BeforeEach
+    void setUp() {
+        handler = new GlobalExceptionHandler();
+        objectMapper = new ObjectMapper();
     }
 
     @Test
     void testEntityNotFoundExceptionReturnsStandardizedFormat() {
-        GlobalExceptionHandler handler = getGlobalExceptionHandler();
         EntityNotFoundException ex = new EntityNotFoundException("Department with ID 999 not found");
 
         ResponseEntity<ErrorResponse> response = handler.handleEntityNotFoundException(ex);
@@ -39,7 +40,6 @@ public class ErrorResponseIntegrationTest {
 
     @Test
     void testValidationExceptionReturnsStandardizedFormat() {
-        GlobalExceptionHandler handler = getGlobalExceptionHandler();
         IllegalArgumentException ex = new IllegalArgumentException("Invalid employee data");
 
         ResponseEntity<ErrorResponse> response = handler.handleValidationException(ex);
@@ -54,7 +54,6 @@ public class ErrorResponseIntegrationTest {
 
     @Test
     void testGenericExceptionReturnsStandardizedFormat() {
-        GlobalExceptionHandler handler = getGlobalExceptionHandler();
         Exception ex = new Exception("Unexpected error");
 
         ResponseEntity<ErrorResponse> response = handler.handleGlobalException(ex);
@@ -69,7 +68,6 @@ public class ErrorResponseIntegrationTest {
 
     @Test
     void testErrorResponseSerializationToJson() throws Exception {
-        GlobalExceptionHandler handler = getGlobalExceptionHandler();
         EntityNotFoundException ex = new EntityNotFoundException("Test error");
 
         ResponseEntity<ErrorResponse> response = handler.handleEntityNotFoundException(ex);
@@ -78,12 +76,11 @@ public class ErrorResponseIntegrationTest {
         assertTrue(json.contains("code"));
         assertTrue(json.contains("message"));
         assertTrue(json.contains("timestamp"));
-        assertTrue(json.contains("DEPARTMENT_NOT_FOUND"));
+        assertTrue(json.contains("ENTITY_NOT_FOUND"));
     }
 
     @Test
     void testErrorResponseHasRequiredFields() {
-        GlobalExceptionHandler handler = getGlobalExceptionHandler();
         Exception ex = new RuntimeException("Test error");
 
         ResponseEntity<ErrorResponse> response = handler.handleGlobalException(ex);

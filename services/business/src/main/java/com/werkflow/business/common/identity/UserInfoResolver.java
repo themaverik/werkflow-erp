@@ -111,8 +111,12 @@ public class UserInfoResolver {
             }
 
             String userinfoEndpoint = discoverUserinfoEndpoint(issuer);
-            if (userinfoEndpoint == null) {
+            if (userinfoEndpoint == null || userinfoEndpoint.isEmpty()) {
                 log.warn("UserInfoResolver: OIDC discovery failed for issuer={}; degrading for sub={}", issuer, sub);
+                return degraded(sub);
+            }
+            if (!userinfoEndpoint.startsWith("https://")) {
+                log.warn("UserInfoResolver: userinfo_endpoint must use HTTPS, got={}; degrading for sub={}", userinfoEndpoint, sub);
                 return degraded(sub);
             }
 
@@ -135,7 +139,10 @@ public class UserInfoResolver {
      * Discovers the userinfo_endpoint via {issuer}/.well-known/openid-configuration.
      * Result is cached in discoveryCache for 60 minutes.
      *
-     * @return userinfo_endpoint URL, or null on failure
+     * <p>Returns an empty string as a sentinel value when discovery fails, so that Caffeine
+     * caches the failure for the full TTL and prevents cache hammering during outages.
+     *
+     * @return userinfo_endpoint URL, or empty string on failure
      */
     String discoverUserinfoEndpoint(String issuer) {
         return discoveryCache.get(issuer, key -> {
@@ -144,22 +151,22 @@ public class UserInfoResolver {
                 ResponseEntity<String> response = restTemplate.getForEntity(discoveryUrl, String.class);
                 if (!response.getStatusCode().is2xxSuccessful() || response.getBody() == null) {
                     log.warn("UserInfoResolver: OIDC discovery returned non-2xx for url={}", discoveryUrl);
-                    return null;
+                    return ""; // sentinel: cache failure to prevent hammering
                 }
                 Map<String, Object> config = objectMapper.readValue(
                         response.getBody(), new TypeReference<>() {});
                 Object endpoint = config.get("userinfo_endpoint");
                 if (endpoint == null) {
                     log.warn("UserInfoResolver: 'userinfo_endpoint' missing in OIDC config from url={}", discoveryUrl);
-                    return null;
+                    return ""; // sentinel: cache failure to prevent hammering
                 }
                 return endpoint.toString();
             } catch (ResourceAccessException e) {
                 log.warn("UserInfoResolver: network error during OIDC discovery url={}; cause={}", discoveryUrl, e.getMessage());
-                return null;
+                return ""; // sentinel: cache failure to prevent hammering
             } catch (Exception e) {
                 log.error("UserInfoResolver: unexpected error during OIDC discovery url={}; cause={}", discoveryUrl, e.getMessage(), e);
-                return null;
+                return ""; // sentinel: cache failure to prevent hammering
             }
         });
     }
@@ -206,7 +213,8 @@ public class UserInfoResolver {
      */
     UserInfo buildUserInfo(String sub, Map<String, Object> claims) {
         String displayName = resolveDisplayName(claims, sub);
-        String email = claims.containsKey("email") ? (String) claims.get("email") : null;
+        Object emailObj = claims.get("email");
+        String email = emailObj != null ? (emailObj instanceof String ? (String) emailObj : String.valueOf(emailObj)) : null;
 
         return UserInfo.builder()
                 .keycloakId(sub)
@@ -216,18 +224,22 @@ public class UserInfoResolver {
     }
 
     private String resolveDisplayName(Map<String, Object> claims, String sub) {
-        if (claims.containsKey("name") && claims.get("name") != null) {
-            return (String) claims.get("name");
+        Object nameObj = claims.get("name");
+        if (nameObj != null) {
+            return nameObj instanceof String ? (String) nameObj : String.valueOf(nameObj);
         }
-        String given = (String) claims.get("given_name");
-        String family = (String) claims.get("family_name");
+        Object givenObj = claims.get("given_name");
+        Object familyObj = claims.get("family_name");
+        String given = givenObj != null ? (givenObj instanceof String ? (String) givenObj : String.valueOf(givenObj)) : null;
+        String family = familyObj != null ? (familyObj instanceof String ? (String) familyObj : String.valueOf(familyObj)) : null;
         if (given != null && family != null) {
             return given + " " + family;
         }
         if (given != null) return given;
         if (family != null) return family;
-        if (claims.containsKey("email") && claims.get("email") != null) {
-            return (String) claims.get("email");
+        Object emailObj = claims.get("email");
+        if (emailObj != null) {
+            return emailObj instanceof String ? (String) emailObj : String.valueOf(emailObj);
         }
         return sub;
     }
@@ -271,7 +283,7 @@ public class UserInfoResolver {
         }
         try {
             String[] parts = jwtToken.split("\\.");
-            if (parts.length < 2) {
+            if (parts.length != 3) {
                 log.warn("UserInfoResolver: malformed JWT — expected 3 parts, got {}", parts.length);
                 return null;
             }
