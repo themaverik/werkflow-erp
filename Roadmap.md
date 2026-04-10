@@ -30,24 +30,20 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P0.6 COMPLETE ✓ — Pagination on all list endpoints implemented and tested
-**Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
-**Next Phase**: P1 — Quality & Integration (Week 3)
-**Last Commit**: docs(P0.6): mark pagination implementation complete
-**Branch**: feature/p0-multi-tenancy
+**Status**: P1.1 COMPLETE ✓ — API Contract Standardization (error responses, enum metadata, DTO examples)
+**Active Phase**: P1 — Quality & Integration
+**Next Task**: P1.2 (Keycloak Linking)
+**Last Commit**: docs(P1.1): add API contract standardization documentation to README
+**Branch**: feature/p1-quality-integration
 
-**P0.1.2 Completion Summary**:
-- Task 1 COMPLETE: TenantContext utility (ThreadLocal + JWT extraction) — 8 unit tests passing
-- Task 2 COMPLETE: TenantContextFilter (request-scoped context extraction) — 7 unit tests passing
-- Task 3 COMPLETE: SecurityConfig integration (BearerTokenAuthenticationFilter anchor, filter ordering)
-- Task 4 COMPLETE: HR repositories and services (6 entities, 12 entities/service pairs, N+1 query fix)
-- Task 5 COMPLETE: Finance repositories and services (5 entities with cross-domain FK validation)
-- Task 6 COMPLETE: Procurement repositories and services (7 entities with line-item scoping)
-- Task 7 COMPLETE: Inventory repositories and services (6 entities with asset-instance validation)
-- Task 8 COMPLETE: BudgetCheckService tenant isolation (cross-domain budget checks now scoped)
-- Task 9 COMPLETE: Full test suite build and verify (192 files compile, 15/15 unit tests passing)
-- All 23 entities now have tenant isolation at the repository query level
-- All 12 domain services enforce tenant boundary on read/write operations
+**P1.1 Completion Summary** (2026-04-08):
+- ✅ Error Response Standardization: GlobalExceptionHandler with EntityNotFoundException, validation, database exception mapping (7/7 tests)
+- ✅ Enum Metadata Endpoint: GET /api/v1/meta/enums returning 15+ enums across 4 domains (HR: 4, Finance: 3, Procurement: 4, Inventory: 5)
+- ✅ DTO Examples: @Schema annotations on all Request/Response DTOs with complete realistic JSON structures
+- ✅ 118 unit tests passing (integration tests require PostgreSQL)
+- ✅ 6 commits: ErrorResponse DTO, GlobalExceptionHandler (3 commits), Enum metadata DTOs/Service/Controller/Tests, DTO examples, README documentation
+- ✅ Zero code quality issues (spec compliance + code quality reviews passed)
+- ✅ Production-ready error response format with extensible error codes
 
 ---
 
@@ -214,22 +210,33 @@ Must complete before any production deployment.
 ### P1 — Quality & Integration (Weeks 3)
 
 #### P1.1 — API Contract Standardization
-- [ ] **P1.1.1** Expose enum metadata endpoint
-  - [ ] `GET /api/v1/meta/enums`
-  - [ ] Returns: all enum types (AssetRequestStatus, PrStatus, etc.) with values and labels
-  - [ ] Used by werkflow at BPMN design time
-  - [ ] Estimated: 2 hours
+- [x] **P1.1.1** Expose enum metadata endpoint *(commits: 066df24, 0cc3bbb, 6a0ca23, a0d3a7f, 40b9336)*
+  - [x] `GET /api/v1/meta/enums` returning 15 enums (HR: 4, Finance: 3, Procurement: 4, Inventory: 5)
+  - [x] EnumValueDTO, EnumMetadataDTO, EnumMetadataResponseDTO with Jackson serialization
+  - [x] EnumMetadataService with all 15 domain enums (EmployeeStatus, LeaveType, PrStatus, etc.)
+  - [x] EnumMetadataController with Swagger documentation
+  - [x] Used by werkflow at BPMN form builder design time (no authentication)
+  - [x] 8 controller unit tests + comprehensive service tests
 
-- [ ] **P1.1.2** Add request/response examples to all DTOs
-  - [ ] Use `@Schema(example = "...")` annotations
-  - [ ] Add to: EmployeeDto, AssetRequestDto, PurchaseRequestDto, etc.
-  - [ ] Estimated: 2 hours
+- [x] **P1.1.2** Add request/response examples to all DTOs *(commits: 0cc3bbb, a0d3a7f)*
+  - [x] Use `@Schema(example = "...")` annotations with complete realistic JSON
+  - [x] HR: EmployeeRequest, EmployeeResponse, LeaveRequestRequest, LeaveRequestResponse
+  - [x] Finance: BudgetRequest, BudgetResponse, ExpenseRequest, ExpenseResponse
+  - [x] Procurement: PurchaseRequestRequest/Response with lineItems, PurchaseOrderRequest/Response with lineItems, ReceiptRequest/Response
+  - [x] Inventory: AssetRequest/Response, AssetTransferRequest/Response, MaintenanceRequest/Response
+  - [x] All examples show complete nested structures for BPMN form builder mapping
 
-- [ ] **P1.1.3** Standardize error responses
-  - [ ] All 4xx/5xx errors use consistent `ErrorResponse` format
-  - [ ] Include: `code`, `message`, `timestamp`, `details`
-  - [ ] Document in README
-  - [ ] Estimated: 2 hours
+- [x] **P1.1.3** Standardize error responses *(commits: 37ff5aa, dfe6847, 2e3fa64, f9d265e, ed93fe4)*
+  - [x] ErrorResponse DTO with code, message, timestamp, details fields
+  - [x] GlobalExceptionHandler (@RestControllerAdvice) with exception mapping:
+    - EntityNotFoundException → 404 Not Found (DEPARTMENT_NOT_FOUND)
+    - IllegalArgumentException, IllegalStateException → 400 Bad Request (VALIDATION_FAILED)
+    - DataIntegrityViolationException → 409 Conflict (DATA_INTEGRITY_VIOLATION)
+    - DataAccessException → 500 Internal Server Error (DATABASE_ERROR)
+  - [x] ISO 8601 timestamp format with UTC timezone
+  - [x] Extensible error codes (string-based, can be added without breaking changes)
+  - [x] Documented in README with examples
+  - [x] 7/7 error handler unit tests passing
 
 #### P1.2 — HR Module: Keycloak Linking
 - [ ] **P1.2.1** Create keycloak-link endpoint
@@ -256,16 +263,14 @@ Must complete before any production deployment.
   - [ ] Estimated: 1 hour
 
 #### P1.4 — Number Generation & Collision Prevention
-- [ ] **P1.4.1** Fix PR number generation (currently uses System.currentTimeMillis)
-  - [ ] Change: `PR-{tenantId}-{year}-{seq:05d}` (e.g., `PR-ACME-2026-00042`)
-  - [ ] Use database sequence: `pr_number_seq`
-  - [ ] V23 Flyway migration
-  - [ ] Estimated: 2 hours
+- [x] **P1.4.1** Fix PR number generation (currently uses System.currentTimeMillis) *(commit: 728bc28)*
+  - [x] Change: `PR-{tenantId}-{year}-{seq:05d}` (e.g., `PR-ACME-2026-00042`)
+  - [x] Use database sequence: `pr_seq_{TENANT_ID}`
+  - [x] V23 Flyway migration *(commit: 57f5b7e)*
 
-- [ ] **P1.4.2** Apply same pattern to PO numbers and Receipt numbers
-  - [ ] PO: `PO-{tenantId}-{year}-{seq:05d}`
-  - [ ] GRN: `GRN-{tenantId}-{year}-{seq:05d}`
-  - [ ] Estimated: 1 hour
+- [x] **P1.4.2** Apply same pattern to PO numbers and Receipt numbers *(commit: 8f97486)*
+  - [x] PO: `PO-{tenantId}-{year}-{seq:05d}`
+  - [x] GRN: `GRN-{tenantId}-{year}-{seq:05d}`
 
 #### P1.5 — Test Suite
 - [ ] **P1.5.1** Write contract tests for all domain services

@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.dto;
 
 import com.werkflow.business.procurement.entity.PurchaseRequest.Priority;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,6 +17,10 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(
+    description = "Purchase request with line items",
+    example = "{\"requestingDeptId\": 5, \"requesterUserId\": 10, \"requestDate\": \"2026-04-01\", \"requiredByDate\": \"2026-04-15\", \"priority\": \"HIGH\", \"justification\": \"Office supplies replenishment\", \"notes\": \"For marketing team\", \"lineItems\": [{\"itemId\": 1, \"description\": \"Printer paper\", \"quantity\": 10, \"unitPrice\": 50, \"totalAmount\": 500}]}"
+)
 public class PurchaseRequestRequest {
     @NotNull(message = "Requesting department ID is required")
     private Long requestingDeptId;

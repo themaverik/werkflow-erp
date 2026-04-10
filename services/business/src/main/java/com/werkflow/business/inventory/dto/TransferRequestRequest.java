@@ -2,6 +2,7 @@ package com.werkflow.business.inventory.dto;
 
 import com.werkflow.business.inventory.entity.TransferRequest.TransferStatus;
 import com.werkflow.business.inventory.entity.TransferRequest.TransferType;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -16,6 +17,10 @@ import java.time.LocalDate;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(
+    description = "Asset transfer request for moving assets between departments",
+    example = "{\"assetInstanceId\": 1001, \"fromDeptId\": 5, \"toDeptId\": 8, \"transferType\": \"PERMANENT\", \"transferReason\": \"Department reorganization\", \"initiatedByUserId\": 20, \"expectedReturnDate\": null}"
+)
 public class TransferRequestRequest {
 
     @NotNull(message = "Asset instance ID is required")

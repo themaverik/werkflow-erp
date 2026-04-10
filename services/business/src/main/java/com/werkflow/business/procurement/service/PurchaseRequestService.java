@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.sequence.NumberGenerationService;
 import com.werkflow.business.common.validator.CrossDomainValidator;
 import com.werkflow.business.procurement.dto.PrLineItemRequest;
 import com.werkflow.business.procurement.dto.PrLineItemResponse;
@@ -47,6 +48,7 @@ public class PurchaseRequestService {
     private final PrLineItemRepository lineItemRepository;
     private final TenantContext tenantContext;
     private final CrossDomainValidator validator;
+    private final NumberGenerationService numberGenerationService;
 
     private String getTenantId() {
         return tenantContext.getTenantId();
@@ -79,7 +81,7 @@ public class PurchaseRequestService {
 
         PurchaseRequest pr = PurchaseRequest.builder()
             .tenantId(tenantId)
-            .prNumber("PR-" + System.currentTimeMillis())
+            .prNumber(numberGenerationService.generatePrNumber(tenantId))
             .requestingDeptId(request.getRequestingDeptId())
             .requesterUserId(request.getRequesterUserId())
             .requestDate(request.getRequestDate())

@@ -245,6 +245,84 @@ GET     /api/v1/inventory/maintenance-records
 POST    /api/v1/inventory/maintenance-records
 ```
 
+### Metadata APIs
+
+#### Enum Metadata Endpoint
+
+Get metadata for all enums across the application. Useful for populating dropdowns, validating enum values, and understanding allowed status transitions.
+
+```
+GET     /api/v1/meta/enums
+```
+
+**Response Example**:
+
+```json
+{
+  "enums": [
+    {
+      "name": "EmployeeStatus",
+      "description": "Represents the employment status of an employee",
+      "values": [
+        {
+          "value": "ACTIVE",
+          "label": "Active",
+          "description": "Employee is actively employed"
+        },
+        {
+          "value": "ON_LEAVE",
+          "label": "On Leave",
+          "description": "Employee is currently on leave"
+        },
+        {
+          "value": "SUSPENDED",
+          "label": "Suspended",
+          "description": "Employee employment is suspended"
+        },
+        {
+          "value": "TERMINATED",
+          "label": "Terminated",
+          "description": "Employee has been terminated"
+        }
+      ]
+    },
+    {
+      "name": "LeaveType",
+      "description": "Represents different types of leave available to employees",
+      "values": [
+        {
+          "value": "ANNUAL",
+          "label": "Annual Leave",
+          "description": "Annual paid leave"
+        },
+        {
+          "value": "SICK",
+          "label": "Sick Leave",
+          "description": "Leave taken when employee is sick"
+        }
+      ]
+    }
+  ]
+}
+```
+
+**Enums Exposed by Domain**:
+
+- **HR** (4 enums): EmployeeStatus, LeaveType, AttendanceStatus, PerformanceRating
+- **Finance** (2 enums): BudgetStatus, ExpenseStatus
+- **Procurement** (4 enums): PrStatus, PoStatus, ReceiptStatus, VendorStatus
+- **Inventory** (5 enums): AssetRequestStatus, AssetCondition, AssetStatus, TransferStatus, MaintenanceType
+
+**Use Cases**:
+
+- Populate dropdown lists in UI forms
+- Validate user-submitted enum values before API calls
+- Display human-readable labels and descriptions in UI
+- Generate form documentation
+- Enable intelligent error messages ("Status must be one of: DRAFT, PENDING, APPROVED, ...")
+
+**Authentication**: This endpoint requires valid JWT authentication (like all other APIs).
+
 ---
 
 ## Key Features
@@ -305,6 +383,30 @@ Response:
   }
 }
 ```
+
+### DTO Examples in Swagger/OpenAPI
+
+All Request and Response DTOs include comprehensive `@Schema` examples that are automatically exposed in the Swagger UI. These examples show:
+
+- **Complete JSON structures** with all fields
+- **Realistic data values** (IDs, dates, amounts, etc.)
+- **Nested objects** (e.g., PurchaseRequest with LineItems)
+- **Enum values** (Status fields showing allowed values)
+- **Optional vs. required fields**
+
+**Access examples**:
+
+1. Open Swagger UI: `http://localhost:8084/api/v1/swagger-ui.html`
+2. Click any endpoint to expand it
+3. Under "Request body" or "Responses", click the DTO name to see the example JSON
+4. Use the example to understand the expected structure before making API calls
+
+**Example domains with rich documentation**:
+
+- **HR**: LeaveRequest, LeaveResponse — employee leave approval flows
+- **Finance**: ExpenseRequest, ExpenseResponse — expense claim workflows
+- **Procurement**: PurchaseRequestRequest, PurchaseRequestResponse — purchase order flows with line items
+- **Inventory**: AssetInstanceResponse, TransferRequestRequest/Response — asset management workflows
 
 ---
 

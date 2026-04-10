@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.sequence.NumberGenerationService;
 import com.werkflow.business.common.validator.CrossDomainValidator;
 import com.werkflow.business.procurement.dto.PurchaseRequestRequest;
 import com.werkflow.business.procurement.dto.PurchaseRequestResponse;
@@ -45,6 +46,9 @@ class PurchaseRequestServiceTest {
     @Mock
     private CrossDomainValidator validator;
 
+    @Mock
+    private NumberGenerationService numberGenerationService;
+
     @InjectMocks
     private PurchaseRequestService prService;
 
@@ -87,6 +91,7 @@ class PurchaseRequestServiceTest {
 
         when(tenantContext.getTenantId()).thenReturn(TENANT_ID);
         // validator does nothing by default (valid dept)
+        when(numberGenerationService.generatePrNumber(TENANT_ID)).thenReturn("PR-12345");
 
         PurchaseRequest savedEntity = PurchaseRequest.builder()
             .id(1L)
