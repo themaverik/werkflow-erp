@@ -8,6 +8,8 @@ import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -15,6 +17,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.io.IOException;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -168,5 +171,32 @@ class UserContextFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/api/v1/employees");
         assertFalse(filter.shouldNotFilter(request));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+        "/swagger-ui.html",
+        "/swagger-ui/",
+        "/v3/api-docs",
+        "/api-docs"
+    })
+    void shouldNotFilter_swaggerAndApiDocsPaths(String path) throws ServletException {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", path);
+
+        boolean result = filter.shouldNotFilter(request);
+
+        assertThat(result).isTrue();
+    }
+
+    @Test
+    void extractBearerToken_withBlankTokenAfterPrefix_returnsNull() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("Authorization", "Bearer ");
+
+        java.lang.reflect.Method method = UserContextFilter.class.getDeclaredMethod("extractBearerToken", jakarta.servlet.http.HttpServletRequest.class);
+        method.setAccessible(true);
+        String token = (String) method.invoke(filter, request);
+
+        assertThat(token).isNull();
     }
 }
