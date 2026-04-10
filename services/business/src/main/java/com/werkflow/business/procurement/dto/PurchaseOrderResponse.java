@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.dto;
 
 import com.werkflow.business.procurement.entity.PurchaseOrder.PoStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,4 +34,10 @@ public class PurchaseOrderResponse {
     private List<PoLineItemResponse> lineItems;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Schema(example = "Jane Smith")
+    private String createdByDisplayName;
+
+    @Schema(example = "John Doe")
+    private String updatedByDisplayName;
 }

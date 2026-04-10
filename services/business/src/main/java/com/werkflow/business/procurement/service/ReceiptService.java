@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.common.sequence.NumberGenerationService;
 import com.werkflow.business.procurement.dto.ReceiptLineItemRequest;
 import com.werkflow.business.procurement.dto.ReceiptLineItemResponse;
@@ -178,7 +179,7 @@ public class ReceiptService {
             .map(this::lineItemToResponse)
             .collect(Collectors.toList());
 
-        return ReceiptResponse.builder()
+        ReceiptResponse response = ReceiptResponse.builder()
             .id(receipt.getId())
             .receiptNumber(receipt.getReceiptNumber())
             .purchaseOrderId(receipt.getPurchaseOrder().getId())
@@ -192,6 +193,16 @@ public class ReceiptService {
             .createdAt(receipt.getCreatedAt())
             .updatedAt(receipt.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 
     private ReceiptLineItemResponse lineItemToResponse(ReceiptLineItem item) {

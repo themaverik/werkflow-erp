@@ -1,5 +1,6 @@
 package com.werkflow.business.inventory.controller;
 
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.inventory.dto.MaintenanceRecordRequestDto;
 import com.werkflow.business.inventory.dto.MaintenanceRecordResponseDto;
 import com.werkflow.business.inventory.entity.AssetInstance;
@@ -158,7 +159,7 @@ public class MaintenanceRecordController {
     }
 
     private MaintenanceRecordResponseDto mapToResponse(MaintenanceRecord record) {
-        return MaintenanceRecordResponseDto.builder()
+        MaintenanceRecordResponseDto response = MaintenanceRecordResponseDto.builder()
             .id(record.getId())
             .assetInstanceId(record.getAssetInstance().getId())
             .assetTag(record.getAssetInstance().getAssetTag())
@@ -171,5 +172,13 @@ public class MaintenanceRecordController {
             .nextMaintenanceDate(record.getNextMaintenanceDate())
             .createdAt(record.getCreatedAt())
             .build();
+
+        try {
+            response.setCreatedByDisplayName(UserContext.getDisplayName());
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 }

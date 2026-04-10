@@ -1,5 +1,6 @@
 package com.werkflow.business.inventory.controller;
 
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.inventory.dto.TransferRequestRequestDto;
 import com.werkflow.business.inventory.dto.TransferRequestResponseDto;
 import com.werkflow.business.inventory.entity.AssetInstance;
@@ -182,7 +183,7 @@ public class TransferRequestController {
     }
 
     private TransferRequestResponseDto mapToResponse(TransferRequest request) {
-        return TransferRequestResponseDto.builder()
+        TransferRequestResponseDto response = TransferRequestResponseDto.builder()
             .id(request.getId())
             .assetInstanceId(request.getAssetInstance().getId())
             .assetTag(request.getAssetInstance().getAssetTag())
@@ -204,5 +205,15 @@ public class TransferRequestController {
             .createdAt(request.getCreatedAt())
             .updatedAt(request.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 }

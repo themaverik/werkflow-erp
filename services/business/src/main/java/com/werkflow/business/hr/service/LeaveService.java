@@ -1,6 +1,7 @@
 package com.werkflow.business.hr.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.hr.dto.LeaveRequest;
 import com.werkflow.business.hr.dto.LeaveResponse;
 import com.werkflow.business.hr.entity.Employee;
@@ -169,7 +170,7 @@ public class LeaveService {
     }
 
     private LeaveResponse convertToResponse(Leave leave) {
-        return LeaveResponse.builder()
+        LeaveResponse response = LeaveResponse.builder()
             .id(leave.getId())
             .employeeId(leave.getEmployee().getId())
             .employeeName(leave.getEmployee().getFullName())
@@ -186,5 +187,15 @@ public class LeaveService {
             .createdAt(leave.getCreatedAt())
             .updatedAt(leave.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 }

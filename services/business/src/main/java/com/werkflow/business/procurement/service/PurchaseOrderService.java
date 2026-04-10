@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.common.sequence.NumberGenerationService;
 import com.werkflow.business.procurement.dto.PoLineItemRequest;
 import com.werkflow.business.procurement.dto.PoLineItemResponse;
@@ -206,7 +207,7 @@ public class PurchaseOrderService {
             .map(this::lineItemToResponse)
             .collect(Collectors.toList());
 
-        return PurchaseOrderResponse.builder()
+        PurchaseOrderResponse response = PurchaseOrderResponse.builder()
             .id(po.getId())
             .poNumber(po.getPoNumber())
             .purchaseRequestId(po.getPurchaseRequest() != null ? po.getPurchaseRequest().getId() : null)
@@ -225,6 +226,16 @@ public class PurchaseOrderService {
             .createdAt(po.getCreatedAt())
             .updatedAt(po.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 
     private PoLineItemResponse lineItemToResponse(PoLineItem item) {

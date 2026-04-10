@@ -1,6 +1,7 @@
 package com.werkflow.business.hr.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.hr.dto.EmployeeRequest;
 import com.werkflow.business.hr.dto.EmployeeResponse;
 import com.werkflow.business.hr.entity.Department;
@@ -297,7 +298,7 @@ public class EmployeeService {
             ? employee.getDepartment().getName()
             : null;
 
-        return EmployeeResponse.builder()
+        EmployeeResponse response = EmployeeResponse.builder()
             .id(employee.getId())
             .organizationId(employee.getOrganizationId())
             .keycloakUserId(employee.getKeycloakUserId())
@@ -321,5 +322,15 @@ public class EmployeeService {
             .createdAt(employee.getCreatedAt())
             .updatedAt(employee.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available (e.g., batch or async context) — leave as null
+        }
+
+        return response;
     }
 }

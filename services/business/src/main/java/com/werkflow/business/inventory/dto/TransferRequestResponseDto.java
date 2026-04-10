@@ -1,5 +1,6 @@
 package com.werkflow.business.inventory.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -60,4 +61,10 @@ public class TransferRequestResponseDto {
     private LocalDateTime createdAt;
 
     private LocalDateTime updatedAt;
+
+    @Schema(example = "Jane Smith")
+    private String createdByDisplayName;
+
+    @Schema(example = "John Doe")
+    private String updatedByDisplayName;
 }

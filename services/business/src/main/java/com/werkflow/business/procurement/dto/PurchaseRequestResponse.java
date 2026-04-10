@@ -40,4 +40,10 @@ public class PurchaseRequestResponse {
     private List<PrLineItemResponse> lineItems;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Schema(example = "Jane Smith")
+    private String createdByDisplayName;
+
+    @Schema(example = "John Doe")
+    private String updatedByDisplayName;
 }

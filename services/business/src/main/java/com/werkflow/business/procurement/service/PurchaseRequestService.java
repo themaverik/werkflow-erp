@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.common.sequence.NumberGenerationService;
 import com.werkflow.business.common.validator.CrossDomainValidator;
 import com.werkflow.business.procurement.dto.PrLineItemRequest;
@@ -190,7 +191,7 @@ public class PurchaseRequestService {
             .map(this::lineItemToResponse)
             .collect(Collectors.toList());
 
-        return PurchaseRequestResponse.builder()
+        PurchaseRequestResponse response = PurchaseRequestResponse.builder()
             .id(pr.getId())
             .prNumber(pr.getPrNumber())
             .requestingDeptId(pr.getRequestingDeptId())
@@ -210,6 +211,16 @@ public class PurchaseRequestService {
             .createdAt(pr.getCreatedAt())
             .updatedAt(pr.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 
     private PrLineItemResponse lineItemToResponse(PrLineItem item) {

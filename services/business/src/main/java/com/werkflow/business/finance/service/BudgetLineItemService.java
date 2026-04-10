@@ -1,6 +1,7 @@
 package com.werkflow.business.finance.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.finance.dto.BudgetLineItemRequest;
 import com.werkflow.business.finance.dto.BudgetLineItemResponse;
 import com.werkflow.business.finance.entity.BudgetLineItem;
@@ -81,7 +82,7 @@ public class BudgetLineItemService {
     }
 
     private BudgetLineItemResponse toResponse(BudgetLineItem item) {
-        return BudgetLineItemResponse.builder()
+        BudgetLineItemResponse response = BudgetLineItemResponse.builder()
             .id(item.getId())
             .budgetPlanId(item.getBudgetPlan().getId())
             .categoryId(item.getCategory().getId())
@@ -93,5 +94,15 @@ public class BudgetLineItemService {
             .createdAt(item.getCreatedAt())
             .updatedAt(item.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 }

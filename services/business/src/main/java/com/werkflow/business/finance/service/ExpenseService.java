@@ -1,6 +1,7 @@
 package com.werkflow.business.finance.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.finance.dto.ExpenseRequest;
 import com.werkflow.business.finance.dto.ExpenseResponse;
 import com.werkflow.business.finance.entity.Expense;
@@ -93,7 +94,7 @@ public class ExpenseService {
     }
 
     private ExpenseResponse toResponse(Expense expense) {
-        return ExpenseResponse.builder()
+        ExpenseResponse response = ExpenseResponse.builder()
             .id(expense.getId())
             .budgetLineItemId(expense.getBudgetLineItem() != null ? expense.getBudgetLineItem().getId() : null)
             .departmentId(expense.getDepartmentId())
@@ -114,5 +115,15 @@ public class ExpenseService {
             .createdAt(expense.getCreatedAt())
             .updatedAt(expense.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 }

@@ -2,6 +2,7 @@ package com.werkflow.business.inventory.dto;
 
 import com.werkflow.business.hr.entity.OfficeLocation;
 import com.werkflow.business.inventory.entity.AssetRequestStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -35,4 +36,10 @@ public class AssetRequestResponse {
     private String rejectionReason;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    @Schema(example = "Jane Smith")
+    private String createdByDisplayName;
+
+    @Schema(example = "John Doe")
+    private String updatedByDisplayName;
 }

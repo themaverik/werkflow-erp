@@ -1,5 +1,6 @@
 package com.werkflow.business.inventory.service;
 
+import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.inventory.dto.AssetRequestDto;
 import com.werkflow.business.inventory.dto.AssetRequestResponse;
 import com.werkflow.business.inventory.entity.AssetRequest;
@@ -140,7 +141,7 @@ public class AssetRequestService {
             categoryName = assetCategoryRepository.findById(req.getAssetCategoryId())
                 .map(AssetCategory::getName).orElse(null);
         }
-        return AssetRequestResponse.builder()
+        AssetRequestResponse response = AssetRequestResponse.builder()
             .id(req.getId())
             .processInstanceId(req.getProcessInstanceId())
             .requesterUserId(req.getRequesterUserId())
@@ -164,5 +165,15 @@ public class AssetRequestService {
             .createdAt(req.getCreatedAt())
             .updatedAt(req.getUpdatedAt())
             .build();
+
+        try {
+            String displayName = UserContext.getDisplayName();
+            response.setCreatedByDisplayName(displayName);
+            response.setUpdatedByDisplayName(displayName);
+        } catch (IllegalStateException e) {
+            // UserContext not available — leave as null
+        }
+
+        return response;
     }
 }
