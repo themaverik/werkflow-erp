@@ -197,10 +197,16 @@ Not tracked for MVP, but documented for reference:
 
 **Current**: P0 ✓ + P1.1 ✓ + P1.2 ✓ + P1.2.5 ✓ + P1.4 ✓ (231 tests)
 
+**Completed**:
+- P0 (Multi-tenant, Idempotency, FK validation, API versioning, Pagination) ✓
+- P1.1 (Error responses, Enum metadata, DTO examples) ✓
+- P1.2 (Keycloak linking) ✓
+- P1.2.5 (User Identity Architecture) ✓
+- P1.4 (Number generation) ✓
+
 **Next 2-3 Sessions**:
-1. **P1.2.5** User Identity Architecture (12-17 hours)
-2. **P1.5** Test Suite (12 hours, can overlap with P1.2.5)
-3. **P2** Documentation & Release (6 hours)
+1. **P1.5** Test Suite (contract + integration tests, 12 hours)
+2. **P2** Documentation & Release (README, API guide, integration guide, 6 hours)
 
 **Target**: 160+ tests passing, all docs updated, ready for MVP release
 
