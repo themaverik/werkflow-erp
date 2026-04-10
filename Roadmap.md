@@ -30,12 +30,13 @@ Single source of truth for task tracking and session continuity.
 
 ## Current Session State
 
-**Status**: P1.5.1 COMPLETE ✓ — Contract tests implemented
+**Status**: P1.5.1 COMPLETE ✓ | P1.5.2 DEFERRED ⏳ — Architectural issue documented
 **Active Phase**: P1 — Quality & Integration
-**Next Task**: P1.5.2 — Integration tests (werkflow → werkflow-erp API calls)
+**Current Task**: P1.5.2 — Integration tests (deferred due to TenantContext mocking limitation)
 **Last Commit**: 4f1c2ee test(P1.5.1): implement 24 contract tests for 4 domain services
 **Branch**: feature/p1.5-test-suite
 **Test Status**: 255 tests passing, 0 failures (+24 contract tests from 231 baseline)
+**Note**: P1.5.2 architectural issue documented in `docs/P1.5.2-INTEGRATION-TESTS-IMPLEMENTATION-NOTES.md` — next session to use @WebMvcTest approach
 
 ---
 
@@ -157,7 +158,7 @@ All foundation work complete. Summary:
 
 ### ⏳ P1.5 — Test Suite (IN PROGRESS — After P1.2.5)
 
-**Estimated**: 12 hours total | **Actual (P1.5.1)**: 4 hours (faster than estimated)
+**Estimated**: 12 hours total | **Actual (P1.5.1)**: 4 hours | **Actual (P1.5.2 attempt)**: 1 hour (deferred)
 
 **[x] P1.5.1** Contract tests for domain services *(commit: 4f1c2ee)*
 - Goal: Unit tests for core domain services (non-HTTP)
@@ -170,13 +171,16 @@ All foundation work complete. Summary:
 - Test count: 231 → 255 tests (+24)
 - Status: COMPLETE ✅
 
-- [~] **P1.5.2** Integration tests specification documented *(see docs/P1.5.2-INTEGRATION-TESTS-SPEC.md)*
+- [!] **P1.5.2** Integration tests specification documented *(see docs/P1.5.2-INTEGRATION-TESTS-SPEC.md)*
   - Specification complete: 3 workflows, 12-18 tests planned
-  - Status: DEFERRED to next session (requires H2 database setup)
-  - Covers: Asset request lifecycle, Budget check flow, Cross-tenant isolation
-  - Estimated: 4 hours (next session)
+  - **Blocked**: Architectural issue with TenantContext mocking in @SpringBootTest contexts
+  - Attempted: BudgetCheckWorkflowIntegrationTest, CrossTenantIsolationIntegrationTest
+  - Issue: TenantContext is request-scoped and requires TenantContextFilter initialization, which conflicts with test setup
+  - **Solution for next session**: Use @WebMvcTest + MockMvc approach (HTTP-based integration tests instead of @SpringBootTest)
+  - Detailed notes: See `docs/P1.5.2-INTEGRATION-TESTS-IMPLEMENTATION-NOTES.md`
+  - Effort remaining: 4 hours (next session)
 
-**Current Target**: 255 tests ✅ (P1.5.1 complete, P1.5.2 spec ready)
+**Current Status**: 255 tests ✅ (P1.5.1 complete, P1.5.2 blocked on architecture, solution documented)
 
 ---
 
