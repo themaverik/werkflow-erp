@@ -109,13 +109,6 @@ logging:
     console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
     file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
-keycloak:
-  realm: ${KEYCLOAK_REALM:werkflow}
-  auth-server-url: ${KEYCLOAK_URL:http://localhost:8090}
-  resource: werkflow-api
-  use-resource-role-mappings: true
-  bearer-only: true
-
 werkflow:
   security:
     # JWT claim name used to extract roles. Configurable per OIDC provider:

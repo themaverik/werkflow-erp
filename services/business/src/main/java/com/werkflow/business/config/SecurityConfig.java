@@ -3,9 +3,11 @@ package com.werkflow.business.config;
 import com.werkflow.business.common.filter.TenantContextFilter;
 import com.werkflow.business.common.filter.UserContextFilter;
 import com.werkflow.business.common.idempotency.filter.IdempotencyFilter;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.util.Assert;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -32,11 +34,17 @@ public class SecurityConfig {
     @Value("${werkflow.security.roles-claim:roles}")
     private String rolesClaim;
 
+    @PostConstruct
+    public void validateRolesClaim() {
+        Assert.hasText(rolesClaim, "werkflow.security.roles-claim must not be blank");
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
                                                    TenantContextFilter tenantContextFilter,
                                                    UserContextFilter userContextFilter,
-                                                   IdempotencyFilter idempotencyFilter) throws Exception {
+                                                   IdempotencyFilter idempotencyFilter,
+                                                   JwtAuthenticationConverter jwtAuthenticationConverter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -53,7 +61,7 @@ public class SecurityConfig {
             )
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
-                    .jwtAuthenticationConverter(jwtAuthenticationConverter())
+                    .jwtAuthenticationConverter(jwtAuthenticationConverter)
                 )
             )
             // Add TenantContextFilter AFTER OAuth2 authentication filters
@@ -71,9 +79,14 @@ public class SecurityConfig {
     }
 
     @Bean
-    public JwtAuthenticationConverter jwtAuthenticationConverter() {
+    public OidcRoleConverter oidcRoleConverter() {
+        return new OidcRoleConverter(rolesClaim);
+    }
+
+    @Bean
+    public JwtAuthenticationConverter jwtAuthenticationConverter(OidcRoleConverter oidcRoleConverter) {
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(new OidcRoleConverter(rolesClaim));
+        converter.setJwtGrantedAuthoritiesConverter(oidcRoleConverter);
         return converter;
     }
 

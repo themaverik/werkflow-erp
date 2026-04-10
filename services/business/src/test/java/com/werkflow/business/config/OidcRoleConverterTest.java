@@ -99,15 +99,13 @@ class OidcRoleConverterTest {
     }
 
     /**
-     * Test 6: Non-String list items are coerced via String.valueOf without ClassCastException.
-     * Covers edge cases where a provider returns integer-typed values in claims.
+     * Test 6: Blank and null roles in the list are filtered out, not mapped to authorities.
+     * Protects against providers that include empty strings in the roles claim.
      */
     @Test
-    void nonStringListItems_coercedViaStringValueOf() {
+    void blankRolesInList_areFilteredOut() {
         OidcRoleConverter converter = new OidcRoleConverter("roles");
-        // Jwt.getClaimAsStringList internally coerces via toString, so we simulate
-        // the converter's behaviour by verifying it handles whatever getClaimAsStringList returns.
-        Jwt jwt = buildJwt(Map.of("roles", List.of("admin")));
+        Jwt jwt = buildJwt(Map.of("roles", List.of("admin", "", "  ")));
 
         Collection<GrantedAuthority> authorities = converter.convert(jwt);
 

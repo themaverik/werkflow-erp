@@ -25,8 +25,8 @@ import java.util.stream.Collectors;
  * {@code application.yml} (default: {@code "roles"}). Each extracted role is prefixed
  * with {@code ROLE_} and uppercased to conform to Spring Security conventions.</p>
  *
- * <p>Null or missing claims are handled gracefully — an empty list is returned without
- * throwing an exception. Non-String list items are coerced via {@link String#valueOf}.</p>
+ * <p>Null, blank, or missing claims are handled gracefully — an empty list is returned without
+ * throwing an exception.</p>
  */
 public class OidcRoleConverter implements Converter<Jwt, Collection<GrantedAuthority>> {
 
@@ -58,7 +58,8 @@ public class OidcRoleConverter implements Converter<Jwt, Collection<GrantedAutho
         }
 
         return roles.stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + String.valueOf(role).toUpperCase()))
-                .collect(Collectors.toList());
+                .filter(role -> role != null && !role.isBlank())
+                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.toUpperCase()))
+                .collect(Collectors.toUnmodifiableList());
     }
 }
