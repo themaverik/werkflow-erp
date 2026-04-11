@@ -26,23 +26,23 @@ A pure **CRUD data service** for HR, Finance, Procurement, and Inventory domains
 
 ## What This Service Does
 
-✅ **Provides CRUD APIs for:**
+**Provides CRUD APIs for:**
 - **HR**: Employees, departments, leave, attendance, payroll, performance reviews
 - **Finance**: Budget plans, expenses, approval thresholds
 - **Procurement**: Vendors, purchase requests, orders, receipts
 - **Inventory**: Assets, categories, custody, transfers, maintenance
 
-✅ **Validates:**
+**Validates:**
 - Foreign key constraints (within and across domains)
 - Enum values (status fields)
 - Required fields and data types
 - Idempotency for safe retries
 
-❌ **Does NOT provide:**
-- Business approval workflows (use werkflow orchestration)
-- Budget checks before purchasing (use werkflow business logic)
-- Task assignment or routing (use werkflow Engine)
-- Notifications or messaging (use werkflow actions)
+**Does NOT provide:**
+- Business approval workflows (use Werkflow orchestration)
+- Budget checks before purchasing (use Werkflow business logic)
+- Task assignment or routing (use Werkflow Engine)
+- Notifications or messaging (use Werkflow actions)
 
 ---
 
