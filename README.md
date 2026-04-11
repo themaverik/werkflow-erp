@@ -1,8 +1,12 @@
-# werkflow-erp — Standalone Business Domain Service
+<div align="center">
+  <img src="public/logo.png" alt="WERP Logo" width="300" />
+</div>
 
-A pure **CRUD data service** for HR, Finance, Procurement, and Inventory domains. Designed to be deployed independently or integrated with the werkflow workflow orchestration platform.
+# Werkflow-ERP — Standalone Business Domain Service
 
-> **What is this?** werkflow-erp manages business domain data. Workflow orchestration, approvals, and routing logic live in the main [werkflow](https://github.com/themaverik/werkflow) platform.
+A pure **CRUD data service** for HR, Finance, Procurement, and Inventory domains. Designed to be deployed independently or integrated with the [Werkflow](https://github.com/themaverik/werkflow) workflow orchestration platform.
+
+> **What is this?** Werkflow-ERP manages business domain data. Workflow orchestration, approvals, and routing logic live in the main Werkflow platform.
 
 ---
 
@@ -22,23 +26,23 @@ A pure **CRUD data service** for HR, Finance, Procurement, and Inventory domains
 
 ## What This Service Does
 
-✅ **Provides CRUD APIs for:**
+**Provides CRUD APIs for:**
 - **HR**: Employees, departments, leave, attendance, payroll, performance reviews
 - **Finance**: Budget plans, expenses, approval thresholds
 - **Procurement**: Vendors, purchase requests, orders, receipts
 - **Inventory**: Assets, categories, custody, transfers, maintenance
 
-✅ **Validates:**
+**Validates:**
 - Foreign key constraints (within and across domains)
 - Enum values (status fields)
 - Required fields and data types
 - Idempotency for safe retries
 
-❌ **Does NOT provide:**
-- Business approval workflows (use werkflow orchestration)
-- Budget checks before purchasing (use werkflow business logic)
-- Task assignment or routing (use werkflow Engine)
-- Notifications or messaging (use werkflow actions)
+**Does NOT provide:**
+- Business approval workflows (use Werkflow orchestration)
+- Budget checks before purchasing (use Werkflow business logic)
+- Task assignment or routing (use Werkflow Engine)
+- Notifications or messaging (use Werkflow actions)
 
 ---
 
@@ -463,34 +467,25 @@ All Request and Response DTOs include comprehensive `@Schema` examples that are 
 
 ## Deployment
 
-### Option 1: Docker Compose (Standalone)
-
+**Standalone:**
 ```bash
 docker compose up -d
 ```
 
-Starts:
-- Business Service (8084)
-- PostgreSQL (5433) [optional, can use shared]
-- Keycloak (8090) [optional, can use shared]
-
-### Option 2: Docker Compose Overlay (Integrated with werkflow)
-
+**Integrated with werkflow stack:**
 ```bash
 cd ../werkflow/infrastructure/docker
 docker compose -f docker-compose.yml -f docker-compose.business.yml up -d
 ```
 
-Integrates werkflow-erp into the main stack while keeping it independently deployable.
-
-### Option 3: Local Development
-
+**Local Development:**
 ```bash
-# Ensure shared services are running
+# Start shared services
 cd ../werkflow/infrastructure/docker
 docker compose up -d postgres keycloak
 
-# In werkflow-erp directory
+# Run service
+cd <this repo>
 mvn spring-boot:run
 ```
 
@@ -529,53 +524,11 @@ LOG_LEVEL=INFO
 
 ## Integration with werkflow
 
-### Registering werkflow-erp as a Connector
-
-In werkflow Admin Portal:
-
-1. Navigate to **Admin > Connectors**
-2. Click **Add Connector**
-3. Fill in:
-   - **Key**: `business-service`
-   - **Display Name**: Werkflow ERP Business Service
-   - **Endpoint URL**: `http://localhost:8084/api/v1`
-4. Click **Save**
-
-### Using in BPMN Workflows
-
-Use `ExternalApiCallDelegate` to call werkflow-erp APIs:
-
-```xml
-<bpmn:serviceTask id="Task_CreateAssetRequest"
-  name="Create Asset Request"
-  implementation="http://localhost:8084/api/v1/inventory/asset-requests"
-  camunda:type="rest"
-  camunda:method="POST">
-  <bpmn:extensionElements>
-    <camunda:inputOutput>
-      <camunda:inputParameter name="headers">
-        <camunda:map>
-          <camunda:entry key="X-Tenant-ID">${tenantId}</camunda:entry>
-          <camunda:entry key="X-Idempotency-Key">${processInstanceId}</camunda:entry>
-        </camunda:map>
-      </camunda:inputParameter>
-      <camunda:inputParameter name="payload">
-        <camunda:script scriptFormat="JavaScript">
-          ({
-            requesterUserId: requesterUserId,
-            assetDefinitionId: assetDefinitionId,
-            quantity: quantity,
-            justification: justification
-          })
-        </camunda:script>
-      </camunda:inputParameter>
-      <camunda:outputParameter name="assetRequestId">
-        ${response.id}
-      </camunda:outputParameter>
-    </camunda:inputOutput>
-  </bpmn:extensionElements>
-</bpmn:serviceTask>
-```
+For detailed integration instructions, see **[Integration Guide](./docs/WERKFLOW-INTEGRATION-GUIDE.md)** which covers:
+- Connector registration in werkflow Admin Portal
+- BPMN workflow setup and examples
+- Header configuration (tenant ID, idempotency keys)
+- Error handling patterns
 
 ---
 
@@ -701,8 +654,13 @@ docker compose up -d postgres
 
 ---
 
-## Related Documents
+## Documentation
 
+### Guides
+- **[API Usage Guide](./docs/API-Usage-Guide.md)** — Step-by-step examples for all 4 domains (HR, Finance, Procurement, Inventory). Use this for standalone Werkflow-ERP deployments.
+- **[Werkflow Integration Guide](./docs/Werkflow-Integration-Guide.md)** — Connector setup, BPMN workflow examples, user identity, ProcessInstanceId linking. Required only if integrating with Werkflow platform.
+
+### Reference
 - **[Architecture Decisions](./docs/ADR-001-Service-Boundary-Architecture.md)** — Design rationale
 - **[Implementation Roadmap](./ROADMAP.md)** — What's being built next
 - **[Business Flow Diagrams](./FLOW_DIAGRAMS.md)** — Visual workflows (informational)
