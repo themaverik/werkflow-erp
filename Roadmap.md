@@ -119,7 +119,7 @@ All foundation work complete. Summary:
 
 ---
 
-### ✅ P1.2.5 — User Identity Architecture (OIDC-Compliant) (COMPLETE)
+### P1.2.5 — User Identity Architecture (OIDC-Compliant) (COMPLETE)
 
 **Design**: `docs/adr/ADR-002-User-Identity-And-JWT-Claims.md`
 **Plan**: `docs/superpowers/plans/2026-04-08-p1.2-keycloak-linking.md`
