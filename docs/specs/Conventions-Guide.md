@@ -77,7 +77,6 @@ Use Title-Case with hyphens (no spaces):
 ✅ Architecture-Overview.md
 ✅ Independence-Checklist.md
 ✅ Implementation-Summary.md
-✅ Flow-Diagrams.md
 ✅ Conventions-Guide.md (this file)
 
 ❌ adr-001-service-boundary-architecture.md
@@ -251,16 +250,15 @@ No conditional logic, no business rules. Caller decides what to do next.
 
 | Document | Purpose | Owner |
 |----------|---------|-------|
-| [README.md](./README.md) | Quick start, API overview | Team |
-| [ROADMAP.md](./ROADMAP.md) | Implementation priorities, task tracking | Team |
-| [LLM.md](./LLM.md) | Global conventions (commit, naming, git, docker) | Global |
-| [CLAUDE.md](./CLAUDE.md) | Claude-specific extensions (change tracking, task execution) | Global |
-| [docs/ADR-001-Service-Boundary-Architecture.md](./docs/ADR-001-Service-Boundary-Architecture.md) | Service boundaries, independence, user linking decisions | Architecture |
-| [docs/ARCHITECTURE-OVERVIEW.md](./docs/ARCHITECTURE-OVERVIEW.md) | Visual explanation of three deployment scenarios | Architecture |
-| [docs/INDEPENDENCE-CHECKLIST.md](./docs/INDEPENDENCE-CHECKLIST.md) | PR review checklist, anti-patterns, forbidden imports | Quality |
-| [FLOW-DIAGRAMS.md](./FLOW_DIAGRAMS.md) | Business process flows (Mermaid diagrams) | Documentation |
-| [IMPLEMENTATION-SUMMARY.md](./IMPLEMENTATION-SUMMARY.md) | Executive summary of key decisions | Summary |
-| [CONVENTIONS-GUIDE.md](./CONVENTIONS-GUIDE.md) | This file — quick reference for conventions | Reference |
+| [README.md](../../README.md) | Quick start, API overview | Team |
+| [ROADMAP.md](../../Roadmap.md) | Implementation priorities, task tracking | Team |
+| [LLM.md](../../LLM.md) | Global conventions (commit, naming, git, docker) | Global |
+| [CLAUDE.md](../../CLAUDE.md) | Claude-specific extensions (change tracking, task execution) | Global |
+| [docs/adr/ADR-001-Service-Boundary-Architecture.md](../adr/ADR-001-Service-Boundary-Architecture.md) | Service boundaries, independence, user linking decisions | Architecture |
+| [docs/Architecture-Overview.md](../Architecture-Overview.md) | Visual explanation of three deployment scenarios and flow diagrams | Architecture |
+| [docs/Independence-Checklist.md](../Independence-Checklist.md) | PR review checklist, anti-patterns, forbidden imports | Quality |
+| [docs/specs/Implementation-Summary.md](./Implementation-Summary.md) | Executive summary of key decisions | Summary |
+| [docs/specs/Conventions-Guide.md](./Conventions-Guide.md) | This file — quick reference for conventions | Reference |
 
 ---
 
@@ -306,7 +304,7 @@ No conditional logic, no business rules. Caller decides what to do next.
 
 1. Check existing files for patterns (they follow these conventions)
 2. Refer to LLM.md and CLAUDE.md
-3. Check this file (CONVENTIONS-GUIDE.md)
+3. Check this file (Conventions-Guide.md)
 4. Ask for clarification
 
 ---

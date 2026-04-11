@@ -3,7 +3,7 @@
 **Project**: Standalone ERP Data Service for HR, Finance, Procurement, Inventory
 **Status**: Pre-MVP — Extracted from main Werkflow platform
 **Last Updated**: 2026-04-10
-**Architecture**: See `docs/ADR-001-Service-Boundary-Architecture.md`
+**Architecture**: See `docs/adr/ADR-001-Service-Boundary-Architecture.md`
 
 ---
 
@@ -99,7 +99,7 @@ All foundation work complete. Summary:
 
 ### ✅ P1.2.5 — User Identity Architecture (OIDC-Compliant) (COMPLETE)
 
-**Design**: `docs/ADR-002-User-Identity-And-JWT-Claims.md`
+**Design**: `docs/adr/ADR-002-User-Identity-And-JWT-Claims.md`
 **Plan**: `docs/superpowers/plans/2026-04-08-p1.2-keycloak-linking.md`
 
 #### Phase 1: Core Infrastructure (3-4 hours)
@@ -238,9 +238,9 @@ Not tracked for MVP, but documented for reference:
 
 ## Related Documents
 
-- `docs/ADR-001-Service-Boundary-Architecture.md` — Architecture decisions
-- `docs/ADR-002-User-Identity-And-JWT-Claims.md` — User identity design
+- `docs/adr/ADR-001-Service-Boundary-Architecture.md` — Architecture decisions
+- `docs/adr/ADR-002-User-Identity-And-JWT-Claims.md` — User identity design
 - `docs/superpowers/plans/2026-04-08-p1.2-keycloak-linking.md` — Implementation plan
 - `docs/superpowers/specs/2026-04-08-p1.2-keycloak-linking-design.md` — Design spec
 - `README.md` — Project overview and quick start
-- `FLOW_DIAGRAMS.md` — Business process flows (informational)
+- `docs/Architecture-Overview.md` — Architecture overview and business flow diagrams

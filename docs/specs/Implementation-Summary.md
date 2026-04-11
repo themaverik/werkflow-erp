@@ -258,20 +258,19 @@ public AssetRequest updateStatus(Long assetId, String newStatus) {
 
 | File | Purpose |
 |------|---------|
-| `docs/ADR-001-Service-Boundary-Architecture.md` | Detailed architectural decisions |
-| `docs/ARCHITECTURE-OVERVIEW.md` | Visual explanation of independence |
-| `docs/INDEPENDENCE-CHECKLIST.md` | Review checklist for PRs |
-| `ROADMAP.md` | Implementation priorities |
+| `docs/adr/ADR-001-Service-Boundary-Architecture.md` | Detailed architectural decisions |
+| `docs/Architecture-Overview.md` | Visual explanation of independence and flow diagrams |
+| `docs/Independence-Checklist.md` | Review checklist for PRs |
+| `Roadmap.md` | Implementation priorities |
 | `README.md` | Quick start and API reference |
-| `FLOW_DIAGRAMS.md` | Mermaid diagrams (informational) |
 
 ---
 
 ## Next Steps
 
 1. **Review the updated ADR-001**: Understand the platform user linking pattern
-2. **Review ARCHITECTURE-OVERVIEW.md**: See three deployment scenarios
-3. **Review INDEPENDENCE-CHECKLIST.md**: Use before every PR
+2. **Review Architecture-Overview.md**: See three deployment scenarios
+3. **Review Independence-Checklist.md**: Use before every PR
 4. **Implement P0 roadmap items**: Multi-tenancy, idempotency, API versioning
 5. **Add platform user linking endpoints**: `PATCH /platform-link`, etc.
 6. **Add CI/CD check**: Reject PRs with werkflow imports

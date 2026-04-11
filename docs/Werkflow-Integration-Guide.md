@@ -714,4 +714,4 @@ curl http://localhost:8084/api/v1/actuator/health
 
 - [API Usage Guide](./API-Usage-Guide.md) - Complete API examples for all domains (standalone usage)
 - [README](../README.md) - Project overview
-- [Architecture Decision](./ADR-001-Service-Boundary-Architecture.md) - Design rationale
+- [Architecture Decision](./adr/ADR-001-Service-Boundary-Architecture.md) - Design rationale
