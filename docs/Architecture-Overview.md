@@ -4,42 +4,30 @@
 
 werkflow-erp is a **completely standalone business data service**. It has **zero dependencies** on any workflow orchestration platform, including werkflow.
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                                                                 │
-│                   werkflow-erp (This Service)                  │
-│                                                                 │
-│  ┌────────────────────────────────────────────────────────┐   │
-│  │  REST API Layer (Stateless, Idempotent)              │   │
-│  │  /api/v1/hr/* /api/v1/finance/* /api/v1/...        │   │
-│  └────────────────────────────────────────────────────────┘   │
-│           ↑                                                     │
-│           │ JWT validation (Spring Security)                   │
-│           │ Multi-tenant scoping (TenantContext)              │
-│           │ Idempotency tracking (IdempotencyRecord)          │
-│           │                                                     │
-│  ┌────────────────────────────────────────────────────────┐   │
-│  │  Business Domain Services                             │   │
-│  │  (HR, Finance, Procurement, Inventory)                │   │
-│  │  • Validation logic                                   │   │
-│  │  • FK constraints                                     │   │
-│  │  • Status state machines                              │   │
-│  │  • No business rules (those are caller's concern)     │   │
-│  └────────────────────────────────────────────────────────┘   │
-│           ↓                                                     │
-│  ┌────────────────────────────────────────────────────────┐   │
-│  │  Data Layer (PostgreSQL)                             │   │
-│  │  4 schemas: hr_service, finance_service,             │   │
-│  │             procurement_service, inventory_service   │   │
-│  └────────────────────────────────────────────────────────┘   │
-│                                                                 │
-│  NO EXTERNAL CALLS                                             │
-│  NO WORKFLOW REFERENCES                                        │
-│  NO KEYCLOAK CLIENT CODE                                       │
-│  NO werkflow IMPORTS                                           │
-│                                                                 │
-└─────────────────────────────────────────────────────────────────┘
-```
+REST API Layer (Stateless, Idempotent)
+  Endpoints: /api/v1/hr/*, /api/v1/finance/*, /api/v1/*
+
+  Processing:
+    - JWT validation (Spring Security)
+    - Multi-tenant scoping (TenantContext)
+    - Idempotency tracking (IdempotencyRecord)
+
+Business Domain Services
+  (HR, Finance, Procurement, Inventory)
+  - Validation logic
+  - FK constraints
+  - Status state machines
+  - No business rules (those are caller's concern)
+
+Data Layer (PostgreSQL)
+  4 schemas: hr_service, finance_service,
+             procurement_service, inventory_service
+
+Constraints:
+  - NO EXTERNAL CALLS
+  - NO WORKFLOW REFERENCES
+  - NO KEYCLOAK CLIENT CODE
+  - NO werkflow IMPORTS
 
 ---
 
@@ -48,11 +36,14 @@ werkflow-erp is a **completely standalone business data service**. It has **zero
 ### Scenario 1: Standalone ERP
 ```
 Company A (No workflow platform)
-    ↓
+    |
+    v
 Custom HR App / Finance Portal
-    ↓
+    |
+    v
 werkflow-erp REST API
-    ↓
+    |
+    v
 PostgreSQL
 ```
 
@@ -61,14 +52,16 @@ Company A gets a complete ERP system without needing werkflow.
 ### Scenario 2: Integrated with werkflow (Testing)
 ```
 werkflow Platform
-├─ Engine (BPMN orchestration)
-├─ Admin (Users, departments)
-├─ Portal (Workflow designer)
-└─ Keycloak (Authentication)
-    ↓ (via REST API)
-    ↓
+  - Engine (BPMN orchestration)
+  - Admin (Users, departments)
+  - Portal (Workflow designer)
+  - Keycloak (Authentication)
+    |
+    | (via REST API)
+    |
 werkflow-erp (Business data provider)
-    ↓
+    |
+    v
 PostgreSQL (shared)
 ```
 
@@ -77,12 +70,14 @@ werkflow uses werkflow-erp for testing and running business workflows.
 ### Scenario 3: Hybrid with Multiple Orchestrators
 ```
 werkflow Platform     +     Zapier     +     Custom Scheduler
-    ↓                      ↓                   ↓
-    └──────────────────────┴───────────────────┘
-                          ↓
-                werkflow-erp REST API
-                          ↓
-                       PostgreSQL
+    |                      |                   |
+    +------+-------+-------+-------+-------+---+
+           |
+           v
+      werkflow-erp REST API
+           |
+           v
+        PostgreSQL
 ```
 
 Multiple systems share the same business data.
@@ -104,12 +99,15 @@ Multiple systems share the same business data.
 
 ```
 External Platform creates user
-    ↓
+    |
+    v
 Calls: PATCH /api/v1/hr/employees/{id}/platform-link
     Body: { platformUserId: "uuid-123" }
-    ↓
+    |
+    v
 werkflow-erp stores the link
-    ↓
+    |
+    v
 Later queries can find: GET /api/v1/hr/employees/platform/uuid-123
 ```
 
@@ -123,22 +121,18 @@ Later queries can find: GET /api/v1/hr/employees/platform/uuid-123
 ### 2. **Zero External Dependencies**
 
 werkflow-erp MUST NOT:
-```
-❌ import com.werkflow.*;
-❌ import org.keycloak.admin.client.*;
-❌ Call Admin Service for user validation
-❌ Validate user IDs against external systems
-❌ Have hardcoded Keycloak configuration
-❌ Assume BPMN orchestration
-```
+  - import com.werkflow.*;
+  - import org.keycloak.admin.client.*;
+  - Call Admin Service for user validation
+  - Validate user IDs against external systems
+  - Have hardcoded Keycloak configuration
+  - Assume BPMN orchestration
 
 werkflow-erp DOES:
-```
-✅ Validate JWT signature (Spring Security, no client code)
-✅ Store user IDs as opaque strings
-✅ Provide status update endpoints
-✅ Work standalone or integrated with any caller
-```
+  - Validate JWT signature (Spring Security, no client code)
+  - Store user IDs as opaque strings
+  - Provide status update endpoints
+  - Work standalone or integrated with any caller
 
 **CI/CD Check:**
 ```bash
