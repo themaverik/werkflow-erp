@@ -16,9 +16,9 @@ werkflow-erp exposes REST APIs across 4 business domains (HR, Finance, Procureme
 3. **Standardized error responses** (how to handle failures consistently)
 
 Currently:
-- ❌ No enum metadata endpoint (BPMN designers must hardcode enum values)
-- ❌ No `@Schema` examples on DTOs (developers guess field types, formats)
-- ❌ No standardized error format (some endpoints return 404, others 400)
+- [MISSING] No enum metadata endpoint - BPMN designers must hardcode enum values
+- [MISSING] No `@Schema` examples on DTOs - developers guess field types, formats
+- [MISSING] No standardized error format - some endpoints return 404, others 400
 
 This ADR establishes the contract patterns for API clarity and BPMN integration.
 
@@ -172,7 +172,7 @@ Error codes follow industry standard: `{ENTITY}_{PROBLEM}`
 ### Implementation
 
 - **Global `@RestControllerAdvice`** intercepts all exceptions
-- Maps standard exceptions → `ErrorResponse`
+- Maps standard exceptions  (calls) `ErrorResponse`
 - All controllers return consistent format automatically
 
 ---

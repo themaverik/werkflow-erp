@@ -1420,14 +1420,14 @@ Also update the `## Current Session State` section:
 
 **Before:**
 ```markdown
-**Status**: P0.1.2 COMPLETE ✓ — All Multi-Tenant Isolation Tasks Done
+**Status**: P0.1.2 COMPLETE [DONE] — All Multi-Tenant Isolation Tasks Done
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
 **Next Phase**: P0.2 — Idempotency for Safe Retries
 ```
 
 **After:**
 ```markdown
-**Status**: P0.2.1-P0.2.2 COMPLETE ✓ — Idempotency infrastructure ready
+**Status**: P0.2.1-P0.2.2 COMPLETE [DONE] — Idempotency infrastructure ready
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
 **Next Phase**: P0.2.3 — Document Idempotency-Key header in endpoints
 ```
@@ -1446,16 +1446,16 @@ git commit -m "chore(P0.2): mark idempotency tasks 1-2 complete, ready for endpo
 
 **Spec Coverage:**
 
-1. ✓ **IdempotencyRecord Entity** — Task 1, with tenant_id, idempotency_key, request/response, status
-2. ✓ **IdempotencyRepository** — Task 2, with `findByTenantIdAndIdempotencyKey` and cleanup query
-3. ✓ **IdempotencyService** — Task 7, with cache + DB logic, strict validation, TTL handling
-4. ✓ **IdempotencyFilter** — Task 8, ServletFilter in SecurityFilterChain, POST/PUT interception
-5. ✓ **Cleanup Job** — Task 10, scheduled daily at 2 AM UTC, lazy + background cleanup
-6. ✓ **Caffeine Configuration** — Task 6, cache spec with TTL
-7. ✓ **Flyway Migration** — Task 5, V22 migration
-8. ✓ **Error Handling** — IdempotencyException (409) for payload mismatch
-9. ✓ **Testing** — Unit tests for all 3 core classes, integration test placeholder
-10. ✓ **Documentation** — Spec document already committed, ROADMAP updated
+1. [DONE] **IdempotencyRecord Entity** — Task 1, with tenant_id, idempotency_key, request/response, status
+2. [DONE] **IdempotencyRepository** — Task 2, with `findByTenantIdAndIdempotencyKey` and cleanup query
+3. [DONE] **IdempotencyService** — Task 7, with cache + DB logic, strict validation, TTL handling
+4. [DONE] **IdempotencyFilter** — Task 8, ServletFilter in SecurityFilterChain, POST/PUT interception
+5. [DONE] **Cleanup Job** — Task 10, scheduled daily at 2 AM UTC, lazy + background cleanup
+6. [DONE] **Caffeine Configuration** — Task 6, cache spec with TTL
+7. [DONE] **Flyway Migration** — Task 5, V22 migration
+8. [DONE] **Error Handling** — IdempotencyException (409) for payload mismatch
+9. [DONE] **Testing** — Unit tests for all 3 core classes, integration test placeholder
+10. [DONE] **Documentation** — Spec document already committed, ROADMAP updated
 
 **No Placeholders Found:** All code blocks complete, all test cases concrete, all commands exact.
 

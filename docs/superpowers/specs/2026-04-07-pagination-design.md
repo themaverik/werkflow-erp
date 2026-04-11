@@ -61,10 +61,10 @@ public ResponseEntity<Page<EmployeeResponse>> getAllEmployees(
 ```
 
 **Query examples**:
-- `GET /api/v1/hr/employees` → Default: page=0, size=20, sort=createdAt DESC
-- `GET /api/v1/hr/employees?page=1&size=50` → Page 2 (1-indexed in UI), 50 items per page
-- `GET /api/v1/hr/employees?sort=firstName,asc&sort=createdAt,desc` → Sort by firstName ASC, then createdAt DESC
-- `GET /api/v1/hr/employees?size=2000` → Capped at 1000 by config
+- `GET /api/v1/hr/employees`  (calls) Default: page=0, size=20, sort=createdAt DESC
+- `GET /api/v1/hr/employees?page=1&size=50`  (calls) Page 2 (1-indexed in UI), 50 items per page
+- `GET /api/v1/hr/employees?sort=firstName,asc&sort=createdAt,desc`  (calls) Sort by firstName ASC, then createdAt DESC
+- `GET /api/v1/hr/employees?size=2000`  (calls) Capped at 1000 by config
 
 ### Configuration (application.yml)
 
@@ -157,16 +157,16 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 ## Error Handling & Edge Cases
 
 **Invalid size (exceeds max):**
-- `?size=5000` → Capped to 1000 (handled by `max-page-size` config, no error)
+- `?size=5000`  (calls) Capped to 1000 (handled by `max-page-size` config, no error)
 
 **Page out of bounds:**
-- `?page=999` → Returns empty `Page` with correct metadata (totalPages, totalElements still accurate)
+- `?page=999`  (calls) Returns empty `Page` with correct metadata (totalPages, totalElements still accurate)
 
 **Invalid sort field:**
-- `?sort=invalidField` → Returns HTTP 400 Bad Request (Spring default, handled by `PropertyReferenceException`)
+- `?sort=invalidField`  (calls) Returns HTTP 400 Bad Request (Spring default, handled by `PropertyReferenceException`)
 
 **Negative page/size:**
-- `?page=-1` or `?size=-1` → Spring validation rejects (400 Bad Request)
+- `?page=-1` or `?size=-1`  (calls) Spring validation rejects (400 Bad Request)
 
 No special handling code needed — Spring handles these by default.
 

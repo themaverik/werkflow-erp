@@ -11,10 +11,10 @@ This project follows standardized development conventions. Refer to:
 
 **File naming**: Title-Case for markdown files
 ```
-✅ Api-Reference.md
-✅ Architecture-Overview.md
-❌ api-reference.md
-❌ API_REFERENCE.md
+[YES] Api-Reference.md
+[YES] Architecture-Overview.md
+[NO] api-reference.md
+[NO] API_REFERENCE.md
 ```
 
 **Exception**: `README.md` is always lowercase
@@ -38,17 +38,17 @@ docs(architecture): explain independence principle
 
 **No auto-generated signatures** in commits:
 ```
-❌ Co-Authored-By: Claude Haiku <noreply@anthropic.com>
-❌ Generated with Claude Code
-✅ Just the commit message with no signature
+[NO] Co-Authored-By: Claude Haiku <noreply@anthropic.com>
+[NO] Generated with Claude Code
+[YES] Just the commit message with no signature
 ```
 
 ### Change Tracking (IMPORTANT)
 
 **This project is PRE-MVP**, so:
-- ✅ Use **ROADMAP.md only** (no CHANGELOG.md yet)
-- ✅ Track ALL changes: features, bugfixes, refactoring, docs
-- ✅ Update ROADMAP.md after every completed task
+- [YES] Use **ROADMAP.md only** (no CHANGELOG.md yet)
+- [YES] Track ALL changes: features, bugfixes, refactoring, docs
+- [YES] Update ROADMAP.md after every completed task
 
 **When switching to Post-MVP:**
 - Switch to ROADMAP.md (features) + CHANGELOG.md (all changes)
@@ -73,15 +73,15 @@ project/CLAUDE.md   # Project-specific overrides (if needed, create it)
 Use Title-Case with hyphens (no spaces):
 
 ```
-✅ ADR-001-Service-Boundary-Architecture.md
-✅ Architecture-Overview.md
-✅ Independence-Checklist.md
-✅ Implementation-Summary.md
-✅ Conventions-Guide.md (this file)
+[YES] ADR-001-Service-Boundary-Architecture.md
+[YES] Architecture-Overview.md
+[YES] Independence-Checklist.md
+[YES] Implementation-Summary.md
+[YES] Conventions-Guide.md (this file)
 
-❌ adr-001-service-boundary-architecture.md
-❌ architecture overview.md
-❌ independence_checklist.md
+[NO] adr-001-service-boundary-architecture.md
+[NO] architecture overview.md
+[NO] independence_checklist.md
 ```
 
 ### Roadmap Updates Workflow
@@ -154,10 +154,10 @@ Co-Authored-By: Claude Haiku <noreply@anthropic.com>"
 
 **Service naming**: lowercase with dashes
 ```
-✅ business-service
-✅ postgres
-❌ BusinessService
-❌ BUSINESS_SERVICE
+[YES] business-service
+[YES] postgres
+[NO] BusinessService
+[NO] BUSINESS_SERVICE
 ```
 
 **Port allocation**: Documented in README.md and docker-compose.yml
@@ -169,31 +169,31 @@ Keycloak: 8090
 
 **Environment variables**: UPPER_SNAKE_CASE
 ```
-✅ POSTGRES_HOST
-✅ KEYCLOAK_URL
-✅ SERVER_PORT
-❌ postgresHost
-❌ keycloak-url
+[YES] POSTGRES_HOST
+[YES] KEYCLOAK_URL
+[YES] SERVER_PORT
+[NO] postgresHost
+[NO] keycloak-url
 ```
 
 ### API Naming Conventions
 
 **URL paths**: kebab-case with version prefix
 ```
-✅ /api/v1/hr/employees
-✅ /api/v1/budget-categories
-✅ /api/v1/inventory/asset-instances
-❌ /api/v1/HR/employees
-❌ /api/v1/budgetCategories
+[YES] /api/v1/hr/employees
+[YES] /api/v1/budget-categories
+[YES] /api/v1/inventory/asset-instances
+[NO] /api/v1/HR/employees
+[NO] /api/v1/budgetCategories
 ```
 
 **Request/Response headers**: Kebab-Case
 ```
-✅ X-Idempotency-Key
-✅ X-Tenant-ID
-✅ Authorization
-❌ x-idempotency-key
-❌ Xidempotencykey
+[YES] X-Idempotency-Key
+[YES] X-Tenant-ID
+[YES] Authorization
+[NO] x-idempotency-key
+[NO] Xidempotencykey
 ```
 
 ---
@@ -204,9 +204,9 @@ Keycloak: 8090
 
 werkflow-erp **must not import werkflow code**:
 ```java
-❌ import com.werkflow.engine.*;
-❌ import org.keycloak.admin.*;
-✅ import org.springframework.security.oauth2.*;
+[NO] import com.werkflow.engine.*;
+[NO] import org.keycloak.admin.*;
+[YES] import org.springframework.security.oauth2.*;
 ```
 
 **Every PR review checks**: `grep -r "import com.werkflow" services/business/`
@@ -225,12 +225,12 @@ Never validate against external systems. Trust the caller.
 
 **Cross-domain FK validation**: Use internal repositories, not REST calls
 ```java
-// ✅ Correct
+// [YES] Correct
 if (!budgetCategoryRepository.existsById(id)) {
     throw new EntityNotFoundException(...);
 }
 
-// ❌ Wrong
+// [NO] Wrong
 adminServiceClient.validateBudgetCategory(id);
 ```
 
@@ -266,7 +266,7 @@ No conditional logic, no business rules. Caller decides what to do next.
 
 ### Starting a New Session
 
-1. Read `ROADMAP.md` → find first `[~]` or `[ ]` task
+1. Read `ROADMAP.md`  (calls) find first `[~]` or `[ ]` task
 2. Check git log: `git log --oneline -5`
 3. Confirm branch: `git status`
 4. Ask: "Continue on current branch or create new feature branch?"
@@ -296,7 +296,7 @@ No conditional logic, no business rules. Caller decides what to do next.
 1. Use Title-Case file names (e.g., `New-Feature.md`)
 2. Include in ROADMAP.md if major change
 3. Link from relevant index (README.md or docs/)
-4. Don't add emojis (except ✅, 🚧, etc. for status)
+4. Don't add emojis (except [YES], 🚧, etc. for status)
 
 ---
 
@@ -312,7 +312,7 @@ No conditional logic, no business rules. Caller decides what to do next.
 ## Tools & Configuration
 
 **Java formatting**: Google Java Style (IntelliJ built-in)
-- Settings → Code Style → Java → Scheme: GoogleStyle
+- Settings  (calls) Code Style  (calls) Java  (calls) Scheme: GoogleStyle
 
 **Git hooks** (optional): Add to `.git/hooks/pre-commit`
 ```bash
@@ -328,11 +328,11 @@ fi
 
 ## Summary
 
-- ✅ Use **Title-Case** for markdown filenames
-- ✅ Follow **Conventional Commits** for git messages
-- ✅ Update **ROADMAP.md** after completing tasks
-- ✅ No **werkflow imports** in werkflow-erp
-- ✅ Use **opaque platform user IDs** (don't validate externally)
-- ✅ Provide **pure status updates** (no workflows)
-- ✅ **Don't push** without confirming first (unless explicitly authorized)
+- [YES] Use **Title-Case** for markdown filenames
+- [YES] Follow **Conventional Commits** for git messages
+- [YES] Update **ROADMAP.md** after completing tasks
+- [YES] No **werkflow imports** in werkflow-erp
+- [YES] Use **opaque platform user IDs** (don't validate externally)
+- [YES] Provide **pure status updates** (no workflows)
+- [YES] **Don't push** without confirming first (unless explicitly authorized)
 

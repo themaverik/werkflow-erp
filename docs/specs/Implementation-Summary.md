@@ -32,10 +32,10 @@ werkflow-erp does NOT manage platform users. Instead:
 2. **External system (werkflow, SAP, Azure, etc.) links the two**
    ```
    External Platform creates/manages user
-       ↓
+        (next step)
    Calls: PATCH /api/v1/hr/employees/{id}/platform-link
    Body: { platformUserId: "user-uuid-123" }
-       ↓
+        (next step)
    werkflow-erp stores the link
    ```
 
@@ -76,36 +76,36 @@ werkflow-erp does NOT manage platform users. Instead:
 
 werkflow-erp is a **standalone business data service**. It:
 
-✅ **Works without werkflow:**
+[YES] **Works without werkflow:**
 ```
 Company A doesn't use werkflow. They have their own HR app.
-    ↓
+     (next step)
 They call werkflow-erp REST APIs
-    ↓
+     (next step)
 werkflow-erp stores/retrieves data
-    ↓
+     (next step)
 Completely works.
 ```
 
-✅ **Can be used AS a test data provider for werkflow:**
+[YES] **Can be used AS a test data provider for werkflow:**
 ```
 werkflow Platform needs to test workflows.
-    ↓
+     (next step)
 werkflow starts werkflow-erp (Docker)
-    ↓
+     (next step)
 werkflow calls werkflow-erp REST APIs during test
-    ↓
+     (next step)
 werkflow-erp has NO IDEA it's being used for testing
-    ↓
+     (next step)
 Both systems work correctly
 ```
 
-✅ **Works with any orchestrator (Zapier, SAP, custom scheduler):**
+[YES] **Works with any orchestrator (Zapier, SAP, custom scheduler):**
 ```
 Multiple systems call the same werkflow-erp APIs
-    ↓
+     (next step)
 werkflow-erp doesn't know or care which system is calling
-    ↓
+     (next step)
 All systems get consistent data
 ```
 
@@ -129,7 +129,7 @@ if grep -r "import com.werkflow" services/business/src/main/java ; then
   echo "ERROR: werkflow-erp must not import werkflow code"
   exit 1
 fi
-echo "✅ werkflow-erp is independent"
+echo "[YES] werkflow-erp is independent"
 ```
 
 ---
@@ -153,11 +153,11 @@ echo "✅ werkflow-erp is independent"
 │  • werkflow-erp just stores it                                │
 │                                                                │
 │  Can be used by:                                              │
-│  ✅ werkflow (for testing workflows)                          │
-│  ✅ SAP (as data source)                                      │
-│  ✅ Zapier (as REST backend)                                  │
-│  ✅ Custom app (direct REST client)                           │
-│  ✅ Standalone (no external system needed)                    │
+│  [YES] werkflow (for testing workflows)                          │
+│  [YES] SAP (as data source)                                      │
+│  [YES] Zapier (as REST backend)                                  │
+│  [YES] Custom app (direct REST client)                           │
+│  [YES] Standalone (no external system needed)                    │
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 ```
@@ -175,7 +175,7 @@ docker compose up -d postgres werkflow-erp
 # Test that it works
 curl -H "Authorization: Bearer $TOKEN" \
   http://localhost:8084/api/v1/hr/employees
-# Response: 200 OK ✅
+# Response: 200 OK [YES]
 ```
 
 ### Test 2: werkflow Integration
@@ -192,11 +192,11 @@ docker compose -f docker-compose.yml \
 ```bash
 # Verify no werkflow imports
 grep -r "import com.werkflow" services/business/
-# Output: (empty) ✅
+# Output: (empty) [YES]
 
 # Verify no Keycloak admin code
 grep -r "KeycloakAdmin" services/business/
-# Output: (empty) ✅
+# Output: (empty) [YES]
 ```
 
 ---
@@ -217,7 +217,7 @@ grep -r "import com.werkflow" services/business/src/main/java
 // In AssetRequestService
 public void approveRequest(Long assetId) {
     // Call Engine to continue BPMN
-    engineClient.continueProcess(processInstanceId);  // ❌
+    engineClient.continueProcess(processInstanceId);  // [NO]
 }
 ```
 
@@ -226,7 +226,7 @@ public void approveRequest(Long assetId) {
 // In AssetRequestService
 public AssetRequest updateStatus(Long assetId, String newStatus) {
     AssetRequest request = repository.findById(assetId);
-    request.setStatus(newStatus);  // ✅ Pure state update
+    request.setStatus(newStatus);  // [YES] Pure state update
     return repository.save(request);
 
     // Caller (could be werkflow, Zapier, etc.) decides what to do next

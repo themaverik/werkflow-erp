@@ -565,10 +565,10 @@ Response:
 Always use `X-Idempotency-Key` for POST requests. If the request fails and is retried, you'll get the same response:
 
 ```bash
-# First call → 201 Created
+# First call  (calls) 201 Created
 curl -X POST ... -H "X-Idempotency-Key: unique-key-123"
 
-# Retry with same key → 200 OK (cached response)
+# Retry with same key  (calls) 200 OK (cached response)
 curl -X POST ... -H "X-Idempotency-Key: unique-key-123"
 ```
 

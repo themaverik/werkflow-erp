@@ -463,7 +463,7 @@ Find the P0.3 section and update:
 Change:
 
 ```markdown
-**Status**: P0.2.1-P0.2.3 COMPLETE ✓ — Idempotency fully integrated and documented
+**Status**: P0.2.1-P0.2.3 COMPLETE [DONE] — Idempotency fully integrated and documented
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
 **Next Phase**: P0.3 — processInstanceId Race Condition Fix
 ```
@@ -471,7 +471,7 @@ Change:
 To:
 
 ```markdown
-**Status**: P0.1-P0.3 COMPLETE ✓ — Multi-tenancy, idempotency, and processInstanceId pattern ready
+**Status**: P0.1-P0.3 COMPLETE [DONE] — Multi-tenancy, idempotency, and processInstanceId pattern ready
 **Active Phase**: P0 — Critical Path to Production (Weeks 1-2)
 **Next Phase**: P0.4 — Cross-Domain FK Validation
 ```
@@ -489,15 +489,15 @@ git commit -m "docs: mark P0.3 complete (processInstanceId pattern for asset/pur
 
 **Spec Coverage:**
 
-1. ✅ **P0.3.1** — "Allow `processInstanceId` in asset request create payload"
+1. [YES] **P0.3.1** — "Allow `processInstanceId` in asset request create payload"
    - Task 1-2 handle PurchaseRequestDto/Service
    - Task 3-4 handle PurchaseOrderDto/Service
    - (AssetRequest completed in prior commit)
 
-2. ✅ **P0.3.2** — "Update werkflow integration docs"
+2. [YES] **P0.3.2** — "Update werkflow integration docs"
    - Task 6 creates comprehensive integration guide with pattern and fallback examples
 
-3. ✅ **P0.3.3** — "Apply same pattern to PurchaseRequest and PurchaseOrder"
+3. [YES] **P0.3.3** — "Apply same pattern to PurchaseRequest and PurchaseOrder"
    - Tasks 1-2: PurchaseRequest
    - Tasks 3-4: PurchaseOrder
 

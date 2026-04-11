@@ -4,7 +4,7 @@
 
 **Goal:** Add Spring Data pagination to all ~18-20 GET list endpoints across 4 domains (HR, Finance, Procurement, Inventory), allowing clients to request pages via `?page=0&size=20&sort=createdAt,desc`.
 
-**Architecture:** Configure Spring Data pagination defaults → update repositories to accept `Pageable` → update services to accept and return `Page<Dto>` → update controllers to expose `Pageable` parameter and return `Page<Dto>` → write integration tests for pagination behavior.
+**Architecture:** Configure Spring Data pagination defaults  (calls) update repositories to accept `Pageable`  (calls) update services to accept and return `Page<Dto>`  (calls) update controllers to expose `Pageable` parameter and return `Page<Dto>`  (calls) write integration tests for pagination behavior.
 
 **Tech Stack:** Spring Data JPA (PagingAndSortingRepository), Springdoc OpenAPI (@ParameterObject), JUnit 5, MockMvc
 

@@ -22,19 +22,19 @@ The key architectural principle: **werkflow-erp is ignorant of how its data is u
 **Model 1: Standalone ERP**
 ```
 Standalone Client Application
-    ↓
+     (next step)
 werkflow-erp REST API (8084)
-    ↓
+     (next step)
 PostgreSQL (5433)
 ```
 
 **Model 2: Integrated with werkflow (Testing)**
 ```
 werkflow Platform (8081, 8083, 4000, 8090)
-    ↓ (calls REST APIs)
-    ↓
+     (next step) (calls REST APIs)
+     (next step)
 werkflow-erp (8084)
-    ↓
+     (next step)
 Shared PostgreSQL (5433)
 ```
 
@@ -58,7 +58,7 @@ Shared PostgreSQL (5433)
 - UPDATE: Modify existing records (approve leave, mark receipt complete, etc.)
 - DELETE: Remove records (where business rules allow)
 - VALIDATE: Foreign key constraints, enum validation, required fields, idempotency
-- STATUS UPDATES: Transition records through their lifecycle (e.g., AssetRequest: PENDING → APPROVED)
+- STATUS UPDATES: Transition records through their lifecycle (e.g., AssetRequest: PENDING  (calls) APPROVED)
 
 ### What werkflow-erp Does NOT Provide
 
@@ -78,14 +78,14 @@ These are **orchestration concerns** — handled by whatever system is calling w
 **By werkflow (for testing workflows):**
 ```
 werkflow Portal
-    ↓ User submits form
-    ↓
+     (next step) User submits form
+     (next step)
 werkflow Engine executes BPMN
-    ↓ Calls REST API
-    ↓
+     (next step) Calls REST API
+     (next step)
 werkflow-erp stores data
-    ↓ Returns response
-    ↓
+     (next step) Returns response
+     (next step)
 werkflow Engine evaluates response and continues BPMN
     (makes business decisions, routes tasks, sends notifications)
 ```
@@ -93,20 +93,20 @@ werkflow Engine evaluates response and continues BPMN
 **By standalone client (direct ERP usage):**
 ```
 Custom Application (e.g., HR onboarding tool)
-    ↓
+     (next step)
 werkflow-erp REST API
-    ↓
+     (next step)
 Stores/retrieves business data
-    ↓
+     (next step)
 Custom Application applies business logic
 ```
 
 **By another system:**
 ```
 External ERP / HRIS / Finance system
-    ↓
+     (next step)
 werkflow-erp REST API
-    ↓
+     (next step)
 Data layer
 ```
 
@@ -165,13 +165,13 @@ public class Employee {
 
 ```
 External Platform (e.g., Keycloak Admin)
-    ↓ "User keycloak-uuid-123 is Alice, who is employee 42"
-    ↓
+     (next step) "User keycloak-uuid-123 is Alice, who is employee 42"
+     (next step)
 PATCH /api/v1/hr/employees/42/platform-link
 Body: { platformUserId: "keycloak-uuid-123" }
-    ↓
+     (next step)
 werkflow-erp stores the link
-    ↓
+     (next step)
 Later queries can find employee by platformUserId
 GET /api/v1/hr/employees/platform/keycloak-uuid-123
 ```
@@ -180,13 +180,13 @@ GET /api/v1/hr/employees/platform/keycloak-uuid-123
 
 ```
 werkflow-erp Admin:
-    ↓ "I want to link employee 42 to platform user"
-    ↓
+     (next step) "I want to link employee 42 to platform user"
+     (next step)
 Call external system REST API to verify user exists
-    ↓
+     (next step)
 PATCH /api/v1/hr/employees/42/platform-link
 Body: { platformUserId: "verified-user-id" }
-    ↓
+     (next step)
 werkflow-erp stores link WITHOUT further coupling
 ```
 
@@ -194,14 +194,14 @@ werkflow-erp stores link WITHOUT further coupling
 
 ```
 External system (e.g., every night at 9 PM):
-    ↓ "Sync all user IDs to werkflow-erp"
-    ↓
+     (next step) "Sync all user IDs to werkflow-erp"
+     (next step)
 POST /api/v1/hr/employees/platform-link-batch
 Body: [
     { employeeId: 1, platformUserId: "user-123" },
     { employeeId: 2, platformUserId: "user-456" }
 ]
-    ↓
+     (next step)
 werkflow-erp stores all links atomically
 ```
 
@@ -240,22 +240,22 @@ Response: { successCount, failureCount, errors: [...] }
 **Scenario 1: Standalone werkflow-erp (no platform user tracking)**
 ```
 HR Manager uses werkflow-erp directly
-    ↓
+     (next step)
 Never calls platform-link endpoints
-    ↓
+     (next step)
 platformUserId is always null
-    ↓
+     (next step)
 Everything works normally
 ```
 
 **Scenario 2: werkflow integration (workflow tasks to employees)**
 ```
 werkflow Portal: User logs in (Keycloak provides user ID = "abc123")
-    ↓
+     (next step)
 werkflow Engine queries: GET /api/v1/hr/employees/platform/abc123
-    ↓
+     (next step)
 werkflow-erp returns: { id: 42, firstName: "Alice", departmentCode: "ENG", ... }
-    ↓
+     (next step)
 werkflow Engine uses employee info for task routing, variable enrichment
 ```
 
@@ -264,11 +264,11 @@ werkflow Engine uses employee info for task routing, variable enrichment
 Some users from Keycloak (platformUserId = "keycloak-...")
 Some users from Azure AD (platformUserId = "oid-...")
 Some users not tracked in any platform (platformUserId = null)
-    ↓
+     (next step)
 werkflow-erp stores all relationships
-    ↓
+     (next step)
 Each calling system resolves: "This user ID came from {Keycloak|AzureAD|...}"
-    ↓
+     (next step)
 werkflow-erp doesn't care — it just returns matching employees
 ```
 
@@ -288,34 +288,34 @@ werkflow-erp is a **completely standalone service**. It MUST NOT:
 
 **Examples of FORBIDDEN imports:**
 ```java
-❌ import com.werkflow.engine.*;
-❌ import com.werkflow.admin.*;
-❌ import org.keycloak.admin.client.*;  // (except for test/demo configs)
-❌ new KeycloakClient(...);
+[NO] import com.werkflow.engine.*;
+[NO] import com.werkflow.admin.*;
+[NO] import org.keycloak.admin.client.*;  // (except for test/demo configs)
+[NO] new KeycloakClient(...);
 ```
 
 **Examples of ALLOWED dependencies:**
 ```java
-✅ import org.springframework.boot.*;
-✅ import org.springframework.security.oauth2.*;  // JWT parsing only
-✅ import org.postgresql.*;
-✅ import java.util.*;
-✅ import lombok.*;
+[YES] import org.springframework.boot.*;
+[YES] import org.springframework.security.oauth2.*;  // JWT parsing only
+[YES] import org.postgresql.*;
+[YES] import java.util.*;
+[YES] import lombok.*;
 ```
 
 ### Why This Matters
 
 If werkflow-erp imports werkflow code:
-- ❌ Deploying werkflow-erp requires building/deploying werkflow first
-- ❌ Upgrading werkflow breaks werkflow-erp
-- ❌ Can't use werkflow-erp without werkflow
-- ❌ Hard to test werkflow-erp in isolation
+- [NO] Deploying werkflow-erp requires building/deploying werkflow first
+- [NO] Upgrading werkflow breaks werkflow-erp
+- [NO] Can't use werkflow-erp without werkflow
+- [NO] Hard to test werkflow-erp in isolation
 
 If werkflow-erp is independent:
-- ✅ werkflow-erp deployment is completely independent
-- ✅ werkflow-erp works with ANY orchestration system (werkflow, Zapier, cron, manual)
-- ✅ Can test werkflow against werkflow-erp without needing werkflow code
-- ✅ Can replace werkflow with another orchestrator, still use werkflow-erp
+- [YES] werkflow-erp deployment is completely independent
+- [YES] werkflow-erp works with ANY orchestration system (werkflow, Zapier, cron, manual)
+- [YES] Can test werkflow against werkflow-erp without needing werkflow code
+- [YES] Can replace werkflow with another orchestrator, still use werkflow-erp
 
 ### Implementation Check
 
@@ -409,7 +409,7 @@ Direct repository call is correct here.
 **Status**: Accepted (P0.4)
 
 **Context**: Services have foreign key references to entities in other domains (e.g.,
-PurchaseRequest.requestingDeptId → HR.Department). Without validation, callers can
+PurchaseRequest.requestingDeptId  (calls) HR.Department). Without validation, callers can
 provide invalid or non-existent IDs, causing silent failures and downstream errors
 in the workflow orchestration layer.
 
@@ -493,33 +493,33 @@ public class CustodyRecordService {
 
 **Scenario 1: werkflow (Keycloak)**
 ```
-werkflow Portal: User logs in → Keycloak issues JWT with sub = "keycloak-uuid-123"
-    ↓
+werkflow Portal: User logs in  (calls) Keycloak issues JWT with sub = "keycloak-uuid-123"
+     (next step)
 werkflow Engine extracts sub from JWT
-    ↓
+     (next step)
 werkflow Engine calls: POST /api/v1/inventory/custody-records
     Body: { custodianUserId: "keycloak-uuid-123", ... }
-    ↓
+     (next step)
 werkflow-erp stores: custodianUserId = "keycloak-uuid-123" (no validation)
 ```
 
 **Scenario 2: SAP system**
 ```
 SAP ERP integration: Employee management system
-    ↓
+     (next step)
 Calls: POST /api/v1/inventory/custody-records
     Body: { custodianUserId: "SAP-EMP-42", ... }
-    ↓
+     (next step)
 werkflow-erp stores: custodianUserId = "SAP-EMP-42" (no validation)
 ```
 
 **Scenario 3: Manual REST client / testing**
 ```
 Test script or API client
-    ↓
+     (next step)
 Calls: POST /api/v1/inventory/custody-records
     Body: { custodianUserId: "alice@example.com", ... }
-    ↓
+     (next step)
 werkflow-erp stores: custodianUserId = "alice@example.com" (no validation)
 ```
 
@@ -658,7 +658,7 @@ Response: { id, status, updatedAt, ... }
 **werkflow using werkflow-erp (for testing)**
 ```
 User submits asset request form in werkflow Portal
-    ↓
+     (next step)
 werkflow Engine:
   a. Calls POST /api/v1/inventory/asset-requests
      (stores externalProcessId = BPMN process UUID)
@@ -670,14 +670,14 @@ werkflow Engine:
 **Standalone HR app using werkflow-erp**
 ```
 HR Manager approves asset request via direct API call
-    ↓
+     (next step)
 PATCH /api/v1/inventory/asset-requests/42/status
 Body: { status: "APPROVED" }
-    ↓
+     (next step)
 werkflow-erp stores status change
-    ↓
+     (next step)
 HR app queries the updated record
-    ↓
+     (next step)
 No external workflow system involved
 ```
 
@@ -765,8 +765,8 @@ spring:
 **All endpoints must use `/api/v1/` prefix.**
 
 ```
-✅ Correct:   GET /api/v1/hr/employees
-❌ Wrong:     GET /api/hr/employees
+[YES] Correct:   GET /api/v1/hr/employees
+[NO] Wrong:     GET /api/hr/employees
 ```
 
 **Why version now?**
@@ -774,7 +774,7 @@ spring:
 1. **Multi-tenancy**: v2 may add `X-Tenant-ID` header validation
 2. **API evolution**: Binary protocol changes can happen (breaking changes)
 3. **Connector Registry**: Registered connectors are versioned
-4. **Pagination**: `/api/v1` allows breaking changes like List→Page return types within same major version
+4. **Pagination**: `/api/v1` allows breaking changes like List (calls)Page return types within same major version
 
 ---
 
@@ -918,7 +918,7 @@ public class AssetRequestService {
 | werkflow-erp data not synced with platform users | `platformUserId` link is manual/event-driven, not automatic. No coupling. |
 | Two systems modify same record simultaneously | Idempotency keys + timestamps prevent duplicate writes |
 | API version mismatch between systems | Semantic versioning (`/api/v1`, `/api/v2`), deprecation period before breaking changes |
-| werkflow-erp down → werkflow can't operate | werkflow should design around graceful degradation or use fallback data source |
+| werkflow-erp down  (calls) werkflow can't operate | werkflow should design around graceful degradation or use fallback data source |
 | No single source of truth | Each system is authoritative for its domain (werkflow for tasks, werkflow-erp for business data) |
 
 ---

@@ -154,11 +154,11 @@ Body: { status: "APPROVED" }
 ```
 
 This endpoint:
-- ✅ Works when called by Werkflow Engine
-- ✅ Works when called by Zapier
-- ✅ Works when called by cron job
-- ✅ Works when called by manual REST client
-- ✅ Doesn't care WHO updated the status
+- [YES] Works when called by Werkflow Engine
+- [YES] Works when called by Zapier
+- [YES] Works when called by cron job
+- [YES] Works when called by manual REST client
+- [YES] Doesn't care WHO updated the status
 
 ---
 
@@ -213,8 +213,8 @@ Response: { content: [...], pageable: { pageNumber: 0, totalElements: 1250 } }
 
 ### Versioned
 ```
-✅ /api/v1/...
-❌ /api/... (no version)
+[YES] /api/v1/...
+[NO] /api/... (no version)
 
 Allows v2 in future without breaking v1 clients
 ```
@@ -228,7 +228,7 @@ Allows v2 in future without breaking v1 clients
 ```
 1. Werkflow Portal
    User: "I need a laptop"
-   ↓
+    (next step)
 2. Werkflow Engine
    Calls: POST /api/v1/inventory/asset-requests
    Body: {
@@ -236,19 +236,19 @@ Allows v2 in future without breaking v1 clients
      assetDefinitionId: 123,
      externalProcessId: "bpmn-proc-456"
    }
-   ↓
+    (next step)
 3. Werkflow-ERP
-   ✅ Validates assetDefinitionId exists
-   ✅ Stores externalProcessId for tracking
-   ✅ Returns: { id: 42, status: "PENDING" }
-   ↓
+   [YES] Validates assetDefinitionId exists
+   [YES] Stores externalProcessId for tracking
+   [YES] Returns: { id: 42, status: "PENDING" }
+    (next step)
 4. Werkflow Engine
-   ✅ Executes approval task (no Werkflow-ERP involved)
-   ✅ On approval: PATCH /asset-requests/42/status
+   [YES] Executes approval task (no Werkflow-ERP involved)
+   [YES] On approval: PATCH /asset-requests/42/status
    Body: { status: "APPROVED" }
-   ✓ Werkflow-ERP updates and returns confirmation
-   ✅ Routes to procurement (no Werkflow-ERP involved)
-   ✅ Creates PO (no Werkflow-ERP involved)
+   [DONE] Werkflow-ERP updates and returns confirmation
+   [YES] Routes to procurement (no Werkflow-ERP involved)
+   [YES] Creates PO (no Werkflow-ERP involved)
 ```
 
 Werkflow-ERP is **completely ignorant** of the approval logic, routing, or notifications.
@@ -260,18 +260,18 @@ Werkflow-ERP is **completely ignorant** of the approval logic, routing, or notif
 ```
 1. HR Portal (custom built, no workflow)
    HR Manager: Approve leave request
-   ↓
+    (next step)
 2. Direct REST call (no workflow involved)
    PATCH /api/v1/hr/leaves/99/status
    Body: { status: "APPROVED" }
-   ↓
+    (next step)
 3. Werkflow-ERP
-   ✅ Updates leave record
-   ✅ Returns confirmation
-   ↓
+   [YES] Updates leave record
+   [YES] Returns confirmation
+    (next step)
 4. HR Portal
-   ✅ Notifies employee (portal's responsibility)
-   ✅ Updates calendar (portal's responsibility)
+   [YES] Notifies employee (portal's responsibility)
+   [YES] Updates calendar (portal's responsibility)
 ```
 
 Werkflow-ERP has **no idea** that this is being used standalone.
