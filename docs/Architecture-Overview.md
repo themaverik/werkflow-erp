@@ -2,7 +2,7 @@
 
 ## Core Principle: Complete Independence
 
-werkflow-erp is a **completely standalone business data service**. It has **zero dependencies** on any workflow orchestration platform, including werkflow.
+Werkflow-ERP is a **completely standalone business data service**. It has **zero dependencies** on any workflow orchestration platform, including Werkflow.
 
 REST API Layer (Stateless, Idempotent)
   Endpoints: /api/v1/hr/*, /api/v1/finance/*, /api/v1/*
@@ -27,7 +27,7 @@ Constraints:
   - NO EXTERNAL CALLS
   - NO WORKFLOW REFERENCES
   - NO KEYCLOAK CLIENT CODE
-  - NO werkflow IMPORTS
+  - NO Werkflow IMPORTS
 
 ---
 
@@ -41,17 +41,17 @@ Company A (No workflow platform)
 Custom HR App / Finance Portal
     |
     v
-werkflow-erp REST API
+Werkflow-ERP REST API
     |
     v
 PostgreSQL
 ```
 
-Company A gets a complete ERP system without needing werkflow.
+Company A gets a complete ERP system without needing Werkflow.
 
-### Scenario 2: Integrated with werkflow (Testing)
+### Scenario 2: Integrated with Werkflow (Testing)
 ```
-werkflow Platform
+Werkflow Platform
   - Engine (BPMN orchestration)
   - Admin (Users, departments)
   - Portal (Workflow designer)
@@ -59,22 +59,22 @@ werkflow Platform
     |
     | (via REST API)
     |
-werkflow-erp (Business data provider)
+Werkflow-ERP (Business data provider)
     |
     v
 PostgreSQL (shared)
 ```
 
-werkflow uses werkflow-erp for testing and running business workflows.
+Werkflow uses Werkflow-ERP for testing and running business workflows.
 
 ### Scenario 3: Hybrid with Multiple Orchestrators
 ```
-werkflow Platform     +     Zapier     +     Custom Scheduler
+Werkflow Platform     +     Zapier     +     Custom Scheduler
     |                      |                   |
     +------+-------+-------+-------+-------+---+
            |
            v
-      werkflow-erp REST API
+      Werkflow-ERP REST API
            |
            v
         PostgreSQL
@@ -94,8 +94,8 @@ Multiple systems share the same business data.
 
 **The Solution:**
 - `Employee.platformUserId` is an optional field
-- External systems (werkflow, SAP, etc.) manage the linking
-- werkflow-erp just stores the reference, doesn't validate it
+- External systems (Werkflow, SAP, etc.) manage the linking
+- Werkflow-ERP just stores the reference, doesn't validate it
 
 ```
 External Platform creates user
@@ -105,14 +105,14 @@ Calls: PATCH /api/v1/hr/employees/{id}/platform-link
     Body: { platformUserId: "uuid-123" }
     |
     v
-werkflow-erp stores the link
+Werkflow-ERP stores the link
     |
     v
 Later queries can find: GET /api/v1/hr/employees/platform/uuid-123
 ```
 
 **Why no coupling?**
-- werkflow-erp never calls Keycloak or any platform system
+- Werkflow-ERP never calls Keycloak or any platform system
 - Works with Keycloak, Azure AD, LDAP, or custom systems
 - Works without any platform system (platformUserId = null is valid)
 
@@ -120,15 +120,15 @@ Later queries can find: GET /api/v1/hr/employees/platform/uuid-123
 
 ### 2. **Zero External Dependencies**
 
-werkflow-erp MUST NOT:
-  - import com.werkflow.*;
+Werkflow-ERP MUST NOT:
+  - import com.Werkflow.*;
   - import org.keycloak.admin.client.*;
   - Call Admin Service for user validation
   - Validate user IDs against external systems
   - Have hardcoded Keycloak configuration
   - Assume BPMN orchestration
 
-werkflow-erp DOES:
+Werkflow-ERP DOES:
   - Validate JWT signature (Spring Security, no client code)
   - Store user IDs as opaque strings
   - Provide status update endpoints
@@ -136,8 +136,8 @@ werkflow-erp DOES:
 
 **CI/CD Check:**
 ```bash
-if grep -r "import com.werkflow" services/business/ ; then
-  echo "FAIL: werkflow-erp has forbidden imports"
+if grep -r "import com.Werkflow" services/business/ ; then
+  echo "FAIL: Werkflow-ERP has forbidden imports"
   exit 1
 fi
 ```
@@ -146,7 +146,7 @@ fi
 
 ### 3. **Status Updates (Not Workflows)**
 
-werkflow-erp doesn't have "workflow callbacks". It has **simple status update endpoints**:
+Werkflow-ERP doesn't have "workflow callbacks". It has **simple status update endpoints**:
 
 ```
 PATCH /api/v1/inventory/asset-requests/{id}/status
@@ -154,7 +154,7 @@ Body: { status: "APPROVED" }
 ```
 
 This endpoint:
-- ✅ Works when called by werkflow Engine
+- ✅ Works when called by Werkflow Engine
 - ✅ Works when called by Zapier
 - ✅ Works when called by cron job
 - ✅ Works when called by manual REST client
@@ -166,12 +166,12 @@ This endpoint:
 
 Entities store user IDs (e.g., `custodianUserId: string`), but:
 
-- werkflow-erp **never validates** them against external systems
-- werkflow-erp **never enriches** them with user names (caller's responsibility)
-- werkflow-erp **trusts the caller** (JWT signature is validation)
+- Werkflow-ERP **never validates** them against external systems
+- Werkflow-ERP **never enriches** them with user names (caller's responsibility)
+- Werkflow-ERP **trusts the caller** (JWT signature is validation)
 
 ```
-Scenario 1: werkflow (Keycloak user ID)
+Scenario 1: Werkflow (Keycloak user ID)
     custodianUserId = "keycloak-uuid-123"
 
 Scenario 2: SAP integration (Employee ID)
@@ -180,7 +180,7 @@ Scenario 2: SAP integration (Employee ID)
 Scenario 3: Manual testing (Email)
     custodianUserId = "alice@example.com"
 
-All three work identically. werkflow-erp doesn't care.
+All three work identically. Werkflow-ERP doesn't care.
 ```
 
 ---
@@ -223,13 +223,13 @@ Allows v2 in future without breaking v1 clients
 
 ## Data Flow Examples
 
-### Example 1: werkflow Testing an Asset Request Workflow
+### Example 1: Werkflow Testing an Asset Request Workflow
 
 ```
-1. werkflow Portal
+1. Werkflow Portal
    User: "I need a laptop"
    ↓
-2. werkflow Engine
+2. Werkflow Engine
    Calls: POST /api/v1/inventory/asset-requests
    Body: {
      requesterUserId: "keycloak-uuid",
@@ -237,25 +237,25 @@ Allows v2 in future without breaking v1 clients
      externalProcessId: "bpmn-proc-456"
    }
    ↓
-3. werkflow-erp
+3. Werkflow-ERP
    ✅ Validates assetDefinitionId exists
    ✅ Stores externalProcessId for tracking
    ✅ Returns: { id: 42, status: "PENDING" }
    ↓
-4. werkflow Engine
-   ✅ Executes approval task (no werkflow-erp involved)
+4. Werkflow Engine
+   ✅ Executes approval task (no Werkflow-ERP involved)
    ✅ On approval: PATCH /asset-requests/42/status
    Body: { status: "APPROVED" }
-   ✓ werkflow-erp updates and returns confirmation
-   ✅ Routes to procurement (no werkflow-erp involved)
-   ✅ Creates PO (no werkflow-erp involved)
+   ✓ Werkflow-ERP updates and returns confirmation
+   ✅ Routes to procurement (no Werkflow-ERP involved)
+   ✅ Creates PO (no Werkflow-ERP involved)
 ```
 
-werkflow-erp is **completely ignorant** of the approval logic, routing, or notifications.
+Werkflow-ERP is **completely ignorant** of the approval logic, routing, or notifications.
 
 ---
 
-### Example 2: Standalone HR System Using werkflow-erp
+### Example 2: Standalone HR System Using Werkflow-ERP
 
 ```
 1. HR Portal (custom built, no workflow)
@@ -265,7 +265,7 @@ werkflow-erp is **completely ignorant** of the approval logic, routing, or notif
    PATCH /api/v1/hr/leaves/99/status
    Body: { status: "APPROVED" }
    ↓
-3. werkflow-erp
+3. Werkflow-ERP
    ✅ Updates leave record
    ✅ Returns confirmation
    ↓
@@ -274,38 +274,38 @@ werkflow-erp is **completely ignorant** of the approval logic, routing, or notif
    ✅ Updates calendar (portal's responsibility)
 ```
 
-werkflow-erp has **no idea** that this is being used standalone.
+Werkflow-ERP has **no idea** that this is being used standalone.
 
 ---
 
-## Testing werkflow with werkflow-erp
+## Testing Werkflow with Werkflow-ERP
 
-werkflow can test its workflows using werkflow-erp as the **data provider**:
+Werkflow can test its workflows using Werkflow-ERP as the **data provider**:
 
 ```
 Integration Test: Asset Request Workflow
-├─ Start Docker: werkflow-erp + PostgreSQL
+├─ Start Docker: Werkflow-ERP + PostgreSQL
 ├─ Create test data: POST /api/v1/inventory/asset-definitions
 ├─ Run workflow: Deploy BPMN, start process instance
-├─ Verify calls: werkflow calls werkflow-erp REST APIs
+├─ Verify calls: Werkflow calls Werkflow-ERP REST APIs
 ├─ Check database: Confirm data stored correctly
 └─ Teardown: Stop containers, reset database
 ```
 
-werkflow tests its **orchestration logic** against werkflow-erp's **data APIs**.
+Werkflow tests its **orchestration logic** against Werkflow-ERP's **data APIs**.
 
 ---
 
-## What werkflow-erp Does NOT Know
+## What Werkflow-ERP Does NOT Know
 
-- Whether it's being used by werkflow, SAP, or a custom app
+- Whether it's being used by Werkflow, SAP, or a custom app
 - What business process is using its data
 - Whether approvals happened (that's the caller's problem)
 - Whether notifications were sent (that's the caller's problem)
 - Any workflow concepts (BPMN, tasks, gateways)
 - Any platform concepts (users, roles, authentication)
 
-werkflow-erp just stores and retrieves business domain data. That's it.
+Werkflow-ERP just stores and retrieves business domain data. That's it.
 
 ---
 
@@ -313,20 +313,18 @@ werkflow-erp just stores and retrieves business domain data. That's it.
 
 ## Business Flow Diagrams
 
-The following Mermaid diagrams illustrate the critical business processes that werkflow-erp supports. These are informational — they show how callers (werkflow, SAP, custom apps) orchestrate werkflow-erp API calls. werkflow-erp itself has no awareness of these flows.
+The following Mermaid diagrams illustrate the critical business processes that Werkflow-ERP supports. These are informational — they show how callers (Werkflow, SAP, custom apps) orchestrate Werkflow-ERP API calls. Werkflow-ERP itself has no awareness of these flows.
 
 ### 1. Asset Lifecycle Flow
 
 ```mermaid
 graph TD
-    A["EMPLOYEE
-Submits Asset Request"] -->|POST /inventory/asset-requests
+    A["EMPLOYEE Submits Asset Request"] -->|POST /inventory/asset-requests
 procurementRequired=true| B["INVENTORY
 AssetRequest Created
 status: PENDING"]
 
-    B -->|POST /asset-requests/{id}/
-process-instance| C["ENGINE SERVICE
+    B -->|"POST /asset-requests/{id}/process-instance"| C["ENGINE SERVICE
 BPMN Process Started
 Variables: assetRequestId,
 departmentCode,
@@ -523,9 +521,9 @@ remaining budget| F
 graph TD
     A["PROCUREMENT
 Team Creates
-Purchase Request"] -->|POST /purchase-requests
+Purchase Request"] -->|"POST /purchase-requests
 requestingDeptId,
-lineItems[budgetCategoryId]| B["PROCUREMENT
+lineItems[budgetCategoryId]"| B["PROCUREMENT
 PR Created
 prNumber: PR-{ts}
 status: DRAFT"]
@@ -691,7 +689,7 @@ graph TD
 Logs in with
 username/password"] -->|Keycloak
 OIDC flow| B["KEYCLOAK
-realm: werkflow
+realm: Werkflow
 Verifies credentials
 Issues JWT"]
 
@@ -703,9 +701,9 @@ realm_access.roles:
 Stores JWT
 in local storage"]
 
-    C -->|Every API request
+    C -->|"Every API request
 Authorization header
-Bearer {JWT}| D["BUSINESS SERVICE
+Bearer {JWT}"| D["BUSINESS SERVICE
 SecurityFilterChain"]
 
     D -->|JwtDecoder
