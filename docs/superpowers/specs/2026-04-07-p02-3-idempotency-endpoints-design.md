@@ -135,15 +135,15 @@ Content-Type: application/json
 
 {"vendorId": "v1", "amount": 1000}
 
-→ Response 201 Created, cached
+ (calls) Response 201 Created, cached
 
 [Client retries with same key and payload]
 
-→ Response 201 Created (from cache, no duplicate PR created)
+ (calls) Response 201 Created (from cache, no duplicate PR created)
 
 [Client retries with same key but different payload]
 
-→ Response 409 Conflict
+ (calls) Response 409 Conflict
 ```
 
 ### Non-Idempotent Request (Without Header)
@@ -153,11 +153,11 @@ Content-Type: application/json
 
 {"vendorId": "v1", "amount": 1000}
 
-→ Response 201 Created, NOT cached
+ (calls) Response 201 Created, NOT cached
 
 [Client retries without header]
 
-→ Response 201 Created (new PR created — duplicate)
+ (calls) Response 201 Created (new PR created — duplicate)
 ```
 
 **No behavior change** — IdempotencyFilter handles all caching; this phase only adds documentation.
@@ -240,15 +240,15 @@ All controller files across 4 domains:
 
 ## Success Criteria
 
-✅ All single-object POST endpoints include:
+[YES] All single-object POST endpoints include:
 - `@RequestHeader(name = "Idempotency-Key", required = false)` parameter
 - Enhanced `@Operation` description with idempotency explanation
 
-✅ Swagger/OpenAPI docs render the parameter correctly
+[YES] Swagger/OpenAPI docs render the parameter correctly
 
-✅ No behavioral changes — existing clients unaffected
+[YES] No behavioral changes — existing clients unaffected
 
-✅ Idempotency still works — filter intercepts header, caches responses
+[YES] Idempotency still works — filter intercepts header, caches responses
 
 ---
 

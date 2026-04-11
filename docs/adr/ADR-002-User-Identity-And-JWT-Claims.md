@@ -216,7 +216,7 @@ werkflow-erp:
 ### Scenario 2: werkflow + werkflow-erp (Shared Keycloak)
 
 ```
-User logs into werkflow → Keycloak
+User logs into werkflow  (calls) Keycloak
 Keycloak returns JWT (minimal claims)
 
 werkflow UI calls: GET /me (werkflow's own endpoint)
@@ -250,7 +250,7 @@ werkflow manages its own Keycloak integration. werkflow-erp is not involved.
 ## Implementation Plan
 
 1. **Create `User` entity and `UserRepository`**
-   - Maps keycloak_id → display_name, email
+   - Maps keycloak_id  (calls) display_name, email
 
 2. **Create `UserInfoResolver` service**
    - Calls OIDC `/userinfo` endpoint
@@ -275,7 +275,7 @@ werkflow manages its own Keycloak integration. werkflow-erp is not involved.
 
 7. **Write tests**
    - Unit: UserInfoResolver caching behavior
-   - Integration: werkflow → werkflow-erp with display names
+   - Integration: werkflow  (calls) werkflow-erp with display names
    - Security: verify JWT never contains names in logs
 
 ---
@@ -284,12 +284,12 @@ werkflow manages its own Keycloak integration. werkflow-erp is not involved.
 
 ### Positive
 
-- ✅ **Security**: No PII in JWT or logs
-- ✅ **Decoupling**: werkflow-erp works with any OIDC provider
-- ✅ **Scalability**: Single `/userinfo` call per session via cache
-- ✅ **Standards-compliant**: Follows OIDC spec and industry practice
-- ✅ **No breaking changes to JWT contract**: Clients can ignore new display names in responses
-- ✅ **Works for all scenarios**: Standalone, integrated, or future scenarios
+- [SECURITY] No PII in JWT or logs
+- [DECOUPLING] werkflow-erp works with any OIDC provider
+- [SCALABILITY] Single `/userinfo` call per session via cache
+- [STANDARDS] Follows OIDC spec and industry practice
+- [COMPATIBILITY] No breaking changes to JWT contract - clients can ignore new display names in responses
+- [FLEXIBILITY] Works for all scenarios - standalone, integrated, or future scenarios
 
 ### Trade-offs
 

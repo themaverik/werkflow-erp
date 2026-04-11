@@ -314,7 +314,7 @@ public class IdempotencyCleanupJob {
   X-Tenant-ID: ACME
   Body: { "vendorId": "v1", "amount": 1000 }
 
-  ↓
+   (next step)
 [SecurityFilterChain]
   ├─ BearerTokenAuthenticationFilter: Validate JWT
   ├─ TenantContextFilter: Extract tenantId = "ACME"
@@ -322,25 +322,25 @@ public class IdempotencyCleanupJob {
   │   ├─ Extract key = "abc-123-def"
   │   ├─ Capture body = '{"vendorId":"v1","amount":1000}'
   │   ├─ Query cache for "ACME:abc-123-def"
-  │   ├─ MISS → proceed
+  │   ├─ MISS  (calls) proceed
   │   │
   │   [DispatcherServlet]
   │     [PurchaseRequestController.create(dto)]
   │       [PurchaseRequestService.create(dto)]
   │         [PurchaseRequestRepository.save(entity)]
-  │         → CREATE PR-ACME-2026-00042 in DB
-  │     ↓ return 201 Created
+  │          (calls) CREATE PR-ACME-2026-00042 in DB
+  │      (next step) return 201 Created
   │
   │   └─ Response capture:
   │       ├─ Status: 201
   │       ├─ Headers: Content-Type: application/json; Location: /api/v1/.../42
   │       ├─ Body: {"id":42,"number":"PR-ACME-2026-00042",...}
   │       ├─ Store to IdempotencyService.store(...)
-  │       ├─ Write cache: "ACME:abc-123-def" → IdempotencyRecord
+  │       ├─ Write cache: "ACME:abc-123-def"  (calls) IdempotencyRecord
   │       └─ Write database: INSERT into idempotency_record
 
 [Client]
-  ↓ (network hiccup, client retries)
+   (next step) (network hiccup, client retries)
 
 [Client]
   POST /api/v1/procurement/purchase-requests
@@ -348,13 +348,13 @@ public class IdempotencyCleanupJob {
   X-Tenant-ID: ACME
   Body: { "vendorId": "v1", "amount": 1000 }  ← identical
 
-  ↓
+   (next step)
 [IdempotencyFilter]
   ├─ Extract key = "abc-123-def"
   ├─ Capture body = '{"vendorId":"v1","amount":1000}'
   ├─ Query cache for "ACME:abc-123-def"
   ├─ HIT! Retrieved IdempotencyRecord
-  ├─ Validate payload matches: ✓
+  ├─ Validate payload matches: [DONE]
   ├─ Return cached response immediately:
   │   ├─ Status: 201
   │   ├─ Headers: Content-Type: ...; Location: /api/v1/.../42

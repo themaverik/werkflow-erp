@@ -382,12 +382,12 @@ Change to:
 
 Find "Current Session State" section and change:
 ```markdown
-**Status**: P0.2.1-P0.2.2 COMPLETE ✓ — Idempotency infrastructure ready
+**Status**: P0.2.1-P0.2.2 COMPLETE [DONE] — Idempotency infrastructure ready
 ```
 
 To:
 ```markdown
-**Status**: P0.2.1-P0.2.3 COMPLETE ✓ — Idempotency fully integrated
+**Status**: P0.2.1-P0.2.3 COMPLETE [DONE] — Idempotency fully integrated
 ```
 
 And:
@@ -442,24 +442,24 @@ Expected: "nothing to commit, working tree clean"
 ## Self-Review Against Spec
 
 **Spec Coverage:**
-1. ✅ **All single-object POST endpoints** — Tasks 2-5 cover Procurement (4), Inventory (7), Finance (2-3), HR (3-5)
-2. ✅ **@RequestHeader(name = "Idempotency-Key", required = false)** — Each task step shows exact annotation
-3. ✅ **@Operation description** — Each step includes full description text
-4. ✅ **Swagger validation** — Task 6 verifies documentation rendering
-5. ✅ **Test suite** — Task 7 runs all tests
-6. ✅ **ROADMAP update** — Task 8 marks P0.2.3 complete
-7. ✅ **No behavior changes** — No service/filter logic modified, only annotations
+1. [YES] **All single-object POST endpoints** — Tasks 2-5 cover Procurement (4), Inventory (7), Finance (2-3), HR (3-5)
+2. [YES] **@RequestHeader(name = "Idempotency-Key", required = false)** — Each task step shows exact annotation
+3. [YES] **@Operation description** — Each step includes full description text
+4. [YES] **Swagger validation** — Task 6 verifies documentation rendering
+5. [YES] **Test suite** — Task 7 runs all tests
+6. [YES] **ROADMAP update** — Task 8 marks P0.2.3 complete
+7. [YES] **No behavior changes** — No service/filter logic modified, only annotations
 
 **No Placeholders:**
-- ✅ All steps have exact code, commands, and expected outputs
-- ✅ All controller names and method names specified
-- ✅ All git commands complete and ready to run
-- ✅ No "similar to" references; each controller update is explicit
+- [YES] All steps have exact code, commands, and expected outputs
+- [YES] All controller names and method names specified
+- [YES] All git commands complete and ready to run
+- [YES] No "similar to" references; each controller update is explicit
 
 **Scope Check:**
-- ✅ Single scope focus: P0.2.3 only (document endpoints)
-- ✅ No extraneous refactoring or feature additions
-- ✅ Clear boundary: single-object POST methods only
+- [YES] Single scope focus: P0.2.3 only (document endpoints)
+- [YES] No extraneous refactoring or feature additions
+- [YES] Clear boundary: single-object POST methods only
 
 ---
 

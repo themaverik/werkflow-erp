@@ -30,7 +30,7 @@ Werkflow-ERP is designed to be called from Werkflow BPMN workflows. This guide c
 ### Navigate to Connectors
 
 1. Open Werkflow Admin Portal: `http://localhost:4000/admin`
-2. Go to **Admin → Connectors**
+2. Go to **Admin  (calls) Connectors**
 3. Click **Add Connector**
 
 ### Fill in Details
@@ -405,8 +405,8 @@ Always use `X-Idempotency-Key` to prevent duplicate resource creation:
 ```
 
 This ensures:
-- First request → 201 Created, resource created
-- Retry with same key → 200 OK, cached response (no duplicate)
+- First request  (calls) 201 Created, resource created
+- Retry with same key  (calls) 200 OK, cached response (no duplicate)
 
 ---
 
