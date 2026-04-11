@@ -657,8 +657,8 @@ docker compose up -d postgres
 ## Documentation
 
 ### Guides
-- **[API Usage Guide](./docs/API-USAGE-GUIDE.md)** — Step-by-step examples for all 4 domains (HR, Finance, Procurement, Inventory). Use this for standalone Werkflow-ERP deployments.
-- **[Werkflow Integration Guide](./docs/WERKFLOW_INTEGRATION.md)** — Connector setup, BPMN workflow examples, user identity, ProcessInstanceId linking. Required only if integrating with Werkflow platform.
+- **[API Usage Guide](./docs/API-Usage-Guide.md)** — Step-by-step examples for all 4 domains (HR, Finance, Procurement, Inventory). Use this for standalone Werkflow-ERP deployments.
+- **[Werkflow Integration Guide](./docs/Werkflow-Integration-Guide.md)** — Connector setup, BPMN workflow examples, user identity, ProcessInstanceId linking. Required only if integrating with Werkflow platform.
 
 ### Reference
 - **[Architecture Decisions](./docs/ADR-001-Service-Boundary-Architecture.md)** — Design rationale

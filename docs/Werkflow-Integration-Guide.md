@@ -1,6 +1,6 @@
 # Werkflow Integration Guide
 
-**Note**: This guide is for integrating Werkflow-ERP with the Werkflow orchestration platform. If you are using Werkflow-ERP as a standalone service, see the [API Usage Guide](./API-USAGE-GUIDE.md) instead.
+**Note**: This guide is required only if you are integrating Werkflow-ERP with the Werkflow orchestration platform. If you are using Werkflow-ERP as a standalone service, see the [API Usage Guide](./API-Usage-Guide.md) instead.
 
 ---
 
@@ -712,6 +712,6 @@ curl http://localhost:8084/api/v1/actuator/health
 
 ## Related Documents
 
-- [API Usage Guide](./API-USAGE-GUIDE.md) - Complete API examples for all domains (standalone usage)
+- [API Usage Guide](./API-Usage-Guide.md) - Complete API examples for all domains (standalone usage)
 - [README](../README.md) - Project overview
 - [Architecture Decision](./ADR-001-Service-Boundary-Architecture.md) - Design rationale
