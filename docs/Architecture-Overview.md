@@ -1,4 +1,4 @@
-# werkflow-erp Architecture Overview
+# Werkflow-ERP Architecture Overview
 
 ## Core Principle: Complete Independence
 
@@ -319,43 +319,108 @@ The following Mermaid diagrams illustrate the critical business processes that w
 
 ```mermaid
 graph TD
-    A["EMPLOYEE<br/>Submits Asset Request"] -->|POST /inventory/asset-requests<br/>procurementRequired=true| B["INVENTORY<br/>AssetRequest Created<br/>status: PENDING"]
+    A["EMPLOYEE
+Submits Asset Request"] -->|POST /inventory/asset-requests
+procurementRequired=true| B["INVENTORY
+AssetRequest Created
+status: PENDING"]
 
-    B -->|POST /asset-requests/{id}/<br/>process-instance| C["ENGINE SERVICE<br/>BPMN Process Started<br/>Variables: assetRequestId,<br/>departmentCode,<br/>custodianGroupName"]
+    B -->|POST /asset-requests/{id}/
+process-instance| C["ENGINE SERVICE
+BPMN Process Started
+Variables: assetRequestId,
+departmentCode,
+custodianGroupName"]
 
-    C -->|User Task:<br/>Manager Reviews| D{"Manager<br/>Decision"}
+    C -->|User Task:
+Manager Reviews| D{"Manager
+Decision"}
 
-    D -->|APPROVE| E["INVENTORY<br/>AssetRequest.status<br/>= APPROVED"]
-    D -->|REJECT| F["INVENTORY<br/>AssetRequest.status<br/>= REJECTED<br/>END FLOW"]
+    D -->|APPROVE| E["INVENTORY
+AssetRequest.status
+= APPROVED"]
+    D -->|REJECT| F["INVENTORY
+AssetRequest.status
+= REJECTED
+END FLOW"]
 
-    E -->|Procurement Flag<br/>procurementRequired=true<br/>Callback| G["INVENTORY<br/>AssetRequest.status<br/>= PROCUREMENT_INITIATED"]
+    E -->|Procurement Flag
+procurementRequired=true
+Callback| G["INVENTORY
+AssetRequest.status
+= PROCUREMENT_INITIATED"]
 
-    G -->|POST /procurement/<br/>purchase-requests<br/>include budgetCategoryId| H["PROCUREMENT<br/>Purchase Request Created<br/>status: DRAFT"]
+    G -->|POST /procurement/
+purchase-requests
+include budgetCategoryId| H["PROCUREMENT
+Purchase Request Created
+status: DRAFT"]
 
-    H -->|POST /finance/budget-check<br/>Request: dept, amount,<br/>fiscalYear| I{"Budget<br/>Available?"}
+    H -->|POST /finance/budget-check
+Request: dept, amount,
+fiscalYear| I{"Budget
+Available?"}
 
-    I -->|NO| J["PR REJECTED<br/>Notify Requester<br/>END FLOW"]
-    I -->|YES| K["PROCUREMENT<br/>PR.status =<br/>PENDING_APPROVAL"]
+    I -->|NO| J["PR REJECTED
+Notify Requester
+END FLOW"]
+    I -->|YES| K["PROCUREMENT
+PR.status =
+PENDING_APPROVAL"]
 
-    K -->|Manager Approval<br/>via BPMN| L["PROCUREMENT<br/>PR.status = APPROVED"]
+    K -->|Manager Approval
+via BPMN| L["PROCUREMENT
+PR.status = APPROVED"]
 
-    L -->|POST /procurement/<br/>purchase-orders<br/>vendorId, prId| M["PROCUREMENT<br/>Purchase Order Created<br/>PO.status: CONFIRMED"]
+    L -->|POST /procurement/
+purchase-orders
+vendorId, prId| M["PROCUREMENT
+Purchase Order Created
+PO.status: CONFIRMED"]
 
-    M -->|Vendor Delivers| N["LOGISTICS<br/>Goods in Transit"]
+    M -->|Vendor Delivers| N["LOGISTICS
+Goods in Transit"]
 
-    N -->|POST /procurement/<br/>receipts<br/>poId, acceptedQty| O["PROCUREMENT<br/>Receipt Created (GRN)<br/>status: COMPLETE"]
+    N -->|POST /procurement/
+receipts
+poId, acceptedQty| O["PROCUREMENT
+Receipt Created (GRN)
+status: COMPLETE"]
 
-    O -->|Manual Step<br/>Future: Webhook| P["INVENTORY<br/>AssetInstance Created<br/>status: AVAILABLE<br/>assetTag assigned"]
+    O -->|Manual Step
+Future: Webhook| P["INVENTORY
+AssetInstance Created
+status: AVAILABLE
+assetTag assigned"]
 
-    P -->|POST /custody-records<br/>assetId, custodianDeptId,<br/>custodianUserId| Q["INVENTORY<br/>CustodyRecord Created<br/>status: ACTIVE<br/>AssetInstance.status: IN_USE"]
+    P -->|POST /custody-records
+assetId, custodianDeptId,
+custodianUserId| Q["INVENTORY
+CustodyRecord Created
+status: ACTIVE
+AssetInstance.status: IN_USE"]
 
-    Q -->|Asset needs<br/>relocation| R["INVENTORY<br/>TransferRequest Created<br/>fromDeptId to toDeptId"]
+    Q -->|Asset needs
+relocation| R["INVENTORY
+TransferRequest Created
+fromDeptId to toDeptId"]
 
-    R -->|Manager Approves| S["INVENTORY<br/>Transfer.status =<br/>COMPLETED<br/>Old Custody ended<br/>New Custody created"]
+    R -->|Manager Approves| S["INVENTORY
+Transfer.status =
+COMPLETED
+Old Custody ended
+New Custody created"]
 
-    Q -->|Maintenance<br/>Scheduled| T["INVENTORY<br/>MaintenanceRecord<br/>Created<br/>status: SCHEDULED"]
+    Q -->|Maintenance
+Scheduled| T["INVENTORY
+MaintenanceRecord
+Created
+status: SCHEDULED"]
 
-    T -->|Service completed| U["INVENTORY<br/>MaintenanceRecord<br/>status: COMPLETED<br/>nextMaintenanceDate set"]
+    T -->|Service completed| U["INVENTORY
+MaintenanceRecord
+status: COMPLETED
+nextMaintenanceDate set"]
 ```
 
 ---
@@ -364,40 +429,90 @@ graph TD
 
 ```mermaid
 graph TD
-    A["FINANCE MANAGER<br/>Creates Budget Plan"] -->|POST /finance/budgets<br/>departmentId, fiscalYear,<br/>totalAmount| B["FINANCE<br/>BudgetPlan Created<br/>status: DRAFT<br/>allocatedAmount: 0"]
+    A["FINANCE MANAGER
+Creates Budget Plan"] -->|POST /finance/budgets
+departmentId, fiscalYear,
+totalAmount| B["FINANCE
+BudgetPlan Created
+status: DRAFT
+allocatedAmount: 0"]
 
-    B -->|POST /finance/budget-<br/>line-items<br/>categoryId, lineAmount| C["FINANCE<br/>BudgetLineItems Created<br/>linked to BudgetPlan"]
+    B -->|POST /finance/budget-
+line-items
+categoryId, lineAmount| C["FINANCE
+BudgetLineItems Created
+linked to BudgetPlan"]
 
-    C -->|Manager approves plan| D["FINANCE<br/>BudgetPlan.status<br/>= APPROVED<br/>allocatedAmount updated"]
+    C -->|Manager approves plan| D["FINANCE
+BudgetPlan.status
+= APPROVED
+allocatedAmount updated"]
 
-    D -->|Plan becomes ACTIVE| E["FINANCE<br/>BudgetPlan.status<br/>= ACTIVE"]
+    D -->|Plan becomes ACTIVE| E["FINANCE
+BudgetPlan.status
+= ACTIVE"]
 
-    E -->|Employee submits<br/>PurchaseRequest| F["PROCUREMENT<br/>PR created with<br/>budgetCategoryId"]
+    E -->|Employee submits
+PurchaseRequest| F["PROCUREMENT
+PR created with
+budgetCategoryId"]
 
-    F -->|BEFORE PR APPROVAL:<br/>POST /finance/budget-check<br/>dept, amount, fiscalYear| G{"Check:<br/>allocated - spent<br/>= available?"}
+    F -->|BEFORE PR APPROVAL:
+POST /finance/budget-check
+dept, amount, fiscalYear| G{"Check:
+allocated - spent
+= available?"}
 
-    G -->|Insufficient| H["PR REJECTED<br/>Notify Requester<br/>Suggest defer to<br/>next fiscal period"]
-    G -->|Sufficient| I["PR can proceed<br/>to approval flow"]
+    G -->|Insufficient| H["PR REJECTED
+Notify Requester
+Suggest defer to
+next fiscal period"]
+    G -->|Sufficient| I["PR can proceed
+to approval flow"]
 
-    I -->|Manager approves PR<br/>via BPMN| J["PROCUREMENT<br/>PR.status =<br/>APPROVED to ORDERED"]
+    I -->|Manager approves PR
+via BPMN| J["PROCUREMENT
+PR.status =
+APPROVED to ORDERED"]
 
-    J -->|Expense submitted| K["FINANCE<br/>Expense Created<br/>budgetLineItemId,<br/>amount, status: SUBMITTED"]
+    J -->|Expense submitted| K["FINANCE
+Expense Created
+budgetLineItemId,
+amount, status: SUBMITTED"]
 
-    K -->|Approval threshold check<br/>GET /approval-thresholds<br/>match by amount| L{"Approval<br/>Threshold<br/>Match?"}
+    K -->|Approval threshold check
+GET /approval-thresholds
+match by amount| L{"Approval
+Threshold
+Match?"}
 
-    L -->|No match| M["Amount outside<br/>approval bands<br/>Escalate to SUPER_ADMIN"]
-    L -->|Match| N["BPMN Process<br/>Routes to requiredRole<br/>approvalOrder sequence"]
+    L -->|No match| M["Amount outside
+approval bands
+Escalate to SUPER_ADMIN"]
+    L -->|Match| N["BPMN Process
+Routes to requiredRole
+approvalOrder sequence"]
 
-    N -->|Multi-level approval| O{"All Approvers<br/>Signed?"}
+    N -->|Multi-level approval| O{"All Approvers
+Signed?"}
 
-    O -->|Rejected| P["Expense Rejected<br/>status: REJECTED"]
-    O -->|Approved| Q["Expense Approved<br/>status: APPROVED"]
+    O -->|Rejected| P["Expense Rejected
+status: REJECTED"]
+    O -->|Approved| Q["Expense Approved
+status: APPROVED"]
 
-    Q -->|Manual Update<br/>Future: Auto-increment| R["FINANCE<br/>BudgetPlan.spentAmount<br/>+= expense.amount<br/>POST-MVP FIX"]
+    Q -->|Manual Update
+Future: Auto-increment| R["FINANCE
+BudgetPlan.spentAmount
++= expense.amount
+POST-MVP FIX"]
 
-    R -->|Recompute| S["FINANCE<br/>availableAmount<br/>= allocated - spent"]
+    R -->|Recompute| S["FINANCE
+availableAmount
+= allocated - spent"]
 
-    S -->|Next PR checks<br/>remaining budget| F
+    S -->|Next PR checks
+remaining budget| F
 ```
 
 ---
@@ -406,41 +521,91 @@ graph TD
 
 ```mermaid
 graph TD
-    A["PROCUREMENT<br/>Team Creates<br/>Purchase Request"] -->|POST /purchase-requests<br/>requestingDeptId,<br/>lineItems[budgetCategoryId]| B["PROCUREMENT<br/>PR Created<br/>prNumber: PR-{ts}<br/>status: DRAFT"]
+    A["PROCUREMENT
+Team Creates
+Purchase Request"] -->|POST /purchase-requests
+requestingDeptId,
+lineItems[budgetCategoryId]| B["PROCUREMENT
+PR Created
+prNumber: PR-{ts}
+status: DRAFT"]
 
-    B -->|BEFORE APPROVAL:<br/>POST /finance/budget-check| C{"Budget<br/>Gate"}
+    B -->|BEFORE APPROVAL:
+POST /finance/budget-check| C{"Budget
+Gate"}
 
-    C -->|FAILED| D["PR REJECTED<br/>Can't proceed"]
-    C -->|PASSED| E["PR APPROVED<br/>status: PENDING_APPROVAL"]
+    C -->|FAILED| D["PR REJECTED
+Can't proceed"]
+    C -->|PASSED| E["PR APPROVED
+status: PENDING_APPROVAL"]
 
-    E -->|Manager Approval| F["PROCUREMENT<br/>PR.status =<br/>APPROVED"]
+    E -->|Manager Approval| F["PROCUREMENT
+PR.status =
+APPROVED"]
 
-    F -->|POST /purchase-orders<br/>vendorId,<br/>purchaseRequestId| G["PROCUREMENT<br/>PO Created<br/>poNumber: PO-{ts}<br/>status: DRAFT"]
+    F -->|POST /purchase-orders
+vendorId,
+purchaseRequestId| G["PROCUREMENT
+PO Created
+poNumber: PO-{ts}
+status: DRAFT"]
 
-    G -->|Line items added<br/>from PR| H["PROCUREMENT<br/>PoLineItems Created<br/>prLineItemId ref"]
+    G -->|Line items added
+from PR| H["PROCUREMENT
+PoLineItems Created
+prLineItemId ref"]
 
-    H -->|Manager confirms| I["PROCUREMENT<br/>PO.status =<br/>CONFIRMED"]
+    H -->|Manager confirms| I["PROCUREMENT
+PO.status =
+CONFIRMED"]
 
-    I -->|PO sent to vendor| J["VENDOR<br/>Processes Order"]
+    I -->|PO sent to vendor| J["VENDOR
+Processes Order"]
 
-    J -->|Goods shipped| K["LOGISTICS<br/>In Transit"]
+    J -->|Goods shipped| K["LOGISTICS
+In Transit"]
 
-    K -->|POST /receipts<br/>poId, lineItems<br/>receiveQty, condition| L["PROCUREMENT<br/>Receipt Created (GRN)<br/>receiptNumber: GR-{ts}"]
+    K -->|POST /receipts
+poId, lineItems
+receiveQty, condition| L["PROCUREMENT
+Receipt Created (GRN)
+receiptNumber: GR-{ts}"]
 
-    L -->|Goods inspected<br/>Quality Check| M{"QC PROCESS<br/>acceptedQty vs<br/>rejectedQty"}
+    L -->|Goods inspected
+Quality Check| M{"QC PROCESS
+acceptedQty vs
+rejectedQty"}
 
-    M -->|Issues found| N["DISCREPANCY<br/>discrepancyNotes<br/>recorded"]
-    M -->|All good| O["RECEIPT COMPLETE<br/>Receipt.status =<br/>COMPLETE"]
+    M -->|Issues found| N["DISCREPANCY
+discrepancyNotes
+recorded"]
+    M -->|All good| O["RECEIPT COMPLETE
+Receipt.status =
+COMPLETE"]
 
-    O -->|Manual Step<br/>Future: Webhook| P["INVENTORY<br/>AssetInstance Created<br/>assetTag assigned<br/>status: AVAILABLE"]
+    O -->|Manual Step
+Future: Webhook| P["INVENTORY
+AssetInstance Created
+assetTag assigned
+status: AVAILABLE"]
 
-    P -->|POST /inventory/stock<br/>assetDefinitionId,<br/>quantityTotal += accepted| Q["INVENTORY<br/>Stock Updated<br/>quantityAvailable<br/>+= acceptedQty"]
+    P -->|POST /inventory/stock
+assetDefinitionId,
+quantityTotal += accepted| Q["INVENTORY
+Stock Updated
+quantityAvailable
++= acceptedQty"]
 
-    Q -->|Asset ready<br/>for assignment| R["INVENTORY<br/>CustodyRecord Created<br/>Asset assigned to user/dept"]
+    Q -->|Asset ready
+for assignment| R["INVENTORY
+CustodyRecord Created
+Asset assigned to user/dept"]
 
-    N -->|Return flow| S["RETURN TO VENDOR<br/>or PR revision"]
+    N -->|Return flow| S["RETURN TO VENDOR
+or PR revision"]
 
-    D -->|Fix budget<br/>or defer| B
+    D -->|Fix budget
+or defer| B
 ```
 
 ---
@@ -449,27 +614,71 @@ graph TD
 
 ```mermaid
 graph TD
-    A["EXTERNAL EVENT<br/>e.g., Asset Request<br/>submitted by Employee"] -->|Business Service calls<br/>Engine REST to start<br/>BPMN process| B["ENGINE SERVICE<br/>BPMN Process<br/>Instance Created"]
+    A["EXTERNAL EVENT
+e.g., Asset Request
+submitted by Employee"] -->|Business Service calls
+Engine REST to start
+BPMN process| B["ENGINE SERVICE
+BPMN Process
+Instance Created"]
 
-    B -->|Retrieve start variables<br/>GET /process-variables| C["BUSINESS SERVICE<br/>AssetRequest supplies:<br/>- assetRequestId<br/>- requesterUserId<br/>- departmentCode<br/>- custodianGroupName<br/>- procurementGroupName"]
+    B -->|Retrieve start variables
+GET /process-variables| C["BUSINESS SERVICE
+AssetRequest supplies:
+- assetRequestId
+- requesterUserId
+- departmentCode
+- custodianGroupName
+- procurementGroupName"]
 
-    C -->|Engine injects variables<br/>into BPMN process| D["ENGINE SERVICE<br/>Variables available<br/>in User Tasks and<br/>Service Tasks"]
+    C -->|Engine injects variables
+into BPMN process| D["ENGINE SERVICE
+Variables available
+in User Tasks and
+Service Tasks"]
 
-    D -->|User Task:<br/>Assign to Manager| E["KEYCLOAK USER<br/>Keycloak user logs in<br/>sees approval task"]
+    D -->|User Task:
+Assign to Manager| E["KEYCLOAK USER
+Keycloak user logs in
+sees approval task"]
 
-    E -->|Manager<br/>Submits Decision| F["ENGINE SERVICE<br/>Task Complete<br/>Decision variable set<br/>Process continues"]
+    E -->|Manager
+Submits Decision| F["ENGINE SERVICE
+Task Complete
+Decision variable set
+Process continues"]
 
-    F -->|Engine Service<br/>Calls Callback| G["CALLBACK:<br/>POST /callback/{action}?<br/>processInstanceId&approverUserId&reason"]
+    F -->|Engine Service
+Calls Callback| G["CALLBACK:
+POST /callback/{action}?
+processInstanceId&approverUserId&reason"]
 
-    G -->|Router selects<br/>callback handler| H{"Action<br/>Type"}
+    G -->|Router selects
+callback handler| H{"Action
+Type"}
 
-    H -->|APPROVE| I["BUSINESS SERVICE<br/>AssetRequest.status =<br/>APPROVED<br/>approvedByUserId set"]
-    H -->|REJECT| J["BUSINESS SERVICE<br/>AssetRequest.status =<br/>REJECTED<br/>rejectionReason set"]
-    H -->|PROCUREMENT| K["BUSINESS SERVICE<br/>AssetRequest.status =<br/>PROCUREMENT_INITIATED<br/>Auto-creates PR (future)"]
+    H -->|APPROVE| I["BUSINESS SERVICE
+AssetRequest.status =
+APPROVED
+approvedByUserId set"]
+    H -->|REJECT| J["BUSINESS SERVICE
+AssetRequest.status =
+REJECTED
+rejectionReason set"]
+    H -->|PROCUREMENT| K["BUSINESS SERVICE
+AssetRequest.status =
+PROCUREMENT_INITIATED
+Auto-creates PR (future)"]
 
-    I -->|Continue Workflow| L["ENGINE SERVICE<br/>Next User Task<br/>or Service Task"]
-    J -->|Exit Workflow| M["ENGINE SERVICE<br/>Process Terminated<br/>Notify requester"]
-    K -->|Procurement Task| N["ENGINE SERVICE<br/>Route to procurement<br/>manager task queue"]
+    I -->|Continue Workflow| L["ENGINE SERVICE
+Next User Task
+or Service Task"]
+    J -->|Exit Workflow| M["ENGINE SERVICE
+Process Terminated
+Notify requester"]
+    K -->|Procurement Task| N["ENGINE SERVICE
+Route to procurement
+manager task queue"]
 ```
 
 ---
@@ -478,30 +687,67 @@ graph TD
 
 ```mermaid
 graph TD
-    A["KEYCLOAK USER<br/>Logs in with<br/>username/password"] -->|Keycloak<br/>OIDC flow| B["KEYCLOAK<br/>realm: werkflow<br/>Verifies credentials<br/>Issues JWT"]
+    A["KEYCLOAK USER
+Logs in with
+username/password"] -->|Keycloak
+OIDC flow| B["KEYCLOAK
+realm: werkflow
+Verifies credentials
+Issues JWT"]
 
-    B -->|JWT contains:<br/>realm_access.roles:<br/>- admin, hr_manager,<br/>  finance_manager,<br/>  procurement_manager| C["CLIENT APP<br/>Stores JWT<br/>in local storage"]
+    B -->|JWT contains:
+realm_access.roles:
+- admin, hr_manager,
+  finance_manager,
+  procurement_manager| C["CLIENT APP
+Stores JWT
+in local storage"]
 
-    C -->|Every API request<br/>Authorization header<br/>Bearer {JWT}| D["BUSINESS SERVICE<br/>SecurityFilterChain"]
+    C -->|Every API request
+Authorization header
+Bearer {JWT}| D["BUSINESS SERVICE
+SecurityFilterChain"]
 
-    D -->|JwtDecoder<br/>validates signature| E{"Signature<br/>Valid?"}
+    D -->|JwtDecoder
+validates signature| E{"Signature
+Valid?"}
 
-    E -->|NO| F["401 Unauthorized<br/>Token rejected"]
-    E -->|YES| G["JWT Decoded<br/>Claims extracted"]
+    E -->|NO| F["401 Unauthorized
+Token rejected"]
+    E -->|YES| G["JWT Decoded
+Claims extracted"]
 
-    G -->|KeycloakRoleConverter<br/>reads realm_access.roles| H["CONVERT TO<br/>GrantedAuthority<br/>ROLE_ADMIN<br/>ROLE_HR_MANAGER<br/>ROLE_FINANCE_MANAGER"]
+    G -->|KeycloakRoleConverter
+reads realm_access.roles| H["CONVERT TO
+GrantedAuthority
+ROLE_ADMIN
+ROLE_HR_MANAGER
+ROLE_FINANCE_MANAGER"]
 
-    H -->|Routing by<br/>@PreAuthorize| I{"Required<br/>Role?"}
+    H -->|Routing by
+@PreAuthorize| I{"Required
+Role?"}
 
-    I -->|Missing role| J["403 Forbidden<br/>Insufficient permissions"]
-    I -->|Has role| K["ALLOWED<br/>Request proceeds<br/>to handler"]
+    I -->|Missing role| J["403 Forbidden
+Insufficient permissions"]
+    I -->|Has role| K["ALLOWED
+Request proceeds
+to handler"]
 
-    K -->|Handler executes| L["BUSINESS SERVICE<br/>API Endpoint<br/>Database operation"]
+    K -->|Handler executes| L["BUSINESS SERVICE
+API Endpoint
+Database operation"]
 
-    D -->|CORS check| M{"Origin<br/>Allowed?"}
+    D -->|CORS check| M{"Origin
+Allowed?"}
 
-    M -->|localhost:4000<br/>localhost:4001<br/>localhost:3000| N["CORS OK<br/>Response headers<br/>set"]
-    M -->|Other origin| O["CORS Blocked<br/>No response headers"]
+    M -->|localhost:4000
+localhost:4001
+localhost:3000| N["CORS OK
+Response headers
+set"]
+    M -->|Other origin| O["CORS Blocked
+No response headers"]
 ```
 
 ---
