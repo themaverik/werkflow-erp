@@ -68,9 +68,8 @@ logs/
 .specstory/
 .claude/
 
-# LLM configurations (do not commit)
+# Personal LLM config files (not project-level)
 LLM.md
-CLAUDE.md
 CHATGPT.md
 GROK.md
 DEEPSEEK.md
