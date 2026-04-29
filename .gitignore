@@ -1,17 +1,9 @@
-# Compiled class files
+# Build artifacts
 *.class
-
-# Log files
-*.log
-
-# Package Files
 *.jar
 *.war
 *.nar
 *.ear
-*.zip
-*.tar.gz
-*.rar
 
 # Maven
 target/
@@ -25,56 +17,33 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# Eclipse
-.classpath
-.project
-.settings/
-bin/
-
-# IntelliJ IDEA
+# IDE
 .idea/
 *.iws
 *.iml
 *.ipr
-out/
-
-# NetBeans
+.classpath
+.project
+.settings/
+.vscode/
 /nbproject/private/
 /nbbuild/
-/dist/
 /nbdist/
 /.nb-gradle/
-
-# VS Code
-.vscode/
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Application
-application-local.yml
-application-local.properties
-
 # Logs
-logs/
 *.log
+logs/
 
-# Temporary files
+# Temp files
 *.tmp
 *.bak
 *.swp
 *~
-.specstory/
-.claude/
-
-# LLM configurations (do not commit)
-LLM.md
-CLAUDE.md
-CHATGPT.md
-GROK.md
-DEEPSEEK.md
-GEMINI.md
 
 # Database
 *.db
@@ -92,13 +61,10 @@ yarn-error.log*
 .npm/
 .eslintcache
 
-# Environment files
+# Environment (never commit real values — use .env.*.example files)
 .env
 .env.local
 .env.*.local
-.env.development.local
-.env.test.local
-.env.production.local
 .env.shared
 .env.engine
 .env.admin
@@ -107,31 +73,30 @@ config/env/.env.shared
 config/env/.env.engine
 config/env/.env.admin
 config/env/.env.business
+application-local.yml
+application-local.properties
 
 # Docker
 docker-compose.override.yml
 .docker/
 volumes/
 
-# Service-specific
+# Service and frontend build output
 services/*/target/
 services/*/.mvn/
 frontends/*/node_modules/
 frontends/*/.next/
 frontends/*/out/
 frontends/*/.env.local
-
-# Build artifacts
 dist/
 build/
 out/
 
+# Test artifacts
+.playwright/
+playwright-report/
+test-results/
+
 # Archives
 /archive/
 docs/archive/
-
-.playwright/
-.playwright-cli/
-.playwright-mcp/
-.playwright-*.worktrees/
-.superpowers/

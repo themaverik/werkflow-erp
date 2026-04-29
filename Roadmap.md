@@ -1,240 +1,126 @@
-# werkflow-erp Implementation Roadmap
+# Werkflow ERP — Roadmap
 
-**Project**: Standalone ERP Data Service for HR, Finance, Procurement, Inventory
-**Status**: Pre-MVP — Extracted from main werkflow platform
-**Last Updated**: 2026-04-10
-**Architecture**: See `docs/ADR-001-Service-Boundary-Architecture.md`
+**Project**: Standalone ERP Data Service — HR, Finance, Procurement, Inventory
+**Master Roadmap**: `~/Projects/werkflow-platform/docs/Roadmap.md` (authoritative for all future tasks)
+**Last Updated**: 2026-04-29
+**Target**: Internal Enterprise Demo — June 2026
 
----
-
-## How To Use This File
-
-Single source of truth for task tracking and session continuity.
-
-### Task Status Markers
-
-| Marker | Status |
-|--------|--------|
-| `[ ]` | Pending |
-| `[~]` | In Progress — note what remains |
-| `[x]` | Completed — note commit hash if applicable |
-| `[!]` | Blocked — note reason |
-
-### Resume Instructions
-
-1. Find first `[~]` task in active phase
-2. If none, start first `[ ]` in lowest active phase
-3. Branch check: confirm you're on the right branch before writing code
+> Future tasks in this file are synced from the master Roadmap (M1 + M7 ERP share).
 
 ---
 
 ## Current Session State
 
-**Status**: P1.5.1 COMPLETE ✓ | P1.5.2 DEFERRED ⏳ — Architectural issue documented
-**Active Phase**: P1 — Quality & Integration
-**Current Task**: P1.5.2 — Integration tests (deferred due to TenantContext mocking limitation)
-**Last Commit**: 4f1c2ee test(P1.5.1): implement 24 contract tests for 4 domain services
+**Active Phase**: M1 — ERP Enterprise APIs
+**Current Task**: P1.5.2 (integration tests — deferred, solution documented) → P1.6.1 (next)
 **Branch**: feature/p1.5-test-suite
-**Test Status**: 255 tests passing, 0 failures (+24 contract tests from 231 baseline)
-**Note**: P1.5.2 architectural issue documented in `docs/P1.5.2-INTEGRATION-TESTS-IMPLEMENTATION-NOTES.md` — next session to use @WebMvcTest approach
+**Test Status**: 255 tests passing, 0 failures
+**Note**: P1.5.2 architectural issue documented in `docs/P1.5.2-INTEGRATION-TESTS-IMPLEMENTATION-NOTES.md` — use `@WebMvcTest + MockMvc` approach
 
 ---
 
 ## Phase Summary
 
-| Phase | Status | Completion |
-|-------|--------|-----------|
-| **P0 — Critical Path** | ✅ COMPLETE | 6/6 items (Multi-tenant, Idempotency, processInstanceId, FK validation, API versioning, Pagination) |
-| **P1.1 — API Standardization** | ✅ COMPLETE | Error responses, Enum metadata, DTO examples (118 tests passing) |
-| **P1.2 — HR/Keycloak Linking** | ✅ COMPLETE | PATCH endpoint, tenant isolation, conflict detection (13 tests passing) |
-| **P1.2.5 — User Identity (OIDC)** | ✅ COMPLETE | 6 phases, 231 tests passing (18 hours) |
-| **P1.3 — User Name Enrichment** | ⏸️ DEFERRED | Superseded by P1.2.5 (better architecture) |
-| **P1.4 — Number Generation** | ✅ COMPLETE | PR/PO/GRN sequence fix (database sequences) |
-| **P1.5 — Test Suite** | 🔄 IN PROGRESS | P1.5.1 ✅ (24 contract tests, 255 total), P1.5.2 ⏳ (integration tests) |
-| **P2 — Documentation & Release** | ⏳ PENDING | README, API guide, integration guide (6 hours) |
-| **P3 — Future Enhancements** | 🔮 FUTURE | Audit logging, CapEx, filtering, webhooks, bulk ops, custom fields |
+| Phase | Status |
+|-------|--------|
+| P0 — Critical Path | ✅ COMPLETE |
+| P1.1 — API Standardisation | ✅ COMPLETE |
+| P1.2 — HR/Keycloak Linking | ✅ COMPLETE |
+| P1.2.5 — User Identity (OIDC) | ✅ COMPLETE — 231 tests |
+| P1.3 — User Name Enrichment | ⏸️ DEFERRED — superseded by P1.2.5 |
+| P1.4 — Number Generation | ✅ COMPLETE |
+| P1.5.1 — Contract Tests | ✅ COMPLETE — 255 total tests |
+| P1.5.2 — Integration Tests | ⏳ PENDING — blocked on TenantContext; solution documented |
+| M1 — Enterprise Integration APIs | ⏳ PENDING — P1.6.1–P1.6.3 |
+| M7 — CI/CD (ERP share) | ⏳ PENDING |
+| P2 — Documentation | ⏳ PENDING — deferred until after June demo |
+| P3 — Future Enhancements | 🔮 POST-MVP |
 
 ---
 
-## Execution Plan
+## Active: M1 — ERP Enterprise Integration APIs
 
-### ✅ P0 — Critical Path to Production (COMPLETE)
+**Deps**: none
+**Estimate**: 8–10 hours
+**Required by**: werkflow-enterprise M3 (Groups 2–3 cannot wire ERP data without these)
 
-All foundation work complete. Summary:
-- [x] **P0.1** Multi-Tenant Isolation (TenantContext, TenantContextFilter, all 23 entities scoped)
-- [x] **P0.2** Idempotency (IdempotencyRecord entity, IdempotencyFilter)
-- [x] **P0.3** processInstanceId Pattern (asset/purchase request workflows)
-- [x] **P0.4** Cross-Domain FK Validation (CrossDomainValidator service)
-- [x] **P0.5** API Versioning (/api/v1 context path, all docs updated)
-- [x] **P0.6** Pagination (all 18-20 list endpoints with Page<T>, Pageable, sorting)
+- [ ] **P1.5.2** Integration tests — `@WebMvcTest + MockMvc` approach; spec in `docs/P1.5.2-INTEGRATION-TESTS-SPEC.md` (4h)
 
-**Test Status**: 40/40 tests passing (integration tests verified)
+- [ ] **P1.6.1** Extend `users` table + profile endpoint
+  - Add columns: `department_code`, `employee_id`, `cost_center`, `is_poc` to `users` table
+  - Flyway V25 migration
+  - New endpoint: `GET /api/v1/users/{keycloakId}/profile`
+  - Required by ADR-003 (Keycloak semantic roles) + ADR-005 (department-scoped routing)
+  - Estimate: 3h
 
----
+- [ ] **P1.6.2** CustodyMapping entity + API
+  - Move `CustodyMapping` from werkflow-enterprise admin-service to werkflow-erp (ADR-004)
+  - Entity: `custody_owner (VARCHAR), candidate_groups (TEXT[]), tenant_id`
+  - Endpoints: `GET/POST/PUT/DELETE /api/v1/custody-mappings`
+  - Tenant-scoped, paginated, idempotent upsert
+  - Required by ADR-004
+  - Estimate: 3h
 
-### ✅ P1.1 — API Contract Standardization (COMPLETE)
-
-- [x] **P1.1.1** Expose enum metadata endpoint (GET /api/v1/meta/enums, 15 enums, 4 domains)
-- [x] **P1.1.2** Add request/response examples to all DTOs (@Schema annotations, realistic JSON)
-- [x] **P1.1.3** Standardize error responses (ErrorResponse DTO, GlobalExceptionHandler, 7 tests)
-
-**Test Status**: 118 tests passing (P0 + P1.1 combined)
-
----
-
-### ✅ P1.2 — HR Module: Keycloak Linking (COMPLETE)
-
-- [x] **P1.2.1** Create keycloak-link endpoint (PATCH /api/v1/hr/employees/{id}/keycloak-link, idempotent, tenant-scoped, conflict detection)
-- [x] **P1.2.2** Document HR integration flow (Design spec, Implementation plan)
-
-**Test Status**: 13 new tests (4 DTO + 5 service + 4 controller), all passing
+- [ ] **P1.6.3** Department API verification + user resolution endpoint
+  - Verify `GET /api/v1/departments` returns `deptCode` correctly
+  - Add `GET /api/v1/departments/{deptCode}/members` (for engine candidateGroup resolution)
+  - Required by ADR-005
+  - Estimate: 2–3h
 
 ---
 
-### ✅ P1.2.5 — User Identity Architecture (OIDC-Compliant) (COMPLETE)
+## M7 — CI/CD (ERP Share)
 
-**Design**: `docs/ADR-002-User-Identity-And-JWT-Claims.md` ✓
-**Plan**: `docs/superpowers/plans/2026-04-08-p1.2-keycloak-linking.md` ✓
+**Deps**: none hard; slot alongside M4–M6 in enterprise
+**Estimate**: 2–3 hours
 
-#### Phase 1: Core Infrastructure (3-4 hours)
-- [x] **1.1** User Entity and Database Migrations (users table, audit columns, V24 Flyway)
-- [x] **1.2** UserInfoResolver Service with Caching (Caffeine, issuer discovery, upsert, 8+ tests)
-- [x] **1.3** UserContext Component (extract JWT sub, ThreadLocal, UserContextFilter, 5+ tests)
-
-#### Phase 2: Security Updates (1-2 hours)
-- [x] **2.1** Update SecurityConfig for OIDC Compliance (generic OidcRoleConverter, configurable roles claim, 4+ tests)
-
-#### Phase 3: Response DTO Updates (2-3 hours)
-- [x] **3.1** Update All Audit-Relevant Response DTOs (add createdByDisplayName, updatedByDisplayName to 13 DTOs, service layer populates names)
-
-#### Phase 4: Testing (4-5 hours)
-- [x] **4.1** Unit Tests: UserInfoResolver (cache hit/miss, issuer discovery, timeout, error handling, concurrent requests, 8+ tests)
-- [x] **4.2** Unit Tests: UserContext (extract sub, resolve profile, ThreadLocal, clear on exit, 5+ tests)
-- [x] **4.3** Integration Tests: werkflow → werkflow-erp with Display Names (multi-user, cache behavior, cross-tenant, 6+ tests)
-- [x] **4.4** Security Tests: JWT Claims and Logs (minimal JWT, no PII in logs, configurable roles, GDPR compliance, 5+ tests)
-
-#### Phase 5: Documentation Updates (1-2 hours)
-- [x] **5.1** Update ROADMAP.md (mark complete, document actual hours)
-- [x] **5.2** Update README.md (User Identity Architecture section, OIDC compliance, config examples)
-- [x] **5.3** Update Integration Docs (docs/WERKFLOW_INTEGRATION.md: display names, no extra calls)
-
-#### Phase 6: Final Validation (1 hour)
-- [x] **6.1** Full Test Suite Run (mvn clean test, 231 tests passing, 0 failures)
-- [x] **6.2** Manual Verification (Keycloak-compliant OIDC role extraction, display names in all audit responses)
-
-**Total Estimated**: 12-17 hours across 1-2 sessions
-**Total Actual**: 18 hours across 1 session (estimated 12-17 hours)
-
-**P1.2.5 Completion Summary:**
-- User entity and UserRepository with upsert capability
-- UserInfoResolver service with Caffeine caching (TTL 10 min)
-- UserContext and UserContextFilter for request-scoped identity
-- OidcRoleConverter for OIDC-compliant role extraction (configurable)
-- All 13 audit-relevant Response DTOs with display names
-- 56+ comprehensive tests (unit, integration, security)
-- GDPR/CCPA compliance verified
-- 231 total tests passing
+- [ ] CI (`ci.yml`): trigger on PR + push to main; job: Maven verify (all tests must pass)
+- [ ] Release (`release.yml`): trigger on tag `v*`; build + push to `ghcr.io`
 
 ---
 
-### ⏸️ P1.3 — User Name Enrichment (DEFERRED — Superseded by P1.2.5)
+## Deferred — P2 Documentation
 
-**Status**: DEFERRED (not tracked for MVP, better architecture in P1.2.5)
+**Status**: Deferred until after June enterprise demo
+**Reason**: No external consumers yet; internal demo does not require public docs
 
-**Reason**: P1.3 was designed to call Admin Service for names, but this violates werkflow-erp decoupling principle. P1.2.5 provides a better solution: OIDC UserInfo endpoint pattern works for standalone and integrated deployments without external dependencies.
-
-**Post-MVP**: After P1.2.5 complete, consider adding name change sync strategy (event-driven updates when Keycloak user modified).
-
----
-
-### ✅ P1.4 — Number Generation & Collision Prevention (COMPLETE)
-
-- [x] **P1.4.1** Fix PR number generation (database sequence: `pr_seq_{TENANT_ID}`, format: `PR-{tenantId}-{year}-{seq:05d}`)
-- [x] **P1.4.2** Apply same pattern to PO and Receipt numbers (PO: `PO-{tenantId}-{year}-{seq:05d}`, GRN: `GRN-{tenantId}-{year}-{seq:05d}`)
-
-**Test Status**: Pattern verified, V23 Flyway migration applied
+- [ ] **P2.1.1** Update README.md (quick start, multi-tenancy setup, JWT auth)
+- [ ] **P2.1.2** API usage guide (step-by-step workflow examples)
+- [ ] **P2.1.3** Integration guide for werkflow (connector registration, config)
+- [ ] **P2.2.1** Load test: 1000 concurrent requests (optional pre-demo)
+- [ ] **P2.2.2** Security audit: SQL injection, JWT, rate limiting (optional pre-demo)
 
 ---
 
-### ⏳ P1.5 — Test Suite (IN PROGRESS — After P1.2.5)
+## Deferred — P3 Future Enhancements
 
-**Estimated**: 12 hours total | **Actual (P1.5.1)**: 4 hours | **Actual (P1.5.2 attempt)**: 1 hour (deferred)
+Not tracked for MVP.
 
-**[x] P1.5.1** Contract tests for domain services *(commit: 4f1c2ee)*
-- Goal: Unit tests for core domain services (non-HTTP)
-- Tests implemented (24 total, all passing):
-  - HR: EmployeeServiceContractTest (6 tests: duplicate email, keycloak linking idempotent, dept head uniqueness, tenant isolation)
-  - Finance: BudgetCheckServiceContractTest (6 tests: no plan, sufficient/insufficient, default fiscal year, zero allocated, exact match)
-  - Procurement: PurchaseRequestServiceContractTest (6 tests: invalid dept, tenant isolation, defaults, processInstanceId)
-  - Inventory: AssetRequestServiceContractTest (6 tests: default status, approve/reject, processInstanceId, non-existent)
-- Implementation: Mock-based unit tests with no entity construction, focus on service contracts
-- Test count: 231 → 255 tests (+24)
-- Status: COMPLETE ✅
-
-- [!] **P1.5.2** Integration tests specification documented *(see docs/P1.5.2-INTEGRATION-TESTS-SPEC.md)*
-  - Specification complete: 3 workflows, 12-18 tests planned
-  - **Blocked**: Architectural issue with TenantContext mocking in @SpringBootTest contexts
-  - Attempted: BudgetCheckWorkflowIntegrationTest, CrossTenantIsolationIntegrationTest
-  - Issue: TenantContext is request-scoped and requires TenantContextFilter initialization, which conflicts with test setup
-  - **Solution for next session**: Use @WebMvcTest + MockMvc approach (HTTP-based integration tests instead of @SpringBootTest)
-  - Detailed notes: See `docs/P1.5.2-INTEGRATION-TESTS-IMPLEMENTATION-NOTES.md`
-  - Effort remaining: 4 hours (next session)
-
-**Current Status**: 255 tests ✅ (P1.5.1 complete, P1.5.2 blocked on architecture, solution documented)
-
----
-
-### ⏳ P2 — Documentation & Release (PENDING — After P1.5)
-
-**Estimated**: 6 hours
-
-- [ ] **P2.1.1** Update README.md (quick start, multi-tenancy setup, JWT auth, 2 hours)
-- [ ] **P2.1.2** Create API usage guide (step-by-step workflow examples, 2 hours)
-- [ ] **P2.1.3** Create integration guide for werkflow (connector registration, config, 2 hours)
-
-**Optional** (can defer to post-MVP):
-- [ ] **P2.2.1** Load test: 1000 concurrent requests
-- [ ] **P2.2.2** Security audit: SQL injection, JWT, rate limiting
-
----
-
-### 🔮 P3 — Future Enhancements (POST-MVP)
-
-Not tracked for MVP, but documented for reference:
-
-- [ ] **P3.1** Audit logging: All mutations logged with user + timestamp
+- [ ] **P3.1** Audit logging: all mutations logged with user + timestamp
 - [ ] **P3.2** CapEx workflow implementation (currently stubbed)
-- [ ] **P3.3** Advanced filtering: Complex queries (e.g., `assetCondition=GOOD AND status=IN_USE`)
-- [ ] **P3.4** Webhook support: Notify werkflow when critical data changes
-- [ ] **P3.5** Bulk operations: `POST /api/v1/bulk/asset-instances` for large imports
-- [ ] **P3.6** Custom fields: Tenant-specific metadata on core entities
+- [ ] **P3.3** Advanced filtering: complex queries (`assetCondition=GOOD AND status=IN_USE`)
+- [ ] **P3.4** Webhook support: notify werkflow on critical data changes
+- [ ] **P3.5** Bulk operations: `POST /api/v1/bulk/asset-instances`
+- [ ] **P3.6** Custom fields: tenant-specific metadata on core entities
 
 ---
 
-## Critical Path to MVP
+## Historical Summary — Completed (P0–P1.5.1)
 
-**Current**: P0 ✓ + P1.1 ✓ + P1.2 ✓ + P1.2.5 ✓ + P1.4 ✓ (231 tests)
-
-**Completed**:
-- P0 (Multi-tenant, Idempotency, FK validation, API versioning, Pagination) ✓
-- P1.1 (Error responses, Enum metadata, DTO examples) ✓
-- P1.2 (Keycloak linking) ✓
-- P1.2.5 (User Identity Architecture) ✓
-- P1.4 (Number generation) ✓
-
-**Next 2-3 Sessions**:
-1. **P1.5** Test Suite (contract + integration tests, 12 hours)
-2. **P2** Documentation & Release (README, API guide, integration guide, 6 hours)
-
-**Target**: 160+ tests passing, all docs updated, ready for MVP release
+| Phase | Highlights | Tests |
+|-------|-----------|-------|
+| P0 | Multi-tenant isolation (23 entities), idempotency, processInstanceId, FK validation, API versioning, pagination | 40 |
+| P1.1 | Error responses (GlobalExceptionHandler), enum metadata endpoint (15 enums), DTO examples | 118 |
+| P1.2 | Keycloak link endpoint (PATCH idempotent, tenant-scoped, conflict detection) | 131 |
+| P1.2.5 | OIDC user identity — UserInfoResolver (Caffeine cache), UserContext/Filter, OidcRoleConverter, 13 audit DTOs with display names, GDPR compliant | 231 |
+| P1.4 | PR/PO/GRN number sequences (DB-level, `{type}-{tenant}-{year}-{seq:05d}`) | 231 |
+| P1.5.1 | 24 contract tests across HR, Finance, Procurement, Inventory domain services | 255 |
 
 ---
 
 ## Related Documents
 
-- `docs/ADR-001-Service-Boundary-Architecture.md` — Architecture decisions
-- `docs/ADR-002-User-Identity-And-JWT-Claims.md` — User identity design
-- `docs/superpowers/plans/2026-04-08-p1.2-keycloak-linking.md` — Implementation plan
-- `docs/superpowers/specs/2026-04-08-p1.2-keycloak-linking-design.md` — Design spec
-- `README.md` — Project overview and quick start
-- `FLOW_DIAGRAMS.md` — Business process flows (informational)
+- `docs/ADR-001-Service-Boundary-Architecture.md`
+- `docs/ADR-002-User-Identity-And-JWT-Claims.md`
+- `docs/P1.5.2-INTEGRATION-TESTS-SPEC.md`
+- `docs/P1.5.2-INTEGRATION-TESTS-IMPLEMENTATION-NOTES.md`
