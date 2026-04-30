@@ -12,9 +12,9 @@
 ## Current Session State
 
 **Active Phase**: M1 — ERP Enterprise APIs
-**Current Task**: P1.6.2 — CustodyMapping entity + API
+**Current Task**: P1.6.3 — Department API verification + members endpoint
 **Branch**: feature/m1-enterprise-apis
-**Test Status**: 262 tests passing (255 + 7 new), 0 failures
+**Test Status**: 279 tests passing (255 + 24 new), 0 failures
 
 ---
 
@@ -53,15 +53,15 @@
   - Required by ADR-003 (Keycloak semantic roles) + ADR-005 (department-scoped routing)
   - Estimate: 3h *(7 tests — 4 service, 3 controller — all green)*
 
-- [~] **P1.6.2** CustodyMapping entity + API
+- [x] **P1.6.2** CustodyMapping entity + API
   - Move `CustodyMapping` from werkflow-enterprise admin-service to werkflow-erp (ADR-004)
   - Entity: `custody_owner (VARCHAR), candidate_groups (TEXT[]), tenant_id`
   - Endpoints: `GET/POST/PUT/DELETE /api/v1/custody-mappings`
   - Tenant-scoped, paginated, idempotent upsert
   - Required by ADR-004
-  - Estimate: 3h
+  - Estimate: 3h *(17 tests — 8 service, 9 controller — all green)*
 
-- [ ] **P1.6.3** Department API verification + user resolution endpoint
+- [~] **P1.6.3** Department API verification + user resolution endpoint
   - Verify `GET /api/v1/departments` returns `deptCode` correctly
   - Add `GET /api/v1/departments/{deptCode}/members`
   - Required by ADR-005
