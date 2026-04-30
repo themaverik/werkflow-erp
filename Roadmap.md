@@ -12,9 +12,10 @@
 ## Current Session State
 
 **Active Phase**: M1 — ERP Enterprise APIs
-**Current Task**: M1 gate — mvn clean verify (all 26 new tests must be included)
-**Branch**: feature/m1-enterprise-apis
-**Test Status**: 281 tests passing (255 + 26 new), 0 failures
+**Active Phase**: M7 — CI/CD (ERP share) or next as directed
+**Current Task**: M1 COMPLETE — 281 tests, gate passed 2026-04-30
+**Branch**: feature/m1-enterprise-apis (ready to merge/PR)
+**Test Status**: 281 tests, 0 failures
 
 ---
 
@@ -31,7 +32,7 @@
 | P1.5.1 — Contract Tests | ✅ COMPLETE — 255 total tests |
 | P1.5.2 — Integration Tests | ⏳ PENDING — @WebMvcTest solution documented |
 | P2.1 — Documentation Suite | ✅ COMPLETE — PR #8 merged |
-| M1 — Enterprise Integration APIs | ⏳ PENDING — P1.6.1–P1.6.3 |
+| M1 — Enterprise Integration APIs | ✅ COMPLETE — 281 tests, gate passed |
 | M7 — CI/CD (ERP share) | ⏳ PENDING |
 | P2.2 — Load + Security Testing | 🔮 POST-DEMO (optional) |
 | P3 — Future Enhancements | 🔮 POST-MVP |
