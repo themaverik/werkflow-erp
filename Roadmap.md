@@ -12,9 +12,9 @@
 ## Current Session State
 
 **Active Phase**: M1 — ERP Enterprise APIs
-**Current Task**: P1.5.2 (integration tests — deferred, solution documented) → P1.6.1 (next)
+**Current Task**: P1.6.2 — CustodyMapping entity + API
 **Branch**: feature/m1-enterprise-apis
-**Test Status**: 255 tests passing, 0 failures
+**Test Status**: 262 tests passing (255 + 7 new), 0 failures
 
 ---
 
@@ -46,14 +46,14 @@
 
 - [ ] **P1.5.2** Integration tests — `@WebMvcTest + MockMvc` approach; spec in `docs/P1.5.2-INTEGRATION-TESTS-SPEC.md` (4h)
 
-- [ ] **P1.6.1** Extend `users` table + profile endpoint
+- [x] **P1.6.1** Extend `users` table + profile endpoint
   - Add columns: `department_code`, `employee_id`, `cost_center`, `is_poc` to `users` table
   - Flyway V25 migration
   - New endpoint: `GET /api/v1/users/{keycloakId}/profile`
   - Required by ADR-003 (Keycloak semantic roles) + ADR-005 (department-scoped routing)
-  - Estimate: 3h
+  - Estimate: 3h *(7 tests — 4 service, 3 controller — all green)*
 
-- [ ] **P1.6.2** CustodyMapping entity + API
+- [~] **P1.6.2** CustodyMapping entity + API
   - Move `CustodyMapping` from werkflow-enterprise admin-service to werkflow-erp (ADR-004)
   - Entity: `custody_owner (VARCHAR), candidate_groups (TEXT[]), tenant_id`
   - Endpoints: `GET/POST/PUT/DELETE /api/v1/custody-mappings`

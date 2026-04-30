@@ -57,6 +57,22 @@ public class User {
     @Column(name = "email")
     private String email;
 
+    /** HR department code linking this user to an HR department (ADR-005). */
+    @Column(name = "department_code", length = 50)
+    private String departmentCode;
+
+    /** Employee ID from HR system — used for cross-domain identity resolution (ADR-003). */
+    @Column(name = "employee_id", length = 100)
+    private String employeeId;
+
+    /** Cost center code for financial routing and budget attribution. */
+    @Column(name = "cost_center", length = 50)
+    private String costCenter;
+
+    /** Whether this user is a Point of Contact (POC) for their department (ADR-003). */
+    @Column(name = "is_poc", nullable = false)
+    private boolean isPoc = false;
+
     /**
      * Timestamp of first cache population from OIDC provider.
      */
