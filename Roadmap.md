@@ -12,9 +12,9 @@
 ## Current Session State
 
 **Active Phase**: M1 — ERP Enterprise APIs
-**Current Task**: P1.6.3 — Department API verification + members endpoint
+**Current Task**: M1 gate — mvn clean verify (all 26 new tests must be included)
 **Branch**: feature/m1-enterprise-apis
-**Test Status**: 279 tests passing (255 + 24 new), 0 failures
+**Test Status**: 281 tests passing (255 + 26 new), 0 failures
 
 ---
 
@@ -61,11 +61,11 @@
   - Required by ADR-004
   - Estimate: 3h *(17 tests — 8 service, 9 controller — all green)*
 
-- [~] **P1.6.3** Department API verification + user resolution endpoint
-  - Verify `GET /api/v1/departments` returns `deptCode` correctly
-  - Add `GET /api/v1/departments/{deptCode}/members`
+- [x] **P1.6.3** Department API verification + user resolution endpoint
+  - Verified `GET /api/v1/departments` returns `deptCode` (alias on `code` field)
+  - Added `GET /api/v1/departments/code/{deptCode}/members`
   - Required by ADR-005
-  - Estimate: 2–3h
+  - Estimate: 2–3h *(2 service tests — all green)*
 
 ---
 

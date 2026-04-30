@@ -2,6 +2,7 @@ package com.werkflow.business.hr.controller;
 
 import com.werkflow.business.hr.dto.DepartmentRequest;
 import com.werkflow.business.hr.dto.DepartmentResponse;
+import com.werkflow.business.hr.dto.EmployeeResponse;
 import com.werkflow.business.hr.service.DepartmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -91,5 +92,21 @@ public class DepartmentController {
     public ResponseEntity<Void> deleteDepartment(@PathVariable Long id) {
         departmentService.deleteDepartment(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/code/{deptCode}/members")
+    @Operation(
+        summary = "Get department members by code",
+        description = "Returns employees in a department identified by its code. Used by werkflow-enterprise for department-scoped group resolution (ADR-005).",
+        parameters = {
+            @Parameter(name = "page", description = "0-indexed page number"),
+            @Parameter(name = "size", description = "Page size (max 1000)"),
+            @Parameter(name = "sort", description = "Sort criteria")
+        }
+    )
+    public ResponseEntity<Page<EmployeeResponse>> getMembersByDeptCode(
+            @PathVariable String deptCode,
+            @ParameterObject Pageable pageable) {
+        return ResponseEntity.ok(departmentService.getMembersByDeptCode(deptCode, pageable));
     }
 }
