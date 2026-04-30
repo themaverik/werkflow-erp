@@ -2,7 +2,7 @@
 
 **Project**: Standalone ERP Data Service — HR, Finance, Procurement, Inventory
 **Master Roadmap**: `~/Projects/werkflow-platform/docs/Roadmap.md` (authoritative for all future tasks)
-**Last Updated**: 2026-04-29
+**Last Updated**: 2026-04-30
 **Target**: Internal Enterprise Demo — June 2026
 
 > Future tasks in this file are synced from the master Roadmap (M1 + M7 ERP share).
@@ -11,11 +11,11 @@
 
 ## Current Session State
 
-**Active Phase**: M1 — ERP Enterprise APIs
-**Active Phase**: M7 — CI/CD (ERP share) or next as directed
-**Current Task**: M1 COMPLETE — 281 tests, gate passed 2026-04-30
-**Branch**: feature/m1-enterprise-apis (ready to merge/PR)
+**Active Phase**: BLOCKED — awaiting werkflow-enterprise M3 (Groups 2–3 depend on ERP APIs)
+**Current Task**: M1 COMPLETE — 281 tests, gate passed 2026-04-30; branch ready to merge
+**Branch**: feature/m1-enterprise-apis (pushed — ready to PR/merge)
 **Test Status**: 281 tests, 0 failures
+**Next ERP task**: M7 CI/CD (parallel-safe with enterprise M4–M6) or await M3 integration
 
 ---
 
