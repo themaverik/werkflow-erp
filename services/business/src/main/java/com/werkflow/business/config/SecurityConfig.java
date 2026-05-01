@@ -34,6 +34,13 @@ public class SecurityConfig {
     @Value("${werkflow.security.roles-claim:roles}")
     private String rolesClaim;
 
+    /** C-3/MED-01: when false (default), actuator/Swagger require authentication. */
+    @Value("${werkflow.security.expose-management-endpoints:false}")
+    private boolean exposeManagementEndpoints;
+
+    @Value("${werkflow.security.cors.allowed-origins:http://localhost:4000,http://localhost:4001,http://localhost:3000}")
+    private String[] corsAllowedOrigins;
+
     @PostConstruct
     public void validateRolesClaim() {
         Assert.hasText(rolesClaim, "werkflow.security.roles-claim must not be blank");
@@ -49,16 +56,19 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/actuator/**",
-                    "/api-docs/**",
-                    "/v3/api-docs/**",
-                    "/swagger-ui/**",
-                    "/swagger-ui.html"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
+            .authorizeHttpRequests(auth -> {
+                // C-3: health endpoint always public; all other management endpoints require auth
+                auth.requestMatchers("/actuator/health", "/actuator/health/**").permitAll();
+                if (exposeManagementEndpoints) {
+                    auth.requestMatchers("/actuator/**", "/api-docs/**", "/v3/api-docs/**",
+                            "/swagger-ui/**", "/swagger-ui.html").permitAll();
+                } else {
+                    auth.requestMatchers("/actuator/**").authenticated()
+                        .requestMatchers("/api-docs/**", "/v3/api-docs/**",
+                            "/swagger-ui/**", "/swagger-ui.html").authenticated();
+                }
+                auth.anyRequest().authenticated();
+            })
             .oauth2ResourceServer(oauth2 -> oauth2
                 .jwt(jwt -> jwt
                     .jwtAuthenticationConverter(jwtAuthenticationConverter)
@@ -93,11 +103,8 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of(
-            "http://localhost:4000",  // Admin Portal
-            "http://localhost:4001",  // HR Portal
-            "http://localhost:3000"   // Dev fallback
-        ));
+        // M-8: CORS origins driven from config (werkflow.security.cors.allowed-origins)
+        configuration.setAllowedOrigins(java.util.Arrays.asList(corsAllowedOrigins));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
