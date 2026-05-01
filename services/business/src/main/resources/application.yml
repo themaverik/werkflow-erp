@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${POSTGRES_HOST:localhost}:${POSTGRES_PORT:5433}/${POSTGRES_DB:werkflow}
     username: ${POSTGRES_USER:werkflow_admin}
-    password: ${POSTGRES_PASSWORD:secure_password_change_me}
+    password: ${POSTGRES_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 20
@@ -66,8 +66,9 @@ server:
   servlet:
     context-path: /api/v1
   error:
-    include-message: always
-    include-binding-errors: always
+    include-message: never
+    include-binding-errors: never
+    include-stacktrace: never
 
 services:
   engine:

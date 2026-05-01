@@ -36,4 +36,12 @@ public class DepartmentResponse {
 
     @Schema(example = "John Doe")
     private String updatedByDisplayName;
+
+    /**
+     * Alias for {@code code} — returned as {@code deptCode} in JSON for ADR-005 compatibility.
+     * Used by werkflow-enterprise to construct group names: {@code ${deptCode}_APPROVER}.
+     */
+    public String getDeptCode() {
+        return this.code;
+    }
 }

@@ -2,7 +2,7 @@
 
 **Project**: Standalone ERP Data Service — HR, Finance, Procurement, Inventory
 **Master Roadmap**: `~/Projects/werkflow-platform/docs/Roadmap.md` (authoritative for all future tasks)
-**Last Updated**: 2026-04-29
+**Last Updated**: 2026-04-30
 **Target**: Internal Enterprise Demo — June 2026
 
 > Future tasks in this file are synced from the master Roadmap (M1 + M7 ERP share).
@@ -11,10 +11,11 @@
 
 ## Current Session State
 
-**Active Phase**: M1 — ERP Enterprise APIs
-**Current Task**: P1.5.2 (integration tests — deferred, solution documented) → P1.6.1 (next)
-**Branch**: feature/m1-enterprise-apis
-**Test Status**: 255 tests passing, 0 failures
+**Active Phase**: BLOCKED — awaiting werkflow-enterprise M3 (Groups 2–3 depend on ERP APIs)
+**Current Task**: M1 COMPLETE — 281 tests, gate passed 2026-04-30; branch ready to merge
+**Branch**: feature/m1-enterprise-apis (pushed — ready to PR/merge)
+**Test Status**: 281 tests, 0 failures
+**Next ERP task**: M7 CI/CD (parallel-safe with enterprise M4–M6) or await M3 integration
 
 ---
 
@@ -31,7 +32,7 @@
 | P1.5.1 — Contract Tests | ✅ COMPLETE — 255 total tests |
 | P1.5.2 — Integration Tests | ⏳ PENDING — @WebMvcTest solution documented |
 | P2.1 — Documentation Suite | ✅ COMPLETE — PR #8 merged |
-| M1 — Enterprise Integration APIs | ⏳ PENDING — P1.6.1–P1.6.3 |
+| M1 — Enterprise Integration APIs | ✅ COMPLETE — 281 tests, gate passed |
 | M7 — CI/CD (ERP share) | ⏳ PENDING |
 | P2.2 — Load + Security Testing | 🔮 POST-DEMO (optional) |
 | P3 — Future Enhancements | 🔮 POST-MVP |
@@ -46,26 +47,26 @@
 
 - [ ] **P1.5.2** Integration tests — `@WebMvcTest + MockMvc` approach; spec in `docs/P1.5.2-INTEGRATION-TESTS-SPEC.md` (4h)
 
-- [ ] **P1.6.1** Extend `users` table + profile endpoint
+- [x] **P1.6.1** Extend `users` table + profile endpoint
   - Add columns: `department_code`, `employee_id`, `cost_center`, `is_poc` to `users` table
   - Flyway V25 migration
   - New endpoint: `GET /api/v1/users/{keycloakId}/profile`
   - Required by ADR-003 (Keycloak semantic roles) + ADR-005 (department-scoped routing)
-  - Estimate: 3h
+  - Estimate: 3h *(7 tests — 4 service, 3 controller — all green)*
 
-- [ ] **P1.6.2** CustodyMapping entity + API
+- [x] **P1.6.2** CustodyMapping entity + API
   - Move `CustodyMapping` from werkflow-enterprise admin-service to werkflow-erp (ADR-004)
   - Entity: `custody_owner (VARCHAR), candidate_groups (TEXT[]), tenant_id`
   - Endpoints: `GET/POST/PUT/DELETE /api/v1/custody-mappings`
   - Tenant-scoped, paginated, idempotent upsert
   - Required by ADR-004
-  - Estimate: 3h
+  - Estimate: 3h *(17 tests — 8 service, 9 controller — all green)*
 
-- [ ] **P1.6.3** Department API verification + user resolution endpoint
-  - Verify `GET /api/v1/departments` returns `deptCode` correctly
-  - Add `GET /api/v1/departments/{deptCode}/members`
+- [x] **P1.6.3** Department API verification + user resolution endpoint
+  - Verified `GET /api/v1/departments` returns `deptCode` (alias on `code` field)
+  - Added `GET /api/v1/departments/code/{deptCode}/members`
   - Required by ADR-005
-  - Estimate: 2–3h
+  - Estimate: 2–3h *(2 service tests — all green)*
 
 ---
 

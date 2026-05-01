@@ -4,8 +4,10 @@ import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.common.context.UserContext;
 import com.werkflow.business.hr.dto.DepartmentRequest;
 import com.werkflow.business.hr.dto.DepartmentResponse;
+import com.werkflow.business.hr.dto.EmployeeResponse;
 import com.werkflow.business.hr.entity.Department;
 import com.werkflow.business.hr.repository.DepartmentRepository;
+import com.werkflow.business.hr.repository.EmployeeRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
 public class DepartmentService {
 
     private final DepartmentRepository departmentRepository;
+    private final EmployeeRepository employeeRepository;
     private final TenantContext tenantContext;
 
     private String getTenantId() {
@@ -70,6 +73,37 @@ public class DepartmentService {
         log.debug("Fetching departments for organization: {} in tenant: {}", organizationId, tenantId);
         return departmentRepository.findByTenantIdAndOrganizationId(tenantId, organizationId, pageable)
             .map(this::convertToResponse);
+    }
+
+    /**
+     * Returns employees whose department code matches {@code deptCode}, scoped to the current tenant.
+     * Used by werkflow-enterprise to resolve department membership for group emission (ADR-005).
+     *
+     * @param deptCode department code (e.g. "FIN", "ENG")
+     * @param pageable pagination parameters
+     * @return paginated list of employees in the department
+     */
+    public Page<EmployeeResponse> getMembersByDeptCode(String deptCode, Pageable pageable) {
+        String tenantId = getTenantId();
+        log.debug("Fetching members of department code: {} for tenant: {}", deptCode, tenantId);
+        return employeeRepository.findByTenantIdAndDepartmentCode(tenantId, deptCode, pageable)
+                .map(this::convertEmployeeToResponse);
+    }
+
+    private EmployeeResponse convertEmployeeToResponse(com.werkflow.business.hr.entity.Employee employee) {
+        com.werkflow.business.hr.entity.Department dept = employee.getDepartment();
+        return EmployeeResponse.builder()
+                .id(employee.getId())
+                .organizationId(employee.getOrganizationId())
+                .keycloakUserId(employee.getKeycloakUserId())
+                .firstName(employee.getFirstName())
+                .lastName(employee.getLastName())
+                .fullName(employee.getFullName())
+                .email(employee.getEmail())
+                .departmentId(dept != null ? dept.getId() : null)
+                .departmentName(dept != null ? dept.getName() : null)
+                .departmentCode(employee.getDepartmentCode())
+                .build();
     }
 
     @Transactional

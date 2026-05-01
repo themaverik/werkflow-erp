@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -27,6 +28,7 @@ public class BudgetCheckController {
     private final TenantContext tenantContext;
 
     @PostMapping("/check")
+    @PreAuthorize("hasAnyAuthority('ROLE_ADMIN', 'ROLE_SUPER_ADMIN', 'ROLE_WORKFLOW_ENGINE')")
     @Operation(
         summary = "Check budget availability",
         description = "Verify if sufficient budget is available for a requested amount. " +
