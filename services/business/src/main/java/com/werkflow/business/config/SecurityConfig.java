@@ -1,5 +1,6 @@
 package com.werkflow.business.config;
 
+import com.werkflow.business.common.apikey.filter.ApiKeyAuthenticationFilter;
 import com.werkflow.business.common.filter.TenantContextFilter;
 import com.werkflow.business.common.filter.UserContextFilter;
 import com.werkflow.business.common.idempotency.filter.IdempotencyFilter;
@@ -48,6 +49,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
+                                                   ApiKeyAuthenticationFilter apiKeyAuthenticationFilter,
                                                    TenantContextFilter tenantContextFilter,
                                                    UserContextFilter userContextFilter,
                                                    IdempotencyFilter idempotencyFilter,
@@ -74,6 +76,8 @@ public class SecurityConfig {
                     .jwtAuthenticationConverter(jwtAuthenticationConverter)
                 )
             )
+            // API key filter runs first — sets SecurityContext so BearerTokenAuthenticationFilter skips JWT
+            .addFilterBefore(apiKeyAuthenticationFilter, BearerTokenAuthenticationFilter.class)
             // Add TenantContextFilter AFTER OAuth2 authentication filters
             .addFilterAfter(tenantContextFilter, BearerTokenAuthenticationFilter.class)
             // Add UserContextFilter AFTER TenantContextFilter (JWT already validated upstream)

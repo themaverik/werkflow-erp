@@ -12,21 +12,22 @@ A standalone CRUD data service for HR, Finance, Procurement, and Inventory domai
 | Port | 8084 |
 | Context Path | `/api/v1` |
 | Database | PostgreSQL 5433 |
-| Authentication | OIDC JWT (Keycloak, Auth0, Azure AD, AWS Cognito) |
+| Authentication | OIDC JWT (Keycloak, Auth0, Azure AD, AWS Cognito) or API Key (`X-API-Key`) |
 | Multi-Tenancy | Yes |
 
 ---
 
 ## What This Service Does
 
-Provides CRUD APIs for four business domains:
+Provides CRUD APIs for five domains:
 
 - **HR**: Employees, departments, leave, attendance, payroll, performance reviews
 - **Finance**: Budget plans, expenses, approval thresholds
 - **Procurement**: Vendors, purchase requests, orders, receipts
 - **Inventory**: Assets, categories, custody, transfers, maintenance
+- **Identity**: User profile cache (OIDC), custody-owner-to-candidate-group mappings (ADR-004)
 
-Validates data (FK constraints, enum values, required fields) and enforces idempotency for safe retries. Does not implement business approval logic, notifications, or workflow routing — those belong to the caller.
+Validates data (enum values, required fields) and enforces idempotency for safe retries. Does not implement business approval logic, notifications, or workflow routing — those belong to the caller.
 
 ---
 
@@ -73,6 +74,33 @@ Environment variables in `config/env/`:
 | `.env.business` | Service port, log level |
 
 Key variables: `POSTGRES_HOST`, `POSTGRES_PORT`, `KEYCLOAK_URL`, `KEYCLOAK_REALM`, `SERVER_PORT`.
+
+---
+
+## API Key Authentication
+
+Requests may authenticate with `X-API-Key: <raw-key>` instead of a Bearer token. The key is validated against a SHA-256 hash stored in the `api_keys` table — raw keys are never persisted.
+
+**Register a key manually:**
+
+```sql
+INSERT INTO api_keys (key_hash, tenant_id, name)
+VALUES (encode(sha256('your-raw-key'::bytea), 'hex'), 'default', 'werkflow-enterprise');
+```
+
+Replace `'your-raw-key'` with the actual secret, `'default'` with the target tenant code, and `'werkflow-enterprise'` with a descriptive label.
+
+**Revoke a key:**
+
+```sql
+UPDATE api_keys SET active = false WHERE name = 'werkflow-enterprise';
+```
+
+**Set an expiry:**
+
+```sql
+UPDATE api_keys SET expires_at = '2027-01-01T00:00:00Z' WHERE name = 'werkflow-enterprise';
+```
 
 ---
 

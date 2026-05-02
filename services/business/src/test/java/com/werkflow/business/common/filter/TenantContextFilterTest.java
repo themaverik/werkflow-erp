@@ -1,5 +1,6 @@
 package com.werkflow.business.common.filter;
 
+import com.werkflow.business.common.apikey.ApiKeyAuthenticationToken;
 import com.werkflow.business.common.context.TenantContext;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -7,7 +8,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.Authentication;
@@ -144,5 +144,28 @@ class TenantContextFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/api/v1/employees");
         assertFalse(filter.shouldNotFilter(request));
+    }
+
+    @Test
+    void testFilterSetsTenantIdFromApiKeyAuthentication() throws ServletException, IOException {
+        ApiKeyAuthenticationToken apiKeyAuth = new ApiKeyAuthenticationToken(
+                "werkflow-enterprise", "default-tenant", java.util.Collections.emptyList());
+
+        SecurityContext context = mock(SecurityContext.class);
+        when(context.getAuthentication()).thenReturn(apiKeyAuth);
+        SecurityContextHolder.setContext(context);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        doAnswer(invocation -> {
+            assertEquals("default-tenant", tenantContext.getTenantId());
+            return null;
+        }).when(filterChain).doFilter(request, response);
+
+        filter.doFilter(request, response, filterChain);
+
+        verify(filterChain).doFilter(request, response);
+        assertThrows(IllegalStateException.class, () -> tenantContext.getTenantId());
     }
 }

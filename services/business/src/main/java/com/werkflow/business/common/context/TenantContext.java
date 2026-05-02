@@ -1,5 +1,6 @@
 package com.werkflow.business.common.context;
 
+import com.werkflow.business.common.apikey.ApiKeyAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -62,7 +63,10 @@ public class TenantContext {
             Jwt jwt = (Jwt) jwtAuth.getPrincipal();
             return extractTenantIdFromJwt(jwt);
         }
-        throw new IllegalArgumentException("Authentication is not JWT-based");
+        if (authentication instanceof ApiKeyAuthenticationToken apiKeyAuth) {
+            return apiKeyAuth.getTenantId();
+        }
+        throw new IllegalArgumentException("Unsupported authentication type: " + authentication.getClass().getSimpleName());
     }
 
     /**

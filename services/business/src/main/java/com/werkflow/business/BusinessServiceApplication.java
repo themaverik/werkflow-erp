@@ -2,10 +2,12 @@ package com.werkflow.business;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.retry.annotation.EnableRetry;
 
 @SpringBootApplication(scanBasePackages = "com.werkflow.business")
+@EnableCaching
 @EnableJpaAuditing
 @EnableRetry
 public class BusinessServiceApplication {

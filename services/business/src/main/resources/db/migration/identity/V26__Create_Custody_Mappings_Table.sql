@@ -2,6 +2,8 @@
 -- Creates custody_mappings table in identity_service schema (ADR-004)
 -- Moves custody group management from werkflow-enterprise admin-service to ERP as source of truth.
 
+CREATE SCHEMA IF NOT EXISTS identity_service;
+
 CREATE TABLE IF NOT EXISTS identity_service.custody_mappings (
     id               BIGSERIAL PRIMARY KEY,
     tenant_id        VARCHAR(100)  NOT NULL,

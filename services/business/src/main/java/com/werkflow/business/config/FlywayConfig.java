@@ -51,4 +51,14 @@ public class FlywayConfig {
             .baselineOnMigrate(true)
             .load();
     }
+
+    @Bean(initMethod = "migrate")
+    public Flyway identityFlyway(DataSource dataSource) {
+        return Flyway.configure()
+            .dataSource(dataSource)
+            .locations("classpath:db/migration/identity")
+            .table("flyway_identity_history")
+            .baselineOnMigrate(true)
+            .load();
+    }
 }
