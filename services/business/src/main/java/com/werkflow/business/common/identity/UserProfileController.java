@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * and POC status from Keycloak user IDs (ADR-003, ADR-005).
  */
 @RestController
-@RequestMapping("/api/v1/users")
+@RequestMapping("/users")
 @RequiredArgsConstructor
 @Tag(name = "User Profiles", description = "Enterprise user profile APIs")
 public class UserProfileController {

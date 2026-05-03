@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Provides endpoints for API clients to discover available enum values and their descriptions.
  */
 @RestController
-@RequestMapping("/api/v1/meta")
+@RequestMapping("/meta")
 @RequiredArgsConstructor
 @Tag(name = "Metadata", description = "Metadata endpoints for application enums and configurations")
 public class EnumMetadataController {

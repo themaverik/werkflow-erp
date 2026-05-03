@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
-@RequestMapping("/api/v1/api-keys")
+@RequestMapping("/api-keys")
 @RequiredArgsConstructor
 public class ApiKeyController {
 

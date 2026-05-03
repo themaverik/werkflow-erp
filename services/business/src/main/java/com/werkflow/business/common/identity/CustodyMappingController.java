@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
  * POST is idempotent (upsert on custodyOwner key); PUT updates by database ID.
  */
 @RestController
-@RequestMapping("/api/v1/custody-mappings")
+@RequestMapping("/custody-mappings")
 @RequiredArgsConstructor
 @Tag(name = "Custody Mappings", description = "Tenant-scoped custody group management (ADR-004)")
 public class CustodyMappingController {
