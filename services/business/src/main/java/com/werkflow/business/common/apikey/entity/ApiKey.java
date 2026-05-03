@@ -20,6 +20,14 @@ import java.util.UUID;
 @NoArgsConstructor
 public class ApiKey {
 
+    public static ApiKey of(String keyHash, String tenantId, String name) {
+        ApiKey key = new ApiKey();
+        key.keyHash = keyHash;
+        key.tenantId = tenantId;
+        key.name = name;
+        return key;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
