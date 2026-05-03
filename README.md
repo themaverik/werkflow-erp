@@ -83,12 +83,30 @@ Requests may authenticate with `X-API-Key: <raw-key>` instead of a Bearer token.
 
 **Register a key manually:**
 
+1. Connect to the ERP Postgres container:
+
+```bash
+docker exec -it werkflow-postgres psql -U werkflow_admin -d werkflow
+```
+
+2. Insert the key (Postgres computes the SHA-256 hash — the raw key is never stored):
+
 ```sql
 INSERT INTO api_keys (key_hash, tenant_id, name)
 VALUES (encode(sha256('your-raw-key'::bytea), 'hex'), 'default', 'werkflow-enterprise');
 ```
 
 Replace `'your-raw-key'` with the actual secret, `'default'` with the target tenant code, and `'werkflow-enterprise'` with a descriptive label.
+
+3. Use the raw key in requests:
+
+```http
+X-API-Key: your-raw-key
+```
+
+**Using API Key in Swagger UI:**
+
+Open `http://localhost:8084/api/v1/swagger-ui/index.html`, click **Authorize**, select the `apiKey` scheme, and paste the raw key.
 
 **Revoke a key:**
 

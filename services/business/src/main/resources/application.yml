@@ -112,6 +112,7 @@ logging:
 
 werkflow:
   security:
+    expose-management-endpoints: ${WERKFLOW_EXPOSE_MANAGEMENT_ENDPOINTS:true}
     # JWT claim name used to extract roles. Configurable per OIDC provider:
     # - Keycloak: "roles"  (flat list at token root)
     # - Auth0:    "scope"  (or a custom namespace claim)
