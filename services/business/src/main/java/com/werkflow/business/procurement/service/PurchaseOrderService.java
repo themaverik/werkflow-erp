@@ -2,6 +2,7 @@ package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
 import com.werkflow.business.common.context.UserContext;
+import com.werkflow.business.common.webhook.WebhookEventPublisher;
 import com.werkflow.business.common.sequence.NumberGenerationService;
 import com.werkflow.business.procurement.dto.PoLineItemRequest;
 import com.werkflow.business.procurement.dto.PoLineItemResponse;
@@ -25,8 +26,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -44,8 +50,13 @@ public class PurchaseOrderService {
     private final VendorRepository vendorRepository;
     private final PurchaseRequestRepository purchaseRequestRepository;
     private final PoLineItemRepository lineItemRepository;
+    private static final String CONNECTOR_KEY = "werkflow-erp-events";
+
     private final TenantContext tenantContext;
     private final NumberGenerationService numberGenerationService;
+
+    @Autowired(required = false)
+    private WebhookEventPublisher webhookPublisher;
 
     private String getTenantId() {
         return tenantContext.getTenantId();
@@ -150,6 +161,33 @@ public class PurchaseOrderService {
 
         PurchaseOrder updated = poRepository.save(po);
         log.info("Purchase order updated: {} for tenant: {}", id, tenantId);
+        return toResponse(updated);
+    }
+
+    @Transactional
+    public PurchaseOrderResponse updatePoStatus(Long id, PurchaseOrder.PoStatus newStatus) {
+        String tenantId = getTenantId();
+        PurchaseOrder po = poRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Purchase order not found with id: " + id));
+        if (!po.getTenantId().equals(tenantId)) {
+            throw new AccessDeniedException("Not authorized to update this PurchaseOrder");
+        }
+        PurchaseOrder.PoStatus oldStatus = po.getStatus();
+        po.setStatus(newStatus);
+        PurchaseOrder updated = poRepository.save(po);
+        log.info("PurchaseOrder {} status changed from {} to {} [tenant={}]",
+                id, oldStatus, newStatus, tenantId);
+
+        if (!newStatus.equals(oldStatus) && webhookPublisher != null) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("purchaseOrderId", updated.getId());
+            event.put("poNumber",        updated.getPoNumber());
+            event.put("tenantId",        tenantId);
+            event.put("oldStatus",       oldStatus.name());
+            event.put("newStatus",       newStatus.name());
+            event.put("occurredAt",      OffsetDateTime.now().toString());
+            webhookPublisher.publish(tenantId, CONNECTOR_KEY, event);
+        }
         return toResponse(updated);
     }
 

@@ -2,6 +2,7 @@ package com.werkflow.business.procurement.controller;
 
 import com.werkflow.business.procurement.dto.PurchaseOrderRequest;
 import com.werkflow.business.procurement.dto.PurchaseOrderResponse;
+import com.werkflow.business.procurement.entity.PurchaseOrder;
 import com.werkflow.business.procurement.service.PurchaseOrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -56,5 +57,15 @@ public class PurchaseOrderController {
         @Valid @RequestBody PurchaseOrderRequest request,
         @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey) {
         return ResponseEntity.status(HttpStatus.CREATED).body(poService.createPurchaseOrder(request));
+    }
+
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Update purchase order status",
+               description = "Transitions a PO to a new status. Publishes a webhook event if Werkflow integration is configured.")
+    public ResponseEntity<PurchaseOrderResponse> updateStatus(
+            @PathVariable Long id,
+            @RequestParam PurchaseOrder.PoStatus status) {
+        return ResponseEntity.ok(poService.updatePoStatus(id, status));
     }
 }
