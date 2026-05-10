@@ -14,4 +14,8 @@ public class ApiKeyRegisterRequest {
 
     @NotBlank @Size(max = 100)
     private String name;
+
+    /** Explicit tenant scoping for service-to-service calls where JWT carries no tenant claim. */
+    @NotBlank @Size(max = 100)
+    private String tenantId;
 }

@@ -1,9 +1,6 @@
 package com.werkflow.business.config;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 
@@ -12,7 +9,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -138,45 +134,22 @@ class JwtClaimsSecurityTest {
     }
 
     /**
-     * Test 4 (Parameterized): OidcRoleConverter correctly extracts roles from different claim names
-     * for Keycloak ("roles"), Auth0 ("scope"), and Azure AD ("roles"). Verifies the
-     * configurable roles-claim property routes extraction to the right place.
+     * Test 4: OidcRoleConverter extracts roles from realm_access.roles (Keycloak standard,
+     * matching admin service JWT decode approach per ADR JWT simplification).
      */
-    @ParameterizedTest(name = "Provider={0}: roles-claim=''{1}'' extracts role ''{3}''")
-    @MethodSource("providerRolesClaims")
-    void configurableRolesClaim_worksForAllMajorProviders(
-            String provider, String claimName, List<String> claimValues, String expectedRole) {
-
-        OidcRoleConverter converter = new OidcRoleConverter(claimName);
+    @Test
+    void oidcRoleConverter_extractsFromRealmAccessRoles_keycloakStandard() {
+        OidcRoleConverter converter = new OidcRoleConverter();
         Jwt jwt = buildJwt(Map.of(
-                "sub", "user-from-" + provider.toLowerCase(),
-                "iss", "https://auth." + provider.toLowerCase() + ".com",
-                claimName, claimValues
+                "sub", "user-123",
+                "realm_access", Map.of("roles", List.of("super_admin", "finance_manager"))
         ));
 
         Collection<GrantedAuthority> authorities = converter.convert(jwt);
 
         assertThat(authorities)
-                .as("Provider %s with roles-claim '%s' must extract role '%s'", provider, claimName, expectedRole)
                 .extracting(GrantedAuthority::getAuthority)
-                .contains("ROLE_" + expectedRole.toUpperCase());
-    }
-
-    static Stream<Arguments> providerRolesClaims() {
-        return Stream.of(
-                // Keycloak — flat "roles" claim after realm-access flattening
-                Arguments.of("Keycloak", "roles",
-                        List.of("finance.manager", "procurement.viewer"), "finance.manager"),
-                // Auth0 — roles in "scope" claim or custom namespace
-                Arguments.of("Auth0", "scope",
-                        List.of("read:employees", "write:payroll"), "read:employees"),
-                // Azure AD — "roles" claim (app role assignments)
-                Arguments.of("AzureAD", "roles",
-                        List.of("Employee.Write", "Task.Read"), "Employee.Write"),
-                // AWS Cognito — custom "cognito:groups" claim
-                Arguments.of("Cognito", "cognito:groups",
-                        List.of("Admins", "Managers"), "Admins")
-        );
+                .containsExactlyInAnyOrder("ROLE_SUPER_ADMIN", "ROLE_FINANCE_MANAGER");
     }
 
     /**
@@ -202,22 +175,20 @@ class JwtClaimsSecurityTest {
     }
 
     /**
-     * Test 6: roles-claim property defaults to "roles" — when configured with "roles",
-     * OidcRoleConverter extracts from "roles" and not from "permissions" or any other claim.
+     * Test 6: OidcRoleConverter only reads realm_access.roles — other claims are ignored.
      */
     @Test
-    void defaultRolesClaim_extractsFromRolesOnly_notFromOtherClaims() {
-        OidcRoleConverter converterWithDefaultClaim = new OidcRoleConverter("roles");
+    void oidcRoleConverter_onlyReadsRealmAccessRoles_ignoresOtherClaims() {
+        OidcRoleConverter converter = new OidcRoleConverter();
 
         Jwt jwt = buildJwt(Map.of(
                 "sub", "user-abc",
-                "roles", List.of("admin"),
-                // These claims must NOT be picked up as roles
+                "realm_access", Map.of("roles", List.of("admin")),
                 "permissions", List.of("should-not-be-extracted"),
                 "scope", "openid api"
         ));
 
-        Collection<GrantedAuthority> authorities = converterWithDefaultClaim.convert(jwt);
+        Collection<GrantedAuthority> authorities = converter.convert(jwt);
 
         assertThat(authorities)
                 .extracting(GrantedAuthority::getAuthority)
