@@ -2,7 +2,7 @@
 
 **Project**: Standalone ERP Data Service — HR, Finance, Procurement, Inventory
 **Master Roadmap**: `~/Projects/werkflow-platform/docs/Roadmap.md` (authoritative for all future tasks)
-**Last Updated**: 2026-04-30
+**Last Updated**: 2026-05-09
 **Target**: Internal Enterprise Demo — June 2026
 
 > Future tasks in this file are synced from the master Roadmap (M1 + M7 ERP share).
@@ -77,6 +77,21 @@
 
 - [ ] CI (`ci.yml`): trigger on PR + push to main; job: Maven verify (all tests must pass)
 - [ ] Release (`release.yml`): trigger on tag `v*`; build + push to `ghcr.io`
+
+---
+
+## M4.6 — ERP Webhook Integration
+
+**Phase**: Pre-Internal-Demo (after M4.5 in werkflow-enterprise)
+**Estimate**: 4–6 hours (ERP share of M4.6)
+**Reference**: Master Roadmap M4.6
+
+ERP publishes outbound webhook events that werkflow-enterprise M4.6 correlates to in-flight process instances.
+
+- [x] Publish webhook on vendor status change (blacklist, approval, deactivation) — `POST {werkflow_webhook_url}/vendor-status-changed` *(commit: c3bce00)*
+- [x] Publish webhook on PO state transitions (approved, dispatched, received, cancelled) — `POST {werkflow_webhook_url}/po-status-changed` *(commit: c3bce00)*
+- [x] Seed `werkflow-erp-events` webhook connector definition (to be loaded into the connector catalog) *(commit: dee91d3 — enterprise)*
+- [x] Update Asset Request and Procurement Approval BPMN sample files (in enterprise) to add Intermediate Message Catch Events for vendor-blacklist and PO-received transitions *(commit: dee91d3 — enterprise)*
 
 ---
 
