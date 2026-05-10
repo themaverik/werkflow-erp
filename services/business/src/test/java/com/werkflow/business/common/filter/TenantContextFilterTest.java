@@ -44,7 +44,7 @@ class TenantContextFilterTest {
     void testFilterSetsAndClearsTenantId() throws ServletException, IOException {
         // Setup JWT with organization_id claim
         Map<String, Object> claims = new HashMap<>();
-        claims.put("organization_id", "acme-corp");
+        claims.put("tenant_id", "acme-corp");
         Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600),
             Collections.singletonMap("alg", "HS256"), claims);
 
@@ -74,7 +74,7 @@ class TenantContextFilterTest {
     @Test
     void testFilterClearsContextAfterChain() throws ServletException, IOException {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("organization_id", "acme-corp");
+        claims.put("tenant_id", "acme-corp");
         Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600),
             Collections.singletonMap("alg", "HS256"), claims);
 

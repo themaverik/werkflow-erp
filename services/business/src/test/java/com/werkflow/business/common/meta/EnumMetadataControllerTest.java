@@ -62,7 +62,7 @@ public class EnumMetadataControllerTest {
 
         when(enumMetadataService.getAllEnums()).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/meta/enums")
+        mockMvc.perform(get("/meta/enums")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
 
@@ -90,7 +90,7 @@ public class EnumMetadataControllerTest {
 
         when(enumMetadataService.getAllEnums()).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/meta/enums")
+        mockMvc.perform(get("/meta/enums")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
@@ -104,7 +104,7 @@ public class EnumMetadataControllerTest {
 
         when(enumMetadataService.getAllEnums()).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/meta/enums"))
+        mockMvc.perform(get("/meta/enums"))
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
@@ -129,7 +129,7 @@ public class EnumMetadataControllerTest {
 
         when(enumMetadataService.getAllEnums()).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/meta/enums"))
+        mockMvc.perform(get("/meta/enums"))
                 .andExpect(jsonPath("$.enums", notNullValue()));
     }
 
@@ -154,7 +154,7 @@ public class EnumMetadataControllerTest {
 
         when(enumMetadataService.getAllEnums()).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/meta/enums"))
+        mockMvc.perform(get("/meta/enums"))
                 .andExpect(jsonPath("$.enums[0].name", equalTo("PrStatus")))
                 .andExpect(jsonPath("$.enums[0].description", equalTo("Purchase request status")))
                 .andExpect(jsonPath("$.enums[0].values", notNullValue()));
@@ -181,7 +181,7 @@ public class EnumMetadataControllerTest {
 
         when(enumMetadataService.getAllEnums()).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/meta/enums"))
+        mockMvc.perform(get("/meta/enums"))
                 .andExpect(jsonPath("$.enums[0].values[0].value", equalTo("DRAFT")))
                 .andExpect(jsonPath("$.enums[0].values[0].label", equalTo("Draft")))
                 .andExpect(jsonPath("$.enums[0].values[0].description", equalTo("Initial state")));
@@ -196,7 +196,7 @@ public class EnumMetadataControllerTest {
 
         when(enumMetadataService.getAllEnums()).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/meta/enums"));
+        mockMvc.perform(get("/meta/enums"));
 
         verify(enumMetadataService, times(1)).getAllEnums();
     }
@@ -234,7 +234,7 @@ public class EnumMetadataControllerTest {
 
         when(enumMetadataService.getAllEnums()).thenReturn(response);
 
-        mockMvc.perform(get("/api/v1/meta/enums"))
+        mockMvc.perform(get("/meta/enums"))
                 .andExpect(jsonPath("$.enums", hasSize(2)))
                 .andExpect(jsonPath("$.enums[0].name", equalTo("PrStatus")))
                 .andExpect(jsonPath("$.enums[1].name", equalTo("EmployeeStatus")));
