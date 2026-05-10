@@ -81,7 +81,7 @@ class CustodyMappingControllerTest {
         when(custodyMappingService.list(any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(buildResponse())));
 
-        mockMvc.perform(get("/api/v1/custody-mappings"))
+        mockMvc.perform(get("/custody-mappings"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath("$.content[0].custodyOwner", equalTo("IT_EQUIPMENT")))
@@ -93,7 +93,7 @@ class CustodyMappingControllerTest {
     void getById_returns200_whenFound() throws Exception {
         when(custodyMappingService.getById(1L)).thenReturn(buildResponse());
 
-        mockMvc.perform(get("/api/v1/custody-mappings/1"))
+        mockMvc.perform(get("/custody-mappings/1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", equalTo(1)))
                 .andExpect(jsonPath("$.custodyOwner", equalTo("IT_EQUIPMENT")));
@@ -105,7 +105,7 @@ class CustodyMappingControllerTest {
         when(custodyMappingService.getById(99L))
                 .thenThrow(new EntityNotFoundException("Custody mapping not found: 99"));
 
-        mockMvc.perform(get("/api/v1/custody-mappings/99"))
+        mockMvc.perform(get("/custody-mappings/99"))
                 .andExpect(status().isNotFound());
     }
 
@@ -115,7 +115,7 @@ class CustodyMappingControllerTest {
         CustodyMappingRequest request = new CustodyMappingRequest("IT_EQUIPMENT", List.of("it_team"));
         when(custodyMappingService.upsert(any(CustodyMappingRequest.class))).thenReturn(buildResponse());
 
-        mockMvc.perform(post("/api/v1/custody-mappings")
+        mockMvc.perform(post("/custody-mappings")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
@@ -127,7 +127,7 @@ class CustodyMappingControllerTest {
     void upsert_returns400_whenCustodyOwnerBlank() throws Exception {
         CustodyMappingRequest request = new CustodyMappingRequest("", List.of("it_team"));
 
-        mockMvc.perform(post("/api/v1/custody-mappings")
+        mockMvc.perform(post("/custody-mappings")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -138,7 +138,7 @@ class CustodyMappingControllerTest {
     void upsert_returns400_whenCandidateGroupsEmpty() throws Exception {
         CustodyMappingRequest request = new CustodyMappingRequest("IT_EQUIPMENT", List.of());
 
-        mockMvc.perform(post("/api/v1/custody-mappings")
+        mockMvc.perform(post("/custody-mappings")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
@@ -151,7 +151,7 @@ class CustodyMappingControllerTest {
         when(custodyMappingService.update(any(Long.class), any(CustodyMappingRequest.class)))
                 .thenReturn(buildResponse());
 
-        mockMvc.perform(put("/api/v1/custody-mappings/1")
+        mockMvc.perform(put("/custody-mappings/1")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk());
@@ -160,7 +160,7 @@ class CustodyMappingControllerTest {
     @Test
     @WithMockUser
     void delete_returns204_whenFound() throws Exception {
-        mockMvc.perform(delete("/api/v1/custody-mappings/1"))
+        mockMvc.perform(delete("/custody-mappings/1"))
                 .andExpect(status().isNoContent());
 
         verify(custodyMappingService).delete(1L);
@@ -172,7 +172,7 @@ class CustodyMappingControllerTest {
         org.mockito.Mockito.doThrow(new EntityNotFoundException("Custody mapping not found: 99"))
                 .when(custodyMappingService).delete(99L);
 
-        mockMvc.perform(delete("/api/v1/custody-mappings/99"))
+        mockMvc.perform(delete("/custody-mappings/99"))
                 .andExpect(status().isNotFound());
     }
 }

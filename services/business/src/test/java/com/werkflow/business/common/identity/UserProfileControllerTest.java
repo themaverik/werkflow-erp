@@ -67,7 +67,7 @@ class UserProfileControllerTest {
 
         when(userProfileService.getProfile("user-123")).thenReturn(profile);
 
-        mockMvc.perform(get("/api/v1/users/user-123/profile")
+        mockMvc.perform(get("/users/user-123/profile")
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -86,7 +86,7 @@ class UserProfileControllerTest {
         when(userProfileService.getProfile("missing"))
                 .thenThrow(new EntityNotFoundException("User profile not found for keycloakId: missing"));
 
-        mockMvc.perform(get("/api/v1/users/missing/profile"))
+        mockMvc.perform(get("/users/missing/profile"))
                 .andExpect(status().isNotFound());
     }
 
@@ -100,7 +100,7 @@ class UserProfileControllerTest {
 
         when(userProfileService.getProfile("user-456")).thenReturn(profile);
 
-        mockMvc.perform(get("/api/v1/users/user-456/profile"))
+        mockMvc.perform(get("/users/user-456/profile"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.departmentCode").doesNotExist())
                 .andExpect(jsonPath("$.employeeId").doesNotExist())

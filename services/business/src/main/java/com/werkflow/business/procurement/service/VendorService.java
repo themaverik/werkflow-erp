@@ -1,6 +1,7 @@
 package com.werkflow.business.procurement.service;
 
 import com.werkflow.business.common.context.TenantContext;
+import com.werkflow.business.common.webhook.WebhookEventPublisher;
 import com.werkflow.business.procurement.dto.VendorRequest;
 import com.werkflow.business.procurement.dto.VendorResponse;
 import com.werkflow.business.procurement.entity.Vendor;
@@ -8,6 +9,7 @@ import com.werkflow.business.procurement.repository.VendorRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -28,8 +34,14 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class VendorService {
 
+    private static final String CONNECTOR_KEY = "werkflow-erp-events";
+
     private final VendorRepository vendorRepository;
     private final TenantContext tenantContext;
+
+    /** Optional — not present when werkflow.webhook.base-url is not configured. */
+    @Autowired(required = false)
+    private WebhookEventPublisher webhookPublisher;
 
     private String getTenantId() {
         return tenantContext.getTenantId();
@@ -96,6 +108,7 @@ public class VendorService {
         vendor.setAddress(request.getAddress());
         vendor.setTaxId(request.getTaxId());
         vendor.setPaymentTerms(request.getPaymentTerms());
+        Vendor.VendorStatus oldStatus = vendor.getStatus();
         if (request.getStatus() != null) {
             vendor.setStatus(request.getStatus());
         }
@@ -105,6 +118,18 @@ public class VendorService {
 
         Vendor updated = vendorRepository.save(vendor);
         log.info("Vendor updated: {} for tenant: {}", id, tenantId);
+
+        // Publish webhook when status changes
+        if (request.getStatus() != null && !request.getStatus().equals(oldStatus) && webhookPublisher != null) {
+            Map<String, Object> event = new HashMap<>();
+            event.put("vendorId",    updated.getId());
+            event.put("tenantId",    tenantId);
+            event.put("oldStatus",   oldStatus.name());
+            event.put("newStatus",   updated.getStatus().name());
+            event.put("occurredAt",  OffsetDateTime.now().toString());
+            webhookPublisher.publish(tenantId, CONNECTOR_KEY, event);
+        }
+
         return toResponse(updated);
     }
 

@@ -4,11 +4,9 @@ import com.werkflow.business.common.apikey.filter.ApiKeyAuthenticationFilter;
 import com.werkflow.business.common.filter.TenantContextFilter;
 import com.werkflow.business.common.filter.UserContextFilter;
 import com.werkflow.business.common.idempotency.filter.IdempotencyFilter;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.Assert;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -32,20 +30,12 @@ public class SecurityConfig {
     @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
     private String jwkSetUri;
 
-    @Value("${werkflow.security.roles-claim:roles}")
-    private String rolesClaim;
-
     /** C-3/MED-01: when false (default), actuator/Swagger require authentication. */
     @Value("${werkflow.security.expose-management-endpoints:false}")
     private boolean exposeManagementEndpoints;
 
     @Value("${werkflow.security.cors.allowed-origins:http://localhost:4000,http://localhost:4001,http://localhost:3000}")
     private String[] corsAllowedOrigins;
-
-    @PostConstruct
-    public void validateRolesClaim() {
-        Assert.hasText(rolesClaim, "werkflow.security.roles-claim must not be blank");
-    }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -94,7 +84,7 @@ public class SecurityConfig {
 
     @Bean
     public OidcRoleConverter oidcRoleConverter() {
-        return new OidcRoleConverter(rolesClaim);
+        return new OidcRoleConverter();
     }
 
     @Bean

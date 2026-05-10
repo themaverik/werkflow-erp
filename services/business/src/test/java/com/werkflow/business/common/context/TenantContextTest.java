@@ -45,7 +45,7 @@ class TenantContextTest {
     @Test
     void testExtractFromJwtClaim() {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("organization_id", "acme-corp");
+        claims.put("tenant_id", "acme-corp");
         claims.put("sub", "user-123");
 
         Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600),
@@ -69,7 +69,7 @@ class TenantContextTest {
     @Test
     void testExtractFromAuthentication() {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("organization_id", "acme-corp");
+        claims.put("tenant_id", "acme-corp");
         Jwt jwt = new Jwt("token", Instant.now(), Instant.now().plusSeconds(3600),
             Collections.singletonMap("alg", "HS256"), claims);
 

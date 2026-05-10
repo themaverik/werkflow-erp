@@ -44,15 +44,17 @@ public class TenantContext {
     }
 
     /**
-     * Extract tenant ID from JWT token
-     * Looks for "organization_id" claim in JWT
+     * Extract tenant ID from JWT token.
+     * Reads the "tenant_id" claim emitted by the Keycloak hardcoded-claim mapper
+     * (see werkflow-realm.json — tenant-id-hardcoded protocolMapper on werkflow-portal client).
      */
     public String extractTenantIdFromJwt(Jwt jwt) {
-        String orgId = jwt.getClaimAsString("organization_id");
-        if (orgId == null) {
-            throw new IllegalArgumentException("JWT claim 'organization_id' not found");
+        String tenantId = jwt.getClaimAsString("tenant_id");
+        if (tenantId == null) {
+            throw new IllegalArgumentException("JWT claim 'tenant_id' not found. " +
+                "Ensure the Keycloak realm has the tenant-id-hardcoded protocol mapper configured.");
         }
-        return orgId;
+        return tenantId;
     }
 
     /**
