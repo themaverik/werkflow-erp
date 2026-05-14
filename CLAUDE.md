@@ -20,6 +20,17 @@ Follow strict lifecycle:
 5. **Record:** Save decisions/patterns to `claude-mem` immediately
 6. **Purge:** Run `/compact` to clear context buffer
 
+## Skill Triggers
+
+- "structure", "scope", "dependencies" → `graphify` (dependency mapping)
+- "quick change", "boilerplate" → `caveman` (fast file ops)
+- language + "test", "build", "review" → `ecc:language-skill`
+- "remember", "past pattern" → `knowledge-query` (search claude-mem)
+- "update memory", "record decision", "save to memory" → `/claude-mem:do` (write to claude-mem)
+- "save decision", "log pattern" → `knowledge-ingest` + `adr-manager`
+- "resume", "continue" → `project-resume`
+- Docker / containers → `docker-dev`
+
 ## Graphify
 
 This project has a graphify knowledge graph at graphify-out/.
