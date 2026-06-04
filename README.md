@@ -81,6 +81,16 @@ Key variables: `POSTGRES_HOST`, `POSTGRES_PORT`, `KEYCLOAK_URL`, `KEYCLOAK_REALM
 
 Requests may authenticate with `X-API-Key: <raw-key>` instead of a Bearer token. The key is validated against a SHA-256 hash stored in the `api_keys` table — raw keys are never persisted.
 
+**Register a key via API (preferred):**
+
+`POST /api/v1/api-keys/generate` — requires `ADMIN`, `SUPER_ADMIN`, or `ENGINE_SERVICE` role.
+
+```json
+{ "name": "werkflow-enterprise", "tenantId": "default" }
+```
+
+Returns `{ "rawKey": "...", "id": "...", "name": "...", "tenantId": "...", "createdAt": "..." }`. Store the `rawKey` securely (OpenBao) — it is not stored and cannot be retrieved again.
+
 **Register a key manually:**
 
 1. Connect to the ERP Postgres container:
