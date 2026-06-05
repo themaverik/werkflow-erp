@@ -11,11 +11,11 @@
 
 ## Current Session State
 
-**Active Phase**: BLOCKED — awaiting werkflow-enterprise M3 (Groups 2–3 depend on ERP APIs)
-**Current Task**: M1 COMPLETE — 281 tests, gate passed 2026-04-30; branch ready to merge
-**Branch**: feature/m1-enterprise-apis (pushed — ready to PR/merge)
-**Test Status**: 281 tests, 0 failures
-**Next ERP task**: M7 CI/CD (parallel-safe with enterprise M4–M6) or await M3 integration
+**Active Phase**: Maintenance / bugfix — all ERP milestones complete (M1 merged; P-5 shipped)
+**Current Task**: none — awaiting MVP release cut
+**Branch**: main
+**Last fix (2026-06-05)**: Flyway ordering bug — `@DependsOn` added to `identityFlyway` bean so it runs after all domain Flywayeans (erp `0c9401c`). Prevents crash-loop on fresh deploys where `identity/V24` references `finance_service.budget_plans` before `financeFlyway` has run.
+**Next ERP task**: MVP release cut (tag + CHANGELOG) or post-MVP ERP P3 work
 
 ---
 
