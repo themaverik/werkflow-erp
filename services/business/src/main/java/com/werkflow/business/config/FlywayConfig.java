@@ -4,6 +4,7 @@ import org.flywaydb.core.Flyway;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 
 import javax.sql.DataSource;
 
@@ -53,6 +54,7 @@ public class FlywayConfig {
     }
 
     @Bean(initMethod = "migrate")
+    @DependsOn({"hrFlyway", "financeFlyway", "procurementFlyway", "inventoryFlyway"})
     public Flyway identityFlyway(DataSource dataSource) {
         return Flyway.configure()
             .dataSource(dataSource)
