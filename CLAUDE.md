@@ -79,3 +79,14 @@ Write code → mvn test -Dtest=<NewTest> → ecc:java-review (changed files only
 - No business logic in controllers — delegate to service layer
 - All public methods have docstrings; no over-commenting obvious code
 - Tests: unit (service layer) + controller test + at least one integration path per endpoint
+
+---
+
+## Coding Behavior (Karpathy Principles)
+
+> Full guidelines in `karpathy-guidelines` skill. These bias toward caution over speed.
+
+* **Think before coding:** State assumptions explicitly. Surface ambiguity. Ask before guessing.
+* **Simplicity first:** Minimum code that solves the problem. No speculative features or abstractions.
+* **Surgical changes:** Touch only what the task requires. Don't improve adjacent code. Match existing style.
+* **Goal-driven execution:** Define verifiable success criteria before starting. Loop until verified.
