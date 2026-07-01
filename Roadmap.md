@@ -19,6 +19,12 @@
 
 ---
 
+## Known Issues (Pre-MVP)
+
+- [ ] **`AccessDeniedException` returns 500 instead of 403** — the business service `GlobalExceptionHandler` (`services/business/src/main/java/com/werkflow/business/common/exception/GlobalExceptionHandler.java`) has a catch-all `@ExceptionHandler(Exception.class)` → 500 but no `AccessDeniedException` handler, so a `@PreAuthorize` denial (e.g. calling `POST /api-keys/generate` with an API key that only carries `ROLE_API_CLIENT`) falls through to the catch-all and is reported as `INTERNAL_SERVER_ERROR` / "Access Denied" instead of `403 Forbidden`. Non-blocking — authorization still correctly denies; only the status code + error envelope are wrong. Fix: add `@ExceptionHandler(AccessDeniedException.class)` → 403 (also covers Spring Security 6.x `AuthorizationDeniedException`, its subclass). Surfaced during enterprise 2026-07-02 ERP api-key manual testing.
+
+---
+
 ## Phase Summary
 
 | Phase | Status |
