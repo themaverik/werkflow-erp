@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -127,7 +128,7 @@ public class VendorService {
             event.put("oldStatus",   oldStatus.name());
             event.put("newStatus",   updated.getStatus().name());
             event.put("occurredAt",  OffsetDateTime.now().toString());
-            webhookPublisher.publish(tenantId, CONNECTOR_KEY, event);
+            webhookPublisher.publish(tenantId, CONNECTOR_KEY, event, UUID.randomUUID().toString());
         }
 
         return toResponse(updated);

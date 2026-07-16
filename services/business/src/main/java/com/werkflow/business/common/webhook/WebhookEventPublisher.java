@@ -8,6 +8,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,6 @@ import java.security.NoSuchAlgorithmException;
 import java.time.OffsetDateTime;
 import java.util.HexFormat;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Publishes domain events to the Werkflow engine webhook receiver.
@@ -62,17 +62,22 @@ public class WebhookEventPublisher {
     /**
      * Publishes a domain event asynchronously with up to 24 retries at 5-minute intervals.
      *
-     * @param tenantCode  Flowable tenant code
-     * @param connectorKey connector key registered in the engine (e.g. "werkflow-erp-events")
-     * @param payload      event payload map — will be serialised to JSON
+     * <p>The idempotency key must be generated ONCE by the caller and passed in — Spring's
+     * {@code @Retryable} interceptor re-invokes this method with the same argument values on
+     * every retry attempt, so a key generated inside this method body would differ on each
+     * attempt and defeat the engine's replay-guard deduplication.</p>
+     *
+     * @param tenantCode     Flowable tenant code
+     * @param connectorKey   connector key registered in the engine (e.g. "werkflow-erp-events")
+     * @param payload        event payload map — will be serialised to JSON
+     * @param idempotencyKey key identifying this logical event, stable across all retry attempts
      */
     @Async
     @Retryable(
         maxAttempts = 24,
         backoff = @Backoff(delay = 300_000, multiplier = 1.0)  // 5 minutes, fixed
     )
-    public void publish(String tenantCode, String connectorKey, Map<String, Object> payload) {
-        String idempotencyKey = UUID.randomUUID().toString();
+    public void publish(String tenantCode, String connectorKey, Map<String, Object> payload, String idempotencyKey) {
         String url = baseUrl + "/api/v1/webhooks/" + tenantCode + "/" + connectorKey;
 
         try {
@@ -92,6 +97,18 @@ public class WebhookEventPublisher {
                     connectorKey, tenantCode, e.getMessage());
             throw new RuntimeException("Webhook publish failed: " + e.getMessage(), e);
         }
+    }
+
+    /**
+     * Invoked once all {@link Retryable} attempts are exhausted. {@code publish} runs
+     * {@code @Async}, so without this the failure exception never reaches the caller —
+     * this ensures a terminal failure is always logged rather than silently swallowed.
+     */
+    @Recover
+    public void recover(RuntimeException e, String tenantCode, String connectorKey,
+                         Map<String, Object> payload, String idempotencyKey) {
+        log.error("WebhookEventPublisher: giving up after all retry attempts for connector='{}' tenant='{}' idempotencyKey='{}' — {}",
+                connectorKey, tenantCode, idempotencyKey, e.getMessage());
     }
 
     private String hmacHex(String secret, String body) {
