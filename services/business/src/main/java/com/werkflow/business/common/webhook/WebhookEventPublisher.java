@@ -72,7 +72,13 @@ public class WebhookEventPublisher {
      * @param payload        event payload map — will be serialised to JSON
      * @param idempotencyKey key identifying this logical event, stable across all retry attempts
      */
-    @Async
+    // Ordering invariant: @Async must stay the OUTERMOST advisor, wrapping @Retryable — so the
+    // whole retry loop (24 attempts × 5-min backoff) runs off-thread on webhookTaskExecutor.
+    // Spring Boot achieves this by registering AsyncAnnotationBeanPostProcessor with
+    // beforeExistingAdvisors=true. Do NOT add explicit order values to @EnableAsync/@EnableRetry:
+    // if retry were to wrap async instead, the blocking backoff would run on the caller thread and
+    // the async proxy would return before failures surface, silently swallowing retries/recovery.
+    @Async("webhookTaskExecutor")
     @Retryable(
         maxAttempts = 24,
         backoff = @Backoff(delay = 300_000, multiplier = 1.0)  // 5 minutes, fixed

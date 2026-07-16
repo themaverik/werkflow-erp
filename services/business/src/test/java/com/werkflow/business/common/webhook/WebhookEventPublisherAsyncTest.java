@@ -6,9 +6,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Map;
@@ -70,6 +72,22 @@ class WebhookEventPublisherAsyncTest {
             return restTemplate;
         }
 
+        /**
+         * Mirrors the production {@code webhookTaskExecutor} bean (AppConfig): {@code @Async("webhookTaskExecutor")}
+         * on WebhookEventPublisher.publish resolves this executor by name, so the dispatch must land on a
+         * {@code webhook-pub-*} thread rather than the shared applicationTaskExecutor.
+         */
+        @Bean
+        TaskExecutor webhookTaskExecutor() {
+            ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+            executor.setCorePoolSize(2);
+            executor.setMaxPoolSize(4);
+            executor.setQueueCapacity(100);
+            executor.setThreadNamePrefix("webhook-pub-");
+            executor.initialize();
+            return executor;
+        }
+
         @Bean
         WebhookEventPublisher webhookEventPublisher(RestTemplate restTemplate) {
             return new WebhookEventPublisher(restTemplate, new ObjectMapper(), "http://engine.test", "");
@@ -90,6 +108,9 @@ class WebhookEventPublisherAsyncTest {
             assertTrue(completed, "async publish should complete within the timeout");
             assertNotSame(testThread, callingThread.get(),
                     "publish should run on a background executor thread, not the caller thread");
+            assertTrue(callingThread.get().getName().startsWith("webhook-pub-"),
+                    "publish should run on the dedicated webhookTaskExecutor (webhook-pub-*), " +
+                    "not the shared applicationTaskExecutor — actual thread: " + callingThread.get().getName());
         }
     }
 }
