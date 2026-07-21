@@ -135,6 +135,14 @@ public class AssetInstanceService {
     }
 
     /**
+     * Get assets with insurance expiring soon
+     */
+    public List<AssetInstance> getAssetsWithExpiringInsurance(LocalDate expiryDate) {
+        String tenantId = getTenantId();
+        return instanceRepository.findAssetsWithExpiringInsuranceForTenant(tenantId, expiryDate);
+    }
+
+    /**
      * Get all asset instances
      */
     public Page<AssetInstance> getAllInstances(Pageable pageable) {
@@ -168,6 +176,8 @@ public class AssetInstanceService {
         instance.setPurchaseDate(instanceDetails.getPurchaseDate());
         instance.setPurchaseCost(instanceDetails.getPurchaseCost());
         instance.setWarrantyExpiryDate(instanceDetails.getWarrantyExpiryDate());
+        instance.setInsuranceProvider(instanceDetails.getInsuranceProvider());
+        instance.setInsuranceExpiryDate(instanceDetails.getInsuranceExpiryDate());
         instance.setCondition(instanceDetails.getCondition());
         instance.setStatus(instanceDetails.getStatus());
         instance.setCurrentLocation(instanceDetails.getCurrentLocation());

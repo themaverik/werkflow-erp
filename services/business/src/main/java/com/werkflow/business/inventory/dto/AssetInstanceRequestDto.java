@@ -36,6 +36,11 @@ public class AssetInstanceRequestDto {
 
     private LocalDate warrantyExpiryDate;
 
+    @Size(max = 200, message = "Insurance provider cannot exceed 200 characters")
+    private String insuranceProvider;
+
+    private LocalDate insuranceExpiryDate;
+
     @Builder.Default
     private String condition = "NEW";
 

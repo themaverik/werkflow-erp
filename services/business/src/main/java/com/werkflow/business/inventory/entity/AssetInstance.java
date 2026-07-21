@@ -51,6 +51,12 @@ public class AssetInstance {
     @Column
     private LocalDate warrantyExpiryDate;
 
+    @Column(length = 200)
+    private String insuranceProvider;
+
+    @Column
+    private LocalDate insuranceExpiryDate;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 50)
     @Builder.Default

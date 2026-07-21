@@ -48,6 +48,11 @@ public interface AssetInstanceRepository extends JpaRepository<AssetInstance, Lo
                                                                 @Param("expiryDate") LocalDate expiryDate);
 
     @Query("SELECT a FROM AssetInstance a WHERE a.tenantId = :tenantId " +
+           "AND a.insuranceExpiryDate <= :expiryDate AND a.status != 'DISPOSED' AND a.status != 'RETIRED'")
+    List<AssetInstance> findAssetsWithExpiringInsuranceForTenant(@Param("tenantId") String tenantId,
+                                                                 @Param("expiryDate") LocalDate expiryDate);
+
+    @Query("SELECT a FROM AssetInstance a WHERE a.tenantId = :tenantId " +
            "AND a.condition IN ('POOR', 'DAMAGED', 'NEEDS_REPAIR')")
     List<AssetInstance> findAssetsNeedingAttentionForTenant(@Param("tenantId") String tenantId);
 

@@ -51,6 +51,8 @@ public class AssetInstanceController {
             .purchaseDate(requestDto.getPurchaseDate())
             .purchaseCost(requestDto.getPurchaseCost())
             .warrantyExpiryDate(requestDto.getWarrantyExpiryDate())
+            .insuranceProvider(requestDto.getInsuranceProvider())
+            .insuranceExpiryDate(requestDto.getInsuranceExpiryDate())
             .condition(AssetInstance.AssetCondition.valueOf(requestDto.getCondition()))
             .status(AssetInstance.AssetStatus.valueOf(requestDto.getStatus()))
             .currentLocation(requestDto.getCurrentLocation())
@@ -130,6 +132,15 @@ public class AssetInstanceController {
         return ResponseEntity.ok(instances.stream().map(this::mapToResponse).collect(Collectors.toList()));
     }
 
+    @GetMapping("/expiring-insurance")
+    @Operation(summary = "Get assets with expiring insurance", description = "Retrieve assets with insurance expiring soon")
+    public ResponseEntity<List<AssetInstanceResponseDto>> getAssetsWithExpiringInsurance(
+            @RequestParam(defaultValue = "30") Integer daysFromNow) {
+        LocalDate expiryDate = LocalDate.now().plusDays(daysFromNow);
+        List<AssetInstance> instances = instanceService.getAssetsWithExpiringInsurance(expiryDate);
+        return ResponseEntity.ok(instances.stream().map(this::mapToResponse).collect(Collectors.toList()));
+    }
+
     @GetMapping("/attention")
     @Operation(summary = "Get assets needing attention", description = "Retrieve assets in poor/damaged condition")
     public ResponseEntity<List<AssetInstanceResponseDto>> getAssetsNeedingAttention() {
@@ -158,6 +169,8 @@ public class AssetInstanceController {
             .purchaseDate(requestDto.getPurchaseDate())
             .purchaseCost(requestDto.getPurchaseCost())
             .warrantyExpiryDate(requestDto.getWarrantyExpiryDate())
+            .insuranceProvider(requestDto.getInsuranceProvider())
+            .insuranceExpiryDate(requestDto.getInsuranceExpiryDate())
             .condition(AssetInstance.AssetCondition.valueOf(requestDto.getCondition()))
             .status(AssetInstance.AssetStatus.valueOf(requestDto.getStatus()))
             .currentLocation(requestDto.getCurrentLocation())
@@ -188,6 +201,8 @@ public class AssetInstanceController {
             .purchaseDate(instance.getPurchaseDate())
             .purchaseCost(instance.getPurchaseCost())
             .warrantyExpiryDate(instance.getWarrantyExpiryDate())
+            .insuranceProvider(instance.getInsuranceProvider())
+            .insuranceExpiryDate(instance.getInsuranceExpiryDate())
             .condition(instance.getCondition().toString())
             .status(instance.getStatus().toString())
             .currentLocation(instance.getCurrentLocation())

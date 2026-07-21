@@ -35,6 +35,10 @@ public class AssetInstanceResponseDto {
 
     private LocalDate warrantyExpiryDate;
 
+    private String insuranceProvider;
+
+    private LocalDate insuranceExpiryDate;
+
     private String condition;
 
     private String status;
