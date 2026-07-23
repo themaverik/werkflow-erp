@@ -2,7 +2,7 @@
 
 **Project**: Standalone ERP Data Service — HR, Finance, Procurement, Inventory
 **Master Roadmap**: `~/Projects/werkflow-platform/docs/Roadmap.md` (authoritative for all future tasks)
-**Last Updated**: 2026-05-09
+**Last Updated**: 2026-07-23
 **Target**: Internal Enterprise Demo — June 2026
 
 > Future tasks in this file are synced from the master Roadmap (M1 + M7 ERP share).
@@ -15,6 +15,7 @@
 **Current Task**: none — awaiting MVP release cut
 **Branch**: main
 **Last fix (2026-06-05)**: Flyway ordering bug — `@DependsOn` added to `identityFlyway` bean so it runs after all domain Flywayeans (erp `0c9401c`). Prevents crash-loop on fresh deploys where `identity/V24` references `finance_service.budget_plans` before `financeFlyway` has run.
+**Recent (2026-07-21 → 23)**: First-class asset insurance tracking on `asset_instances` — inventory migration `V23` (`insuranceProvider`, `insuranceExpiryDate`) + DTOs + `GET /asset-instances/expiring-insurance?daysFromNow=N` mirroring the warranty path (merged to main `f6babc7`; resolves asset-mgmt E2E Known-Gap #1). API-Usage-Guide documented the warranty/insurance expiry endpoints (`d592094`). Serves the platform asset-management MVP-gate E2E.
 **Next ERP task**: MVP release cut (tag + CHANGELOG) or post-MVP ERP P3 work
 
 ---
