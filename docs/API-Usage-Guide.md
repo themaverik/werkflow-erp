@@ -556,6 +556,44 @@ Response:
 }
 ```
 
+### Track Warranty & Insurance Expiry
+
+Asset instances carry optional warranty and insurance fields, set on create or update:
+
+```bash
+curl -X PUT http://localhost:8084/api/v1/inventory/asset-instances/1201 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Tenant-ID: acme-corp" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "assetDefinitionId": 1,
+    "serialNumber": "DELL-XPS-ABC123",
+    "status": "IN_USE",
+    "warrantyExpiryDate": "2027-04-10",
+    "insuranceProvider": "Acme General Insurance",
+    "insuranceExpiryDate": "2026-10-10"
+  }'
+```
+
+Query instances whose warranty or insurance expires within a window. `daysFromNow`
+defaults to `30`:
+
+```bash
+# Warranty expiring within the next 60 days
+curl -X GET "http://localhost:8084/api/v1/inventory/asset-instances/expiring-warranty?daysFromNow=60" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Tenant-ID: acme-corp"
+
+# Insurance expiring within the next 60 days
+curl -X GET "http://localhost:8084/api/v1/inventory/asset-instances/expiring-insurance?daysFromNow=60" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "X-Tenant-ID: acme-corp"
+```
+
+Each returns the list of matching asset instances (same shape as `GET /asset-instances/{id}`),
+including `warrantyExpiryDate`, `insuranceProvider`, and `insuranceExpiryDate`. A scheduled
+werkflow process can poll these endpoints to drive renewal reminders.
+
 ---
 
 ## Common Patterns
