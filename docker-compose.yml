@@ -11,6 +11,7 @@ name: werkflow-erp
 services:
   # Business Service (consolidated HR + Finance + Procurement + Inventory)
   business-service:
+    image: werkflow/business:latest
     build:
       context: .
       dockerfile: Dockerfile
